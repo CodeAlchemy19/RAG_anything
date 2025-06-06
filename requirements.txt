@@ -1,0 +1,6 @@
+# LightRAG packages
+lightrag-hku
+
+# MinerU packages
+magic-pdf[full]>=1.2.2
+huggingface_hub
