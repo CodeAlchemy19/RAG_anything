@@ -68,17 +68,17 @@ RAGAnything 实现了一个**多阶段多模态处理流水线**，将传统RAG�
   - 视觉模型集成，进行详细图像分析
   - 上下文感知的标题生成
   - 视觉元素关系提取
-  
+
 - **TableModalProcessor（表格模态处理器）**：
   - 结构化数据解释
   - 统计模式识别
   - 跨表格关系识别
-  
+
 - **EquationModalProcessor（公式模态处理器）**：
   - 数学公式解析
   - LaTeX格式支持
   - 公式-概念关系映射
-  
+
 - **GenericModalProcessor（通用模态处理器）**：
   - 自定义内容类型的灵活处理
   - 新模态的可扩展框架
@@ -215,32 +215,32 @@ async def process_multimodal_content():
         # ... 你的LLM和嵌入配置
     )
     await rag.initialize_storages()
-    
+
     # 处理图像
     image_processor = ImageModalProcessor(
         lightrag=rag,
         modal_caption_func=your_vision_model_func
     )
-    
+
     image_content = {
         "img_path": "path/to/image.jpg",
         "img_caption": ["图1：实验结果"],
         "img_footnote": ["数据收集于2024年"]
     }
-    
+
     description, entity_info = await image_processor.process_multimodal_content(
         modal_content=image_content,
         content_type="image",
         file_path="research_paper.pdf",
         entity_name="实验结果图表"
     )
-    
+
     # 处理表格
     table_processor = TableModalProcessor(
         lightrag=rag,
         modal_caption_func=your_llm_model_func
     )
-    
+
     table_content = {
         "table_body": """
         | 方法 | 准确率 | F1分数 |
@@ -251,7 +251,7 @@ async def process_multimodal_content():
         "table_caption": ["性能对比"],
         "table_footnote": ["测试数据集结果"]
     }
-    
+
     description, entity_info = await table_processor.process_multimodal_content(
         modal_content=table_content,
         content_type="table",
@@ -294,7 +294,7 @@ class CustomModalProcessor(GenericModalProcessor):
 ```python
 # 不同的查询模式
 result_hybrid = await rag.query_with_multimodal("你的问题", mode="hybrid")
-result_local = await rag.query_with_multimodal("你的问题", mode="local") 
+result_local = await rag.query_with_multimodal("你的问题", mode="local")
 result_global = await rag.query_with_multimodal("你的问题", mode="global")
 ```
 
@@ -393,4 +393,4 @@ OPENAI_BASE_URL=your_base_url  # 可选
         <a href="https://github.com/HKUDS/RAGAnything/issues">🐛 报告问题</a> |
         <a href="https://github.com/HKUDS/RAGAnything/discussions">💬 讨论交流</a>
     </p>
-</div> 
+</div>
