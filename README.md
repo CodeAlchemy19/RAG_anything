@@ -40,14 +40,19 @@ As a unified solution, RAG-Anything **eliminates the need for multiple specializ
 
 Users can query documents containing **interleaved text**, **visual diagrams**, **structured tables**, and **mathematical formulations** through **one cohesive interface**. This consolidated approach makes RAG-Anything particularly valuable for academic research, technical documentation, financial reports, and enterprise knowledge management where rich, mixed-content documents demand a **unified processing framework**.
 
-### Key Features
+### Key Features of RAG-Anything
 
-- **🔄 End-to-End Multimodal Processing**: Complete pipeline from document parsing to multimodal query answering
-- **📄 Comprehensive Document Support**: PDF, Office documents (DOC/DOCX/PPT/PPTX), images, and more
-- **🧠 Advanced Content Analysis**: Specialized processors for images, tables, equations, and generic content
-- **🔗 Knowledge Graph Integration**: Automatic entity extraction and relationship building across modalities
-- **⚡ Flexible Processing Options**: MinerU-based parsing or direct multimodal content insertion
-- **🎯 Intelligent Retrieval**: Hybrid search across text and multimodal content
+- 🔄 **End-to-End Multimodal Pipeline**: Complete workflow from document ingestion and parsing to intelligent multimodal query answering.
+
+- 📄 **Universal Document Support**: Seamless processing of PDFs, Office documents (DOC/DOCX/PPT/PPTX), images, and diverse file formats.
+
+- 🧠 **Specialized Content Analysis**: Dedicated processors for images, tables, mathematical equations, and heterogeneous content types.
+
+- 🔗 **Multimodal Knowledge Graph**: Automatic entity extraction and cross-modal relationship discovery for enhanced understanding.
+
+- ⚡ **Adaptive Processing Modes**: Flexible MinerU-based parsing or direct multimodal content injection workflows.
+
+- 🎯 **Hybrid Intelligent Retrieval**: Advanced search capabilities spanning textual and multimodal content with contextual understanding.
 
 ## 🏗️ Algorithm & Architecture
 
