@@ -34,7 +34,11 @@
 
 ## 🌟 Overview
 
-**RAGAnything** is a comprehensive multimodal document processing RAG (Retrieval-Augmented Generation) system built on [LightRAG](https://github.com/HKUDS/LightRAG). It enables seamless processing and querying of complex documents containing text, images, tables, equations, and other multimodal content.
+Modern documents increasingly contain diverse multimodal content—text, images, tables, equations, charts, and multimedia—that traditional text-focused RAG systems cannot effectively process. **RAG-Anything** addresses this challenge as a comprehensive *All-in-One Multimodal Document Processing RAG system** built on LightRAG.
+
+As a unified solution, RAG-Anything **eliminates the need for multiple specialized tools**. It provides **seamless processing and querying across all content modalities** within a single integrated framework. Unlike conventional RAG approaches that struggle with non-textual elements, our all-in-one system delivers **comprehensive multimodal retrieval capabilities**.
+
+Users can query documents containing **interleaved text**, **visual diagrams**, **structured tables**, and **mathematical formulations** through **one cohesive interface**. This consolidated approach makes RAG-Anything particularly valuable for academic research, technical documentation, financial reports, and enterprise knowledge management where rich, mixed-content documents demand a **unified processing framework**.
 
 ### Key Features
 
