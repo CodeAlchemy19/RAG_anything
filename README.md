@@ -1,4 +1,4 @@
-<center><h1>🚀 RAGAnything: All-in-One RAG System</h1></center>
+<center><h1>🚀 RAG-Anything: All-in-One RAG System</h1></center>
 
 <div align="center">
 <table border="0" width="100%">
