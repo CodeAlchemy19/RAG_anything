@@ -61,37 +61,42 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 **RAG-Anything** implements an effective **multi-stage multimodal pipeline** that fundamentally extends traditional RAG architectures to seamlessly handle diverse content modalities through intelligent orchestration and cross-modal understanding.
 
 #### 1. Document Parsing Stage
+The system provides high-fidelity document extraction through adaptive content decomposition. It intelligently segments heterogeneous elements while preserving contextual relationships. Universal format compatibility is achieved via specialized optimized parsers.
 
-- **MinerU Integration**: Leverages [MinerU](https://github.com/opendatalab/MinerU) for high-fidelity document structure extraction and semantic preservation across complex layouts.
+- **⚙️ MinerU Integration**: Leverages [MinerU](https://github.com/opendatalab/MinerU) for high-fidelity document structure extraction and semantic preservation across complex layouts.
 
-- **Adaptive Content Decomposition**: Automatically segments documents into coherent text blocks, visual elements, structured tables, mathematical equations, and specialized content types while preserving contextual relationships.
+- **🧩 Adaptive Content Decomposition**: Automatically segments documents into coherent text blocks, visual elements, structured tables, mathematical equations, and specialized content types while preserving contextual relationships.
 
-- **Universal Format Support**: Provides comprehensive handling of PDFs, Office documents, images, and emerging formats through specialized parsers with format-specific optimization.
+- **📁 Universal Format Support**: Provides comprehensive handling of PDFs, Office documents, images, and emerging formats through specialized parsers with format-specific optimization.
 
 #### 2. Multi-Modal Content Understanding & Processing
-- **Autonomous Content Categorization and Routing**: Automatically identify, categorize, and route different content types through optimized execution channels.
-- **Concurrent Multi-Pipeline Architecture**: Implements concurrent execution of textual and multimodal content through dedicated processing pipelines. This approach maximizes throughput efficiency while preserving content integrity.
-- **Document Hierarchy Extraction**: Extracts and preserves original document hierarchy and inter-element relationships during content transformation.
+The system automatically categorizes and routes content through optimized channels. It uses concurrent pipelines for parallel text and multimodal processing. Document hierarchy and relationships are preserved during transformation.
+
+- **🎯 Autonomous Content Categorization and Routing**: Automatically identify, categorize, and route different content types through optimized execution channels.
+
+- **⚡ Concurrent Multi-Pipeline Architecture**: Implements concurrent execution of textual and multimodal content through dedicated processing pipelines. This approach maximizes throughput efficiency while preserving content integrity.
+
+- **🏗️ Document Hierarchy Extraction**: Extracts and preserves original document hierarchy and inter-element relationships during content transformation.
 
 #### 3. Multimodal Analysis Engine
 The system deploys modality-aware processing units for heterogeneous data modalities:
 
-- **Visual Content Analyzer**:
+- **🔍 Visual Content Analyzer**:
   - Integrate vision model for image analysis.
   - Generates context-aware descriptive captions based on visual semantics.
   - Extracts spatial relationships and hierarchical structures between visual elements.
 
-- **Structured Data Interpreter**:
+- **📊 Structured Data Interpreter**:
   - Performs systematic interpretation of tabular and structured data formats.
   - Implements statistical pattern recognition algorithms for data trend analysis.
   - Identifies semantic relationships and dependencies across multiple tabular datasets.
 
-- **Mathematical Expression Parser**:
+- **📐 Mathematical Expression Parser**:
   - Parses complex mathematical expressions and formulas with high accuracy.
   - Provides native LaTeX format support for seamless integration with academic workflows.
   - Establishes conceptual mappings between mathematical equations and domain-specific knowledge bases.
 
-- **Extensible Modality Handler**:
+- **🔧 Extensible Modality Handler**:
   - Provides configurable processing framework for custom and emerging content types.
   - Enables dynamic integration of new modality processors through plugin architecture.
   - Supports runtime configuration of processing pipelines for specialized use cases.
@@ -99,22 +104,22 @@ The system deploys modality-aware processing units for heterogeneous data modali
 #### 4. Multi-Modal Knowledge Graph Index
 The multi-modal knowledge graph construction module transforms document content into structured semantic representations. It extracts multimodal entities, establishes cross-modal relationships, and preserves hierarchical organization. The system applies weighted relevance scoring for optimized knowledge retrieval.
 
--**Multi-Modal Entity Extraction**: Transforms significant multimodal elements into structured knowledge graph entities. The process includes semantic annotations and metadata preservation.
+- **🔍 Multi-Modal Entity Extraction**: Transforms significant multimodal elements into structured knowledge graph entities. The process includes semantic annotations and metadata preservation.
 
--**Cross-Modal Relationship Mapping**: Establishes semantic connections and dependencies between textual entities and multimodal components. This is achieved through automated relationship inference algorithms.
+- **🔗 Cross-Modal Relationship Mapping**: Establishes semantic connections and dependencies between textual entities and multimodal components. This is achieved through automated relationship inference algorithms.
 
--**Hierarchical Structure Preservation**: Maintains original document organization through "belongs_to" relationship chains. These chains preserve logical content hierarchy and sectional dependencies.
+- **🏗️ Hierarchical Structure Preservation**: Maintains original document organization through "belongs_to" relationship chains. These chains preserve logical content hierarchy and sectional dependencies.
 
--**Weighted Relationship Scoring**: Assigns quantitative relevance scores to relationship types. Scoring is based on semantic proximity and contextual significance within the document structure.
+- **⚖️ Weighted Relationship Scoring**: Assigns quantitative relevance scores to relationship types. Scoring is based on semantic proximity and contextual significance within the document structure.
 
 #### 5. Modality-Aware Retrieval
 The hybrid retrieval system combines vector similarity search with graph traversal algorithms for comprehensive content retrieval. It implements modality-aware ranking mechanisms and maintains relational coherence between retrieved elements to ensure contextually integrated information delivery.
 
--**Vector-Graph Fusion**: Integrates vector similarity search with graph traversal algorithms. This approach leverages both semantic embeddings and structural relationships for comprehensive content retrieval.
+-  **🔀 Vector-Graph Fusion**: Integrates vector similarity search with graph traversal algorithms. This approach leverages both semantic embeddings and structural relationships for comprehensive content retrieval.
 
---**Modality-Aware Ranking**: Implements adaptive scoring mechanisms that weight retrieval results based on content type relevance. The system adjusts rankings according to query-specific modality preferences.
+-- **📊 Modality-Aware Ranking**: Implements adaptive scoring mechanisms that weight retrieval results based on content type relevance. The system adjusts rankings according to query-specific modality preferences.
 
-- **Relational Coherence Maintenance**: Maintains semantic and structural relationships between retrieved elements. This ensures coherent information delivery and contextual integrity.
+- **🔗 Relational Coherence Maintenance**: Maintains semantic and structural relationships between retrieved elements. This ensures coherent information delivery and contextual integrity.
 
 ## 🚀 Quick Start
 
