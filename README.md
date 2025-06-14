@@ -58,50 +58,63 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 
 ### Core Algorithm
 
-RAGAnything implements a **multi-stage multimodal processing pipeline** that extends traditional RAG systems to handle diverse content types:
+**RAG-Anything** implements an effective **multi-stage multimodal pipeline** that fundamentally extends traditional RAG architectures to seamlessly handle diverse content modalities through intelligent orchestration and cross-modal understanding.
 
 #### 1. Document Parsing Stage
-- **MinerU Integration**: Leverages [MinerU](https://github.com/opendatalab/MinerU) for high-quality document structure extraction
-- **Content Decomposition**: Automatically separates documents into text blocks, images, tables, equations, and other elements
-- **Format Support**: Handles PDFs, Office documents, images, and more with specialized parsers
 
-#### 2. Content Separation & Processing
-- **Modality Classification**: Automatically identifies and classifies different content types
-- **Parallel Processing**: Processes text and multimodal content through separate pipelines
-- **Quality Preservation**: Maintains original structure and relationships between content elements
+- **MinerU Integration**: Leverages [MinerU](https://github.com/opendatalab/MinerU) for high-fidelity document structure extraction and semantic preservation across complex layouts.
+
+- **Adaptive Content Decomposition**: Automatically segments documents into coherent text blocks, visual elements, structured tables, mathematical equations, and specialized content types while preserving contextual relationships.
+
+- **Universal Format Support**: Provides comprehensive handling of PDFs, Office documents, images, and emerging formats through specialized parsers with format-specific optimization.
+
+#### 2. Multi-Modal Content Understanding & Processing
+- **Autonomous Content Categorization and Routing**: Automatically identify, categorize, and route different content types through optimized execution channels.
+- **Concurrent Multi-Pipeline Architecture**: Implements concurrent execution of textual and multimodal content through dedicated processing pipelines. This approach maximizes throughput efficiency while preserving content integrity.
+- **Document Hierarchy Extraction**: Extracts and preserves original document hierarchy and inter-element relationships during content transformation.
 
 #### 3. Multimodal Analysis Engine
-The system employs specialized processors for different modalities:
+The system deploys modality-aware processing units for heterogeneous data modalities:
 
-- **ImageModalProcessor**:
-  - Vision model integration for detailed image analysis
-  - Context-aware caption generation
-  - Visual element relationship extraction
+- **Visual Content Analyzer**:
+  - Integrate vision model for image analysis.
+  - Generates context-aware descriptive captions based on visual semantics.
+  - Extracts spatial relationships and hierarchical structures between visual elements.
 
-- **TableModalProcessor**:
-  - Structured data interpretation
-  - Statistical pattern recognition
-  - Cross-table relationship identification
+- **Structured Data Interpreter**:
+  - Performs systematic interpretation of tabular and structured data formats.
+  - Implements statistical pattern recognition algorithms for data trend analysis.
+  - Identifies semantic relationships and dependencies across multiple tabular datasets.
 
-- **EquationModalProcessor**:
-  - Mathematical formula parsing
-  - LaTeX format support
-  - Equation-concept relationship mapping
+- **Mathematical Expression Parser**:
+  - Parses complex mathematical expressions and formulas with high accuracy.
+  - Provides native LaTeX format support for seamless integration with academic workflows.
+  - Establishes conceptual mappings between mathematical equations and domain-specific knowledge bases.
 
-- **GenericModalProcessor**:
-  - Flexible processing for custom content types
-  - Extensible framework for new modalities
+- **Extensible Modality Handler**:
+  - Provides configurable processing framework for custom and emerging content types.
+  - Enables dynamic integration of new modality processors through plugin architecture.
+  - Supports runtime configuration of processing pipelines for specialized use cases.
 
-#### 4. Knowledge Graph Construction
-- **Multi-Modal Entity Creation**: Each significant multimodal element becomes a knowledge graph entity
-- **Cross-Modal Relationships**: Establishes connections between text entities and multimodal elements
-- **Hierarchical Structure**: Maintains document structure through "belongs_to" relationships
-- **Weighted Connections**: Assigns relevance scores to different relationship types
+#### 4. Multi-Modal Knowledge Graph Index
+The multi-modal knowledge graph construction module transforms document content into structured semantic representations. It extracts multimodal entities, establishes cross-modal relationships, and preserves hierarchical organization. The system applies weighted relevance scoring for optimized knowledge retrieval.
 
-#### 5. Hybrid Retrieval System
-- **Vector-Graph Fusion**: Combines vector similarity search with graph traversal
-- **Modality-Aware Ranking**: Adjusts retrieval scores based on content type relevance
-- **Context Preservation**: Maintains relationships between retrieved elements
+-**Multi-Modal Entity Extraction**: Transforms significant multimodal elements into structured knowledge graph entities. The process includes semantic annotations and metadata preservation.
+
+-**Cross-Modal Relationship Mapping**: Establishes semantic connections and dependencies between textual entities and multimodal components. This is achieved through automated relationship inference algorithms.
+
+-**Hierarchical Structure Preservation**: Maintains original document organization through "belongs_to" relationship chains. These chains preserve logical content hierarchy and sectional dependencies.
+
+-**Weighted Relationship Scoring**: Assigns quantitative relevance scores to relationship types. Scoring is based on semantic proximity and contextual significance within the document structure.
+
+#### 5. Modality-Aware Retrieval
+The hybrid retrieval system combines vector similarity search with graph traversal algorithms for comprehensive content retrieval. It implements modality-aware ranking mechanisms and maintains relational coherence between retrieved elements to ensure contextually integrated information delivery.
+
+-**Vector-Graph Fusion**: Integrates vector similarity search with graph traversal algorithms. This approach leverages both semantic embeddings and structural relationships for comprehensive content retrieval.
+
+--**Modality-Aware Ranking**: Implements adaptive scoring mechanisms that weight retrieval results based on content type relevance. The system adjusts rankings according to query-specific modality preferences.
+
+- **Relational Coherence Maintenance**: Maintains semantic and structural relationships between retrieved elements. This ensures coherent information delivery and contextual integrity.
 
 ## 🚀 Quick Start
 
@@ -387,7 +400,7 @@ If you find RAGAnything useful in your research, please cite our paper:
 
 ## Contribution
 
-Thank you to all our contributors!
+We thank all our contributors for their valuable contributions.
 
 <!-- <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=HKUDS/RAGAnything" />
