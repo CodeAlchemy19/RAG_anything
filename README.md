@@ -389,9 +389,9 @@ If you find RAGAnything useful in your research, please cite our paper:
 
 ## 🔗 Related Projects
 
-- [LightRAG](https://github.com/HKUDS/LightRAG): The foundation RAG system
-- [VideoRAG](https://github.com/HKUDS/VideoRAG): Video understanding RAG system
-- [MiniRAG](https://github.com/HKUDS/MiniRAG): Lightweight RAG with small models
+- [LightRAG](https://github.com/HKUDS/LightRAG): **Simple and Fast RAG**
+- [VideoRAG](https://github.com/HKUDS/VideoRAG): **Extreme Long-Context Video RAG**
+- [MiniRAG](https://github.com/HKUDS/MiniRAG): **Extremely Simple RAG**
 
 ## Star History
 
