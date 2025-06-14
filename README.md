@@ -374,7 +374,7 @@ The system automatically uses MinerU's configuration file `magic-pdf.json` in yo
 
 ## 📖 Citation
 
-If you find RAGAnything useful in your research, please cite our paper:
+If you find RAG-Anything useful in your research, please cite our paper:
 
 ```bibtex
 @article{guo2024lightrag,
