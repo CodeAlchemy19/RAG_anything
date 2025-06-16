@@ -61,7 +61,7 @@ setuptools.setup(
     url=metadata["__url__"],
     version=metadata["__version__"],
     author=metadata["__author__"],
-    description="RAGAnything: xxx",
+    description="RAGAnything: All-in-One RAG System",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(
