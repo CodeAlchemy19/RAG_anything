@@ -6,4 +6,4 @@ recursive-include raganything *.py
 recursive-include examples *.py
 global-exclude *.pyc
 global-exclude __pycache__
-global-exclude *.egg-info 
+global-exclude *.egg-info
