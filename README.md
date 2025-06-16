@@ -44,7 +44,7 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 
 - 🔄 **End-to-End Multimodal Pipeline**: Complete workflow from document ingestion and parsing to intelligent multimodal query answering.
 
-- 📄 **Universal Document Support**: Seamless processing of PDFs, Office documents (DOC/DOCX/PPT/PPTX), images, and diverse file formats.
+- 📄 **Universal Document Support**: Seamless processing of PDFs, Office documents (DOC/DOCX/PPT/PPTX/XLS/XLSX), images, and diverse file formats.
 
 - 🧠 **Specialized Content Analysis**: Dedicated processors for images, tables, mathematical equations, and heterogeneous content types.
 
@@ -67,7 +67,7 @@ The system provides high-fidelity document extraction through adaptive content d
 
 - **🧩 Adaptive Content Decomposition**: Automatically segments documents into coherent text blocks, visual elements, structured tables, mathematical equations, and specialized content types while preserving contextual relationships.
 
-- **📁 Universal Format Support**: Provides comprehensive handling of PDFs, Office documents, images, and emerging formats through specialized parsers with format-specific optimization.
+- **📁 Universal Format Support**: Provides comprehensive handling of PDFs, Office documents (DOC/DOCX/PPT/PPTX/XLS/XLSX), images, and emerging formats through specialized parsers with format-specific optimization.
 
 #### 2. Multi-Modal Content Understanding & Processing
 The system automatically categorizes and routes content through optimized channels. It uses concurrent pipelines for parallel text and multimodal processing. Document hierarchy and relationships are preserved during transformation.
@@ -349,6 +349,9 @@ The `examples/` directory contains comprehensive usage examples:
 
 - **`raganything_example.py`**: End-to-end document processing with MinerU
 - **`modalprocessors_example.py`**: Direct multimodal content processing
+- **`office_document_test.py`**: Office document parsing test with MinerU (no API key required)
+- **`image_format_test.py`**: Image format parsing test with MinerU (no API key required)
+- **`text_format_test.py`**: Text format parsing test with MinerU (no API key required)
 
 Run examples:
 ```bash
@@ -357,6 +360,24 @@ python examples/raganything_example.py path/to/document.pdf --api-key YOUR_API_K
 
 # Direct modal processing
 python examples/modalprocessors_example.py --api-key YOUR_API_KEY
+
+# Office document parsing test (MinerU only)
+python examples/office_document_test.py --file path/to/document.docx
+
+# Image format parsing test (MinerU only)
+python examples/image_format_test.py --file path/to/image.bmp
+
+# Text format parsing test (MinerU only)
+python examples/text_format_test.py --file path/to/document.md
+
+# Check LibreOffice installation
+python examples/office_document_test.py --check-libreoffice --file dummy
+
+# Check PIL/Pillow installation
+python examples/image_format_test.py --check-pillow --file dummy
+
+# Check ReportLab installation
+python examples/text_format_test.py --check-reportlab --file dummy
 ```
 
 ## 🔧 Configuration
@@ -368,6 +389,8 @@ Create a `.env` file (refer to `.env.example`):
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_BASE_URL=your_base_url  # Optional
 ```
+
+> **Note**: API keys are only required for full RAG processing with LLM integration. The parsing test files (`office_document_test.py` and `image_format_test.py`) only test MinerU functionality and do not require API keys.
 
 ### MinerU Configuration
 
@@ -402,16 +425,43 @@ await rag.process_document_complete(
 
 ### Document Formats
 - **PDFs**: Research papers, reports, presentations
-- **Office Documents**: DOC, DOCX, PPT, PPTX ⚠️
-- **Images**: JPG, PNG, BMP, TIFF
-- **Text Files**: TXT, MD
+- **Office Documents**: DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️
+- **Images**: JPG, PNG, BMP, TIFF, GIF, WebP 📸
+- **Text Files**: TXT, MD ⚠️
 
-> **⚠️ Office Document Processing in MinerU 2.0:**
+> **⚠️ Office Document Processing Requirements:**
 >
-> Due to MinerU 2.0's architectural changes, Office documents require additional setup:
-> - **Automatic conversion**: Requires LibreOffice installation for PDF conversion
-> - **Manual conversion**: Convert to PDF beforehand for optimal performance
-> - **Recommended approach**: Use PDF format when possible for best results
+> RAG-Anything supports comprehensive Office document processing through automatic PDF conversion:
+> - **Supported formats**: .doc, .docx, .ppt, .pptx, .xls, .xlsx
+> - **LibreOffice requirement**: Automatic conversion requires LibreOffice installation
+> - **Installation instructions**:
+>   - **Windows**: Download from [LibreOffice official website](https://www.libreoffice.org/download/download/)
+>   - **macOS**: `brew install --cask libreoffice`
+>   - **Ubuntu/Debian**: `sudo apt-get install libreoffice`
+>   - **CentOS/RHEL**: `sudo yum install libreoffice`
+> - **Alternative approach**: Convert to PDF manually for optimal performance
+> - **Processing workflow**: Office files are automatically converted to PDF, then processed by MinerU
+
+> **📸 Image Format Support:**
+>
+> RAG-Anything supports comprehensive image format processing:
+> - **MinerU native formats**: .jpg, .jpeg, .png (processed directly)
+> - **Auto-converted formats**: .bmp, .tiff/.tif, .gif, .webp (automatically converted to PNG)
+> - **Conversion requirements**: PIL/Pillow library (`pip install Pillow`)
+> - **Processing workflow**: Non-native formats are converted to PNG, then processed by MinerU
+> - **Quality preservation**: Conversion maintains image quality while ensuring compatibility
+> **⚠️ Text File Processing Requirements:**
+>
+> RAG-Anything supports text file processing through automatic PDF conversion:
+> - **Supported formats**: .txt, .md
+> - **ReportLab requirement**: Automatic conversion requires ReportLab library
+> - **Installation**: `pip install reportlab`
+> - **Features**: Supports multiple text encodings (UTF-8, GBK, Latin-1, CP1252)
+> - **Complete Markdown support**: Headers, paragraphs, **bold**, *italic*, ~~strikethrough~~, `inline code`, code blocks, tables, lists, quotes, links, images, and horizontal rules
+> - **Advanced features**: Auto-scaling images, nested lists, multi-level quotes, syntax-highlighted code blocks
+> - **Cross-platform fonts**: Automatic Chinese font detection for Windows/macOS
+> - **Processing workflow**: Text files are automatically converted to PDF, then processed by MinerU
+
 
 ### Multimodal Elements
 - **Images**: Photographs, diagrams, charts, screenshots

@@ -255,6 +255,9 @@ class MineruParser:
         """
         Parse image document using MinerU 2.0
 
+        Note: MinerU 2.0 natively supports .png, .jpeg, .jpg formats.
+        Other formats (.bmp, .tiff, .tif, etc.) will be automatically converted to .png.
+
         Args:
             image_path: Path to the image file
             output_dir: Output directory path
@@ -270,6 +273,86 @@ class MineruParser:
             if not image_path.exists():
                 raise FileNotFoundError(f"Image file does not exist: {image_path}")
 
+            # Supported image formats by MinerU 2.0
+            mineru_supported_formats = {".png", ".jpeg", ".jpg"}
+
+            # All supported image formats (including those we can convert)
+            all_supported_formats = {
+                ".png",
+                ".jpeg",
+                ".jpg",
+                ".bmp",
+                ".tiff",
+                ".tif",
+                ".gif",
+                ".webp",
+            }
+
+            ext = image_path.suffix.lower()
+            if ext not in all_supported_formats:
+                raise ValueError(
+                    f"Unsupported image format: {ext}. Supported formats: {', '.join(all_supported_formats)}"
+                )
+
+            # Determine the actual image file to process
+            actual_image_path = image_path
+            temp_converted_file = None
+
+            # If format is not natively supported by MinerU, convert it
+            if ext not in mineru_supported_formats:
+                print(f"Converting {ext} image to PNG for MinerU compatibility...")
+
+                try:
+                    from PIL import Image
+                except ImportError:
+                    raise RuntimeError(
+                        "PIL/Pillow is required for image format conversion. "
+                        "Please install it using: pip install Pillow"
+                    )
+
+                # Create temporary directory for conversion
+                import tempfile
+
+                temp_dir = Path(tempfile.mkdtemp())
+                temp_converted_file = temp_dir / f"{image_path.stem}_converted.png"
+
+                try:
+                    # Open and convert image
+                    with Image.open(image_path) as img:
+                        # Handle different image modes
+                        if img.mode in ("RGBA", "LA", "P"):
+                            # For images with transparency or palette, convert to RGB first
+                            if img.mode == "P":
+                                img = img.convert("RGBA")
+
+                            # Create white background for transparent images
+                            background = Image.new("RGB", img.size, (255, 255, 255))
+                            if img.mode == "RGBA":
+                                background.paste(
+                                    img, mask=img.split()[-1]
+                                )  # Use alpha channel as mask
+                            else:
+                                background.paste(img)
+                            img = background
+                        elif img.mode not in ("RGB", "L"):
+                            # Convert other modes to RGB
+                            img = img.convert("RGB")
+
+                        # Save as PNG
+                        img.save(temp_converted_file, "PNG", optimize=True)
+                        print(
+                            f"Successfully converted {image_path.name} to PNG ({temp_converted_file.stat().st_size / 1024:.1f} KB)"
+                        )
+
+                        actual_image_path = temp_converted_file
+
+                except Exception as e:
+                    if temp_converted_file and temp_converted_file.exists():
+                        temp_converted_file.unlink()
+                    raise RuntimeError(
+                        f"Failed to convert image {image_path.name}: {str(e)}"
+                    )
+
             name_without_suff = image_path.stem
 
             # Prepare output directory
@@ -280,21 +363,31 @@ class MineruParser:
 
             base_output_dir.mkdir(parents=True, exist_ok=True)
 
-            # Run mineru command (images are processed with OCR method)
-            MineruParser._run_mineru_command(
-                input_path=image_path,
-                output_dir=base_output_dir,
-                method="ocr",  # Images require OCR method
-                lang=lang,
-                **kwargs,
-            )
+            try:
+                # Run mineru command (images are processed with OCR method)
+                MineruParser._run_mineru_command(
+                    input_path=actual_image_path,
+                    output_dir=base_output_dir,
+                    method="ocr",  # Images require OCR method
+                    lang=lang,
+                    **kwargs,
+                )
 
-            # Read the generated output files
-            content_list, md_content = MineruParser._read_output_files(
-                base_output_dir, name_without_suff
-            )
+                # Read the generated output files
+                content_list, md_content = MineruParser._read_output_files(
+                    base_output_dir, name_without_suff
+                )
 
-            return content_list, md_content
+                return content_list, md_content
+
+            finally:
+                # Clean up temporary converted file if it was created
+                if temp_converted_file and temp_converted_file.exists():
+                    try:
+                        temp_converted_file.unlink()
+                        temp_converted_file.parent.rmdir()  # Remove temp directory if empty
+                    except Exception:
+                        pass  # Ignore cleanup errors
 
         except Exception as e:
             print(f"Error in parse_image: {str(e)}")
@@ -310,8 +403,10 @@ class MineruParser:
         Note: This method requires LibreOffice to be installed separately for PDF conversion.
         MinerU 2.0 no longer includes built-in Office document conversion.
 
+        Supported formats: .doc, .docx, .ppt, .pptx, .xls, .xlsx
+
         Args:
-            doc_path: Path to the document file (.doc, .docx, .ppt, .pptx)
+            doc_path: Path to the document file (.doc, .docx, .ppt, .pptx, .xls, .xlsx)
             output_dir: Output directory path
             **kwargs: Additional parameters for mineru command
 
@@ -323,15 +418,70 @@ class MineruParser:
             if not doc_path.exists():
                 raise FileNotFoundError(f"Document file does not exist: {doc_path}")
 
+            # Supported office formats
+            supported_office_formats = {
+                ".doc",
+                ".docx",
+                ".ppt",
+                ".pptx",
+                ".xls",
+                ".xlsx",
+            }
+            if doc_path.suffix.lower() not in supported_office_formats:
+                raise ValueError(f"Unsupported office format: {doc_path.suffix}")
+
             # Check if LibreOffice is available
+            libreoffice_available = False
+            working_libreoffice_cmd = None
             try:
-                subprocess.run(
-                    ["libreoffice", "--version"], capture_output=True, check=True
+                result = subprocess.run(
+                    ["libreoffice", "--version"],
+                    capture_output=True,
+                    check=True,
+                    timeout=10,
                 )
-            except (subprocess.CalledProcessError, FileNotFoundError):
+                libreoffice_available = True
+                working_libreoffice_cmd = "libreoffice"
+                print(f"LibreOffice detected: {result.stdout.decode().strip()}")
+            except (
+                subprocess.CalledProcessError,
+                FileNotFoundError,
+                subprocess.TimeoutExpired,
+            ):
+                pass
+
+            # Try alternative commands for LibreOffice
+            if not libreoffice_available:
+                for cmd in ["soffice", "libreoffice"]:
+                    try:
+                        result = subprocess.run(
+                            [cmd, "--version"],
+                            capture_output=True,
+                            check=True,
+                            timeout=10,
+                        )
+                        libreoffice_available = True
+                        working_libreoffice_cmd = cmd
+                        print(
+                            f"LibreOffice detected with command '{cmd}': {result.stdout.decode().strip()}"
+                        )
+                        break
+                    except (
+                        subprocess.CalledProcessError,
+                        FileNotFoundError,
+                        subprocess.TimeoutExpired,
+                    ):
+                        continue
+
+            if not libreoffice_available:
                 raise RuntimeError(
-                    "LibreOffice is required for Office document conversion. "
-                    "Please install LibreOffice or convert the document to PDF manually. "
+                    "LibreOffice is required for Office document conversion but was not found.\n"
+                    "Please install LibreOffice:\n"
+                    "- Windows: Download from https://www.libreoffice.org/download/download/\n"
+                    "- macOS: brew install --cask libreoffice\n"
+                    "- Ubuntu/Debian: sudo apt-get install libreoffice\n"
+                    "- CentOS/RHEL: sudo yum install libreoffice\n"
+                    "Alternatively, convert the document to PDF manually.\n"
                     "MinerU 2.0 no longer includes built-in Office document conversion."
                 )
 
@@ -340,29 +490,73 @@ class MineruParser:
                 temp_path = Path(temp_dir)
 
                 # Convert to PDF using LibreOffice
-                print(f"Converting {doc_path.name} to PDF...")
-                cmd = [
-                    "libreoffice",
-                    "--headless",
-                    "--convert-to",
-                    "pdf",
-                    "--outdir",
-                    str(temp_path),
-                    str(doc_path),
-                ]
+                print(f"Converting {doc_path.name} to PDF using LibreOffice...")
 
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                if result.returncode != 0:
+                # Use the working LibreOffice command first, then try alternatives if it fails
+                commands_to_try = [working_libreoffice_cmd]
+                if working_libreoffice_cmd == "libreoffice":
+                    commands_to_try.append("soffice")
+                else:
+                    commands_to_try.append("libreoffice")
+
+                conversion_successful = False
+                for cmd in commands_to_try:
+                    try:
+                        convert_cmd = [
+                            cmd,
+                            "--headless",
+                            "--convert-to",
+                            "pdf",
+                            "--outdir",
+                            str(temp_path),
+                            str(doc_path),
+                        ]
+
+                        result = subprocess.run(
+                            convert_cmd,
+                            capture_output=True,
+                            text=True,
+                            timeout=60,  # 60 second timeout
+                        )
+
+                        if result.returncode == 0:
+                            conversion_successful = True
+                            print(f"Successfully converted {doc_path.name} to PDF")
+                            break
+                        else:
+                            print(
+                                f"LibreOffice command '{cmd}' failed: {result.stderr}"
+                            )
+                    except subprocess.TimeoutExpired:
+                        print(f"LibreOffice command '{cmd}' timed out")
+                    except Exception as e:
+                        print(f"LibreOffice command '{cmd}' failed with exception: {e}")
+
+                if not conversion_successful:
                     raise RuntimeError(
-                        f"LibreOffice conversion failed: {result.stderr}"
+                        f"LibreOffice conversion failed for {doc_path.name}. "
+                        f"Please check if the file is corrupted or try converting manually."
                     )
 
                 # Find the generated PDF
                 pdf_files = list(temp_path.glob("*.pdf"))
                 if not pdf_files:
-                    raise RuntimeError("PDF conversion failed - no PDF file generated")
+                    raise RuntimeError(
+                        f"PDF conversion failed for {doc_path.name} - no PDF file generated. "
+                        f"Please check LibreOffice installation or try manual conversion."
+                    )
 
                 pdf_path = pdf_files[0]
+                print(
+                    f"Generated PDF: {pdf_path.name} ({pdf_path.stat().st_size} bytes)"
+                )
+
+                # Validate the generated PDF
+                if pdf_path.stat().st_size < 100:  # Very small file, likely empty
+                    raise RuntimeError(
+                        "Generated PDF appears to be empty or corrupted. "
+                        "Original file may have issues or LibreOffice conversion failed."
+                    )
 
                 # Parse the converted PDF
                 return MineruParser.parse_pdf(
@@ -371,6 +565,536 @@ class MineruParser:
 
         except Exception as e:
             print(f"Error in parse_office_doc: {str(e)}")
+            raise
+
+    @staticmethod
+    def parse_text_file(
+        text_path: Union[str, Path], output_dir: Optional[str] = None, **kwargs
+    ) -> Tuple[List[Dict[str, Any]], str]:
+        """
+        Parse text file by first converting to PDF, then parsing with MinerU 2.0
+
+        Supported formats: .txt, .md
+
+        Args:
+            text_path: Path to the text file (.txt, .md)
+            output_dir: Output directory path
+            **kwargs: Additional parameters for mineru command
+
+        Returns:
+            Tuple[List[Dict[str, Any]], str]: Tuple containing (content list JSON, Markdown text)
+        """
+        try:
+            text_path = Path(text_path)
+            if not text_path.exists():
+                raise FileNotFoundError(f"Text file does not exist: {text_path}")
+
+            # Supported text formats
+            supported_text_formats = {".txt", ".md"}
+            if text_path.suffix.lower() not in supported_text_formats:
+                raise ValueError(f"Unsupported text format: {text_path.suffix}")
+
+            # Read the text content
+            try:
+                with open(text_path, "r", encoding="utf-8") as f:
+                    text_content = f.read()
+            except UnicodeDecodeError:
+                # Try with different encodings
+                for encoding in ["gbk", "latin-1", "cp1252"]:
+                    try:
+                        with open(text_path, "r", encoding=encoding) as f:
+                            text_content = f.read()
+                        print(f"Successfully read file with {encoding} encoding")
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                else:
+                    raise RuntimeError(
+                        f"Could not decode text file {text_path.name} with any supported encoding"
+                    )
+
+            # Create temporary directory for PDF conversion
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir)
+                pdf_path = temp_path / f"{text_path.stem}.pdf"
+
+                # Convert text to PDF
+                print(f"Converting {text_path.name} to PDF...")
+
+                try:
+                    from reportlab.lib.pagesizes import A4
+                    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+                    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                    from reportlab.lib.units import inch
+                    from reportlab.pdfbase import pdfmetrics
+                    import re
+
+                    # Create PDF document
+                    doc = SimpleDocTemplate(
+                        str(pdf_path),
+                        pagesize=A4,
+                        leftMargin=inch,
+                        rightMargin=inch,
+                        topMargin=inch,
+                        bottomMargin=inch,
+                    )
+
+                    # Get styles
+                    styles = getSampleStyleSheet()
+                    normal_style = styles["Normal"]
+                    heading_style = styles["Heading1"]
+
+                    # Try to register a font that supports Chinese characters
+                    try:
+                        # Try to use system fonts that support Chinese
+                        import platform
+
+                        system = platform.system()
+                        if system == "Windows":
+                            # Try common Windows fonts
+                            for font_name in ["SimSun", "SimHei", "Microsoft YaHei"]:
+                                try:
+                                    from reportlab.pdfbase.cidfonts import (
+                                        UnicodeCIDFont,
+                                    )
+
+                                    pdfmetrics.registerFont(UnicodeCIDFont(font_name))
+                                    normal_style.fontName = font_name
+                                    heading_style.fontName = font_name
+                                    break
+                                except Exception:
+                                    continue
+                        elif system == "Darwin":  # macOS
+                            for font_name in ["STSong-Light", "STHeiti"]:
+                                try:
+                                    from reportlab.pdfbase.cidfonts import (
+                                        UnicodeCIDFont,
+                                    )
+
+                                    pdfmetrics.registerFont(UnicodeCIDFont(font_name))
+                                    normal_style.fontName = font_name
+                                    heading_style.fontName = font_name
+                                    break
+                                except Exception:
+                                    continue
+                    except Exception:
+                        pass  # Use default fonts if Chinese font setup fails
+
+                    # Build content
+                    story = []
+
+                    # Handle markdown or plain text
+                    if text_path.suffix.lower() == ".md":
+                        # Complete markdown parsing with full feature support
+                        import re
+                        from reportlab.platypus import (
+                            Image as RLImage,
+                            Table,
+                            TableStyle,
+                        )
+                        from reportlab.lib import colors
+
+                        lines = text_content.split("\n")
+                        i = 0
+                        in_code_block = False
+                        code_lines = []
+                        in_table = False
+                        table_lines = []
+
+                        while i < len(lines):
+                            line = lines[i].rstrip()
+
+                            # Handle code blocks
+                            if line.startswith("```"):
+                                if not in_code_block:
+                                    # Start code block
+                                    in_code_block = True
+                                    code_lines = []
+                                else:
+                                    # End code block
+                                    in_code_block = False
+                                    if code_lines:
+                                        code_style = ParagraphStyle(
+                                            name="Code",
+                                            parent=normal_style,
+                                            fontName="Courier",
+                                            fontSize=9,
+                                            backgroundColor=colors.lightgrey,
+                                            borderColor=colors.grey,
+                                            borderWidth=1,
+                                            borderPadding=6,
+                                            leftIndent=12,
+                                            rightIndent=12,
+                                        )
+                                        code_text = "\n".join(code_lines)
+                                        story.append(Paragraph(code_text, code_style))
+                                        story.append(Spacer(1, 12))
+                                i += 1
+                                continue
+
+                            if in_code_block:
+                                code_lines.append(line)
+                                i += 1
+                                continue
+
+                            # Handle tables
+                            if (
+                                "|" in line
+                                and line.strip().startswith("|")
+                                and line.strip().endswith("|")
+                            ):
+                                if not in_table:
+                                    in_table = True
+                                    table_lines = []
+                                table_lines.append(line)
+                                i += 1
+                                continue
+                            elif in_table:
+                                # End of table
+                                in_table = False
+                                if (
+                                    len(table_lines) >= 2
+                                ):  # Need at least header and separator
+                                    try:
+                                        # Parse table
+                                        table_data = []
+                                        for table_line in table_lines:
+                                            if (
+                                                "---" in table_line
+                                                or "===" in table_line
+                                            ):
+                                                continue  # Skip separator line
+                                            cells = [
+                                                cell.strip()
+                                                for cell in table_line.split("|")[1:-1]
+                                            ]
+                                            if cells:
+                                                table_data.append(cells)
+
+                                        if table_data:
+                                            # Create table
+                                            table = Table(table_data)
+                                            table.setStyle(
+                                                TableStyle(
+                                                    [
+                                                        (
+                                                            "BACKGROUND",
+                                                            (0, 0),
+                                                            (-1, 0),
+                                                            colors.grey,
+                                                        ),
+                                                        (
+                                                            "TEXTCOLOR",
+                                                            (0, 0),
+                                                            (-1, 0),
+                                                            colors.whitesmoke,
+                                                        ),
+                                                        (
+                                                            "ALIGN",
+                                                            (0, 0),
+                                                            (-1, -1),
+                                                            "LEFT",
+                                                        ),
+                                                        (
+                                                            "FONTNAME",
+                                                            (0, 0),
+                                                            (-1, 0),
+                                                            "Helvetica-Bold",
+                                                        ),
+                                                        (
+                                                            "FONTSIZE",
+                                                            (0, 0),
+                                                            (-1, 0),
+                                                            10,
+                                                        ),
+                                                        (
+                                                            "BOTTOMPADDING",
+                                                            (0, 0),
+                                                            (-1, 0),
+                                                            12,
+                                                        ),
+                                                        (
+                                                            "BACKGROUND",
+                                                            (0, 1),
+                                                            (-1, -1),
+                                                            colors.beige,
+                                                        ),
+                                                        (
+                                                            "GRID",
+                                                            (0, 0),
+                                                            (-1, -1),
+                                                            1,
+                                                            colors.black,
+                                                        ),
+                                                    ]
+                                                )
+                                            )
+                                            story.append(table)
+                                            story.append(Spacer(1, 12))
+                                    except Exception:
+                                        # Fallback to text if table parsing fails
+                                        for table_line in table_lines:
+                                            story.append(
+                                                Paragraph(table_line, normal_style)
+                                            )
+                                continue
+
+                            # Empty lines
+                            if not line.strip():
+                                story.append(Spacer(1, 12))
+                                i += 1
+                                continue
+
+                            # Headers
+                            if line.startswith("#"):
+                                level = len(line) - len(line.lstrip("#"))
+                                header_text = line.lstrip("#").strip()
+                                if header_text:
+                                    header_style = ParagraphStyle(
+                                        name=f"Heading{level}",
+                                        parent=heading_style,
+                                        fontSize=max(16 - level, 10),
+                                        spaceAfter=8,
+                                        spaceBefore=16 if level <= 2 else 12,
+                                    )
+                                    story.append(
+                                        Paragraph(
+                                            MineruParser._process_inline_markdown(
+                                                header_text
+                                            ),
+                                            header_style,
+                                        )
+                                    )
+
+                            # Horizontal rules
+                            elif re.match(r"^---+$|^\*\*\*+$|^___+$", line):
+                                from reportlab.platypus import HRFlowable
+
+                                story.append(
+                                    HRFlowable(
+                                        width="100%",
+                                        thickness=1,
+                                        lineCap="round",
+                                        color=colors.grey,
+                                    )
+                                )
+                                story.append(Spacer(1, 12))
+
+                            # Images
+                            elif line.startswith("![") and "](" in line and ")" in line:
+                                match = re.search(r"!\[([^\]]*)\]\(([^)]+)\)", line)
+                                if match:
+                                    alt_text = match.group(1)
+                                    img_src = match.group(2)
+
+                                    # Handle relative paths
+                                    if not Path(img_src).is_absolute():
+                                        img_path = text_path.parent / img_src
+                                    else:
+                                        img_path = Path(img_src)
+
+                                    if img_path.exists():
+                                        try:
+                                            # Auto-scale image
+                                            from PIL import Image as PILImage
+
+                                            with PILImage.open(img_path) as pil_img:
+                                                img_width, img_height = pil_img.size
+                                                max_width = 5 * inch
+                                                max_height = 4 * inch
+
+                                                # Calculate scaled dimensions
+                                                scale = min(
+                                                    max_width / img_width,
+                                                    max_height / img_height,
+                                                    1.0,
+                                                )
+                                                final_width = img_width * scale
+                                                final_height = img_height * scale
+
+                                            img = RLImage(
+                                                str(img_path),
+                                                width=final_width,
+                                                height=final_height,
+                                            )
+                                            story.append(img)
+
+                                            if alt_text:
+                                                caption_style = ParagraphStyle(
+                                                    name="Caption",
+                                                    parent=normal_style,
+                                                    fontSize=9,
+                                                    textColor=colors.grey,
+                                                    alignment=1,  # Center
+                                                )
+                                                story.append(
+                                                    Paragraph(
+                                                        f"Image: {alt_text}",
+                                                        caption_style,
+                                                    )
+                                                )
+                                            story.append(Spacer(1, 12))
+                                            print(f"  📷 Added image: {img_path.name}")
+                                        except Exception as e:
+                                            story.append(
+                                                Paragraph(
+                                                    f"[Image loading failed: {alt_text}]",
+                                                    normal_style,
+                                                )
+                                            )
+                                            print(
+                                                f"  ⚠️ Failed to load image {img_path}: {e}"
+                                            )
+                                    else:
+                                        story.append(
+                                            Paragraph(
+                                                f"[Image not found: {alt_text} - {img_src}]",
+                                                normal_style,
+                                            )
+                                        )
+                                        print(f"  ⚠️ Image not found: {img_src}")
+
+                            # Block quotes
+                            elif line.startswith(">"):
+                                quote_text = line.lstrip(">").strip()
+                                quote_style = ParagraphStyle(
+                                    name="Quote",
+                                    parent=normal_style,
+                                    leftIndent=24,
+                                    rightIndent=24,
+                                    fontSize=10,
+                                    textColor=colors.darkgrey,
+                                    borderColor=colors.grey,
+                                    borderWidth=0,
+                                    borderPadding=8,
+                                    backgroundColor=colors.lightgrey,
+                                )
+                                story.append(
+                                    Paragraph(
+                                        MineruParser._process_inline_markdown(
+                                            quote_text
+                                        ),
+                                        quote_style,
+                                    )
+                                )
+                                story.append(Spacer(1, 6))
+
+                            # Unordered lists
+                            elif re.match(r"^[\s]*[-\*\+]\s+", line):
+                                indent_level = len(line) - len(line.lstrip())
+                                list_text = re.sub(r"^[\s]*[-\*\+]\s+", "", line)
+                                list_style = ParagraphStyle(
+                                    name="List",
+                                    parent=normal_style,
+                                    leftIndent=12 + indent_level,
+                                    bulletIndent=6 + indent_level,
+                                    bulletFontName="Symbol",
+                                )
+                                story.append(
+                                    Paragraph(
+                                        f"• {MineruParser._process_inline_markdown(list_text)}",
+                                        list_style,
+                                    )
+                                )
+                                story.append(Spacer(1, 3))
+
+                            # Ordered lists
+                            elif re.match(r"^[\s]*\d+\.\s+", line):
+                                indent_level = len(line) - len(line.lstrip())
+                                match = re.match(r"^[\s]*(\d+)\.\s+(.+)", line)
+                                if match:
+                                    num = match.group(1)
+                                    list_text = match.group(2)
+                                    list_style = ParagraphStyle(
+                                        name="OrderedList",
+                                        parent=normal_style,
+                                        leftIndent=12 + indent_level,
+                                        bulletIndent=6 + indent_level,
+                                    )
+                                    story.append(
+                                        Paragraph(
+                                            f"{num}. {MineruParser._process_inline_markdown(list_text)}",
+                                            list_style,
+                                        )
+                                    )
+                                    story.append(Spacer(1, 3))
+
+                            # Regular paragraphs
+                            else:
+                                processed_text = MineruParser._process_inline_markdown(
+                                    line
+                                )
+                                story.append(Paragraph(processed_text, normal_style))
+                                story.append(Spacer(1, 6))
+
+                            i += 1
+
+                    else:
+                        # Handle plain text files (.txt)
+                        print(
+                            f"Processing plain text file with {len(text_content)} characters..."
+                        )
+
+                        # Split text into lines and process each line
+                        lines = text_content.split("\n")
+                        line_count = 0
+
+                        for line in lines:
+                            line = line.rstrip()
+                            line_count += 1
+
+                            # Empty lines
+                            if not line.strip():
+                                story.append(Spacer(1, 6))
+                                continue
+
+                            # Regular text lines
+                            # Escape special characters for ReportLab
+                            safe_line = (
+                                line.replace("&", "&amp;")
+                                .replace("<", "&lt;")
+                                .replace(">", "&gt;")
+                            )
+
+                            # Create paragraph
+                            story.append(Paragraph(safe_line, normal_style))
+                            story.append(Spacer(1, 3))
+
+                        print(f"Added {line_count} lines to PDF")
+
+                        # If no content was added, add a placeholder
+                        if not story:
+                            story.append(Paragraph("(Empty text file)", normal_style))
+
+                    # Build PDF
+                    doc.build(story)
+                    print(
+                        f"Successfully converted {text_path.name} to PDF ({pdf_path.stat().st_size / 1024:.1f} KB)"
+                    )
+
+                except ImportError:
+                    raise RuntimeError(
+                        "reportlab is required for text-to-PDF conversion. "
+                        "Please install it using: pip install reportlab"
+                    )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to convert text file {text_path.name} to PDF: {str(e)}"
+                    )
+
+                # Validate the generated PDF
+                if not pdf_path.exists() or pdf_path.stat().st_size < 100:
+                    raise RuntimeError(
+                        f"PDF conversion failed for {text_path.name} - generated PDF is empty or corrupted."
+                    )
+
+                # Parse the converted PDF
+                return MineruParser.parse_pdf(
+                    pdf_path=pdf_path, output_dir=output_dir, **kwargs
+                )
+
+        except Exception as e:
+            print(f"Error in parse_text_file: {str(e)}")
             raise
 
     @staticmethod
@@ -405,14 +1129,16 @@ class MineruParser:
         # Choose appropriate parser based on file type
         if ext == ".pdf":
             return MineruParser.parse_pdf(file_path, output_dir, method, lang, **kwargs)
-        elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
+        elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".gif", ".webp"]:
             return MineruParser.parse_image(file_path, output_dir, lang, **kwargs)
-        elif ext in [".doc", ".docx", ".ppt", ".pptx"]:
+        elif ext in [".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx"]:
             print(
                 f"Warning: Office document detected ({ext}). "
                 f"MinerU 2.0 requires conversion to PDF first."
             )
             return MineruParser.parse_office_doc(file_path, output_dir, **kwargs)
+        elif ext in [".txt", ".md"]:
+            return MineruParser.parse_text_file(file_path, output_dir, **kwargs)
         else:
             # For unsupported file types, try as PDF
             print(
@@ -441,6 +1167,50 @@ class MineruParser:
                 "Please install it using: pip install -U 'mineru[core]'"
             )
             return False
+
+    @staticmethod
+    def _process_inline_markdown(text: str) -> str:
+        """
+        Process inline markdown formatting (bold, italic, code, links)
+
+        Args:
+            text: Raw text with markdown formatting
+
+        Returns:
+            Text with ReportLab markup
+        """
+        import re
+
+        # Escape special characters for ReportLab
+        text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+        # Bold text: **text** or __text__
+        text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text)
+        text = re.sub(r"__(.*?)__", r"<b>\1</b>", text)
+
+        # Italic text: *text* or _text_ (but not in the middle of words)
+        text = re.sub(r"(?<!\w)\*([^*\n]+?)\*(?!\w)", r"<i>\1</i>", text)
+        text = re.sub(r"(?<!\w)_([^_\n]+?)_(?!\w)", r"<i>\1</i>", text)
+
+        # Inline code: `code`
+        text = re.sub(
+            r"`([^`]+?)`",
+            r'<font name="Courier" size="9" color="darkred">\1</font>',
+            text,
+        )
+
+        # Links: [text](url) - convert to text with URL annotation
+        def link_replacer(match):
+            link_text = match.group(1)
+            url = match.group(2)
+            return f'<link href="{url}" color="blue"><u>{link_text}</u></link>'
+
+        text = re.sub(r"\[([^\]]+?)\]\(([^)]+?)\)", link_replacer, text)
+
+        # Strikethrough: ~~text~~
+        text = re.sub(r"~~(.*?)~~", r"<strike>\1</strike>", text)
+
+        return text
 
 
 def main():

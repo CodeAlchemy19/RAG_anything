@@ -187,12 +187,21 @@ class RAGAnything:
                 content_list, md_content = MineruParser.parse_pdf(
                     pdf_path=file_path, output_dir=output_dir, method=parse_method
                 )
-            elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
+            elif ext in [
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".bmp",
+                ".tiff",
+                ".tif",
+                ".gif",
+                ".webp",
+            ]:
                 self.logger.info("Detected image file, using image parser...")
                 content_list, md_content = MineruParser.parse_image(
                     image_path=file_path, output_dir=output_dir
                 )
-            elif ext in [".doc", ".docx", ".ppt", ".pptx"]:
+            elif ext in [".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx"]:
                 self.logger.info("Detected Office document, using Office parser...")
                 content_list, md_content = MineruParser.parse_office_doc(
                     doc_path=file_path, output_dir=output_dir
@@ -486,10 +495,14 @@ class RAGAnything:
             ".bmp",
             ".tiff",
             ".tif",
+            ".gif",
+            ".webp",
             ".doc",
             ".docx",
             ".ppt",
             ".pptx",
+            ".xls",
+            ".xlsx",
             ".txt",
             ".md",
         }
