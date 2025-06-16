@@ -10,7 +10,7 @@
 
 <div>
     <p>
-        <a href='https://github.com/HKUDS/RAGAnything'><img src='https://img.shields.io/badge/项目-主页-Green'></a>
+        <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/项目-主页-Green'></a>
         <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/arXiv-2410.05779-b31b1b'></a>
         <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/基于-LightRAG-blue'></a>
     </p>
@@ -36,7 +36,7 @@
 
 **RAG-Anything**是一个综合性多模态文档处理RAG系统。该系统能够无缝处理和查询包含文本、图像、表格、公式等多模态内容的复杂文档，提供完整的检索增强(RAG)生成解决方案。
 
-### Key Features
+### 核心特性
 
 - **🔄 端到端多模态处理流水线**：提供从文档解析到多模态查询响应的完整处理链路，确保系统的一体化运行。
 - **📄 多格式文档支持**：支持PDF、Office文档（DOC/DOCX/PPT/PPTX）、图像等主流文档格式的统一处理和解析。
@@ -124,18 +124,37 @@ pip install raganything
 
 #### 选项2：从源码安装
 ```bash
-git clone https://github.com/HKUDS/RAGAnything.git
+git clone https://github.com/HKUDS/RAG-Anything.git
 cd RAGAnything
 pip install -e .
 ```
 
 #### MinerU依赖（可选）
-用于文档解析功能：
+用于MinerU 2.0文档解析功能：
 ```bash
-pip install "magic-pdf[full]>=1.2.2" huggingface_hub
+# 安装MinerU 2.0
+pip install -U 'mineru[core]'
+
+# 或使用uv（更快）
+uv pip install -U 'mineru[core]'
 ```
 
-下载MinerU模型：
+> **⚠️ MinerU 2.0重要变化：**
+> - 包名从 `magic-pdf` 改为 `mineru`
+> - 移除了LibreOffice集成（Office文档需要手动转换为PDF）
+> - 简化的命令行界面，使用 `mineru` 命令
+> - 新的后端选项和性能改进
+
+检查MinerU安装：
+```bash
+# 验证安装
+mineru --version
+
+# 检查是否正确配置
+python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ MinerU安装正常' if rag.check_mineru_installation() else '❌ MinerU安装有问题')"
+```
+
+模型在首次使用时自动下载。手动下载（如果需要）：
 ```bash
 # 选项1：Hugging Face
 wget https://github.com/opendatalab/MinerU/raw/master/scripts/download_models_hf.py
@@ -224,7 +243,7 @@ if __name__ == "__main__":
 ```python
 import asyncio
 from lightrag import LightRAG
-from lightrag.modalprocessors import ImageModalProcessor, TableModalProcessor
+from raganything.modalprocessors import ImageModalProcessor, TableModalProcessor
 
 async def process_multimodal_content():
     # 初始化LightRAG
@@ -344,19 +363,47 @@ OPENAI_BASE_URL=your_base_url  # 可选
 
 ### MinerU配置
 
-系统自动使用用户目录下的MinerU配置文件 `magic-pdf.json`。你可以自定义：
-- 模型目录路径
-- OCR引擎设置
-- GPU加速选项
-- 缓存设置
+MinerU 2.0使用简化的配置方式：
+
+```bash
+# MinerU 2.0使用命令行参数而不是配置文件
+# 查看可用选项：
+mineru --help
+
+# 常用配置：
+mineru -p input.pdf -o output_dir -m auto    # 自动解析模式
+mineru -p input.pdf -o output_dir -m ocr     # OCR重点解析
+mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU加速
+```
+
+你也可以通过RAGAnything参数配置MinerU：
+```python
+# 配置解析行为
+await rag.process_document_complete(
+    file_path="document.pdf",
+    parse_method="auto",     # 或 "ocr", "txt"
+    device="cuda",           # GPU加速
+    backend="pipeline",      # 解析后端
+    lang="ch"               # 语言优化
+)
+```
+
+> **注意**：MinerU 2.0不再使用 `magic-pdf.json` 配置文件。所有设置现在通过命令行参数或函数参数传递。
 
 ## 🧪 支持的内容类型
 
 ### 文档格式
 - **PDF**：研究论文、报告、演示文稿
-- **Office文档**：DOC、DOCX、PPT、PPTX
+- **Office文档**：DOC、DOCX、PPT、PPTX ⚠️
 - **图像**：JPG、PNG、BMP、TIFF
 - **文本文件**：TXT、MD
+
+> **⚠️ MinerU 2.0中的Office文档处理：**
+>
+> 由于MinerU 2.0的架构变化，Office文档需要额外设置：
+> - **自动转换**：需要安装LibreOffice进行PDF转换
+> - **手动转换**：预先转换为PDF以获得最佳性能
+> - **推荐方式**：尽可能使用PDF格式以获得最佳效果
 
 ### 多模态元素
 - **图像**：照片、图表、示意图、截图
@@ -399,7 +446,7 @@ OPENAI_BASE_URL=your_base_url  # 可选
 
 感谢所有贡献者！
 
-<!-- <a href="https://github.com/HKUDS/RAGAnything/graphs/contributors">
+<!-- <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=HKUDS/RAGAnything" />
 </a> -->
 
@@ -407,8 +454,8 @@ OPENAI_BASE_URL=your_base_url  # 可选
 
 <div align="center">
     <p>
-        <a href="https://github.com/HKUDS/RAGAnything">⭐ 在GitHub上为我们点星</a> |
-        <a href="https://github.com/HKUDS/RAGAnything/issues">🐛 报告问题</a> |
-        <a href="https://github.com/HKUDS/RAGAnything/discussions">💬 讨论交流</a>
+        <a href="https://github.com/HKUDS/RAG-Anything">⭐ 在GitHub上为我们点星</a> |
+        <a href="https://github.com/HKUDS/RAG-Anything/issues">🐛 报告问题</a> |
+        <a href="https://github.com/HKUDS/RAG-Anything/discussions">💬 讨论交流</a>
     </p>
 </div>

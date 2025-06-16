@@ -2,5 +2,10 @@ huggingface_hub
 # LightRAG packages
 lightrag-hku
 
-# MinerU packages
-magic-pdf[full]>=1.2.2
+# MinerU 2.0 packages (replaces magic-pdf)
+mineru[core]
+
+# Note: MinerU 2.0 has breaking changes from magic-pdf
+# - Package name changed from magic-pdf to mineru
+# - LibreOffice integration removed
+# - Simplified command-line interface

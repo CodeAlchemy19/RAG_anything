@@ -2,17 +2,21 @@
 """
 MinerU Document Parser Utility
 
-This module provides functionality for parsing PDF, image and office documents using MinerU library,
+This module provides functionality for parsing PDF and image documents using MinerU 2.0 library,
 and converts the parsing results into markdown and JSON formats
+
+Note: MinerU 2.0 no longer includes LibreOffice document conversion module.
+For Office documents (.doc, .docx, .ppt, .pptx), please convert them to PDF format first.
 """
 
 from __future__ import annotations
 
 __all__ = ["MineruParser"]
 
-import os
 import json
 import argparse
+import subprocess
+import tempfile
 from pathlib import Path
 from typing import (
     Dict,
@@ -22,119 +26,185 @@ from typing import (
     Tuple,
     Any,
     TypeVar,
-    cast,
-    TYPE_CHECKING,
-    ClassVar,
 )
-
-# Type stubs for magic_pdf
-FileBasedDataWriter = Any
-FileBasedDataReader = Any
-PymuDocDataset = Any
-InferResult = Any
-PipeResult = Any
-SupportedPdfParseMethod = Any
-doc_analyze = Any
-read_local_office = Any
-read_local_images = Any
-
-if TYPE_CHECKING:
-    from magic_pdf.data.data_reader_writer import (
-        FileBasedDataWriter,
-        FileBasedDataReader,
-    )
-    from magic_pdf.data.dataset import PymuDocDataset
-    from magic_pdf.model.doc_analyze_by_custom_model import doc_analyze
-    from magic_pdf.config.enums import SupportedPdfParseMethod
-    from magic_pdf.data.read_api import read_local_office, read_local_images
-else:
-    # MinerU imports
-    from magic_pdf.data.data_reader_writer import (
-        FileBasedDataWriter,
-        FileBasedDataReader,
-    )
-    from magic_pdf.data.dataset import PymuDocDataset
-    from magic_pdf.model.doc_analyze_by_custom_model import doc_analyze
-    from magic_pdf.config.enums import SupportedPdfParseMethod
-    from magic_pdf.data.read_api import read_local_office, read_local_images
 
 T = TypeVar("T")
 
 
 class MineruParser:
     """
-    MinerU document parsing utility class
+    MinerU 2.0 document parsing utility class
 
-    Supports parsing PDF, image and office documents (like Word, PPT, etc.),
-    converting the content into structured data and generating markdown and JSON output
+    Supports parsing PDF and image documents, converting the content into structured data
+    and generating markdown and JSON output.
+
+    Note: Office documents are no longer directly supported. Please convert them to PDF first.
     """
 
-    __slots__: ClassVar[Tuple[str, ...]] = ()
+    __slots__ = ()
 
     def __init__(self) -> None:
         """Initialize MineruParser"""
         pass
 
     @staticmethod
-    def safe_write(
-        writer: Any,
-        content: Union[str, bytes, Dict[str, Any], List[Any]],
-        filename: str,
+    def _run_mineru_command(
+        input_path: Union[str, Path],
+        output_dir: Union[str, Path],
+        method: str = "auto",
+        lang: Optional[str] = None,
+        backend: str = "pipeline",
+        start_page: Optional[int] = None,
+        end_page: Optional[int] = None,
+        formula: bool = True,
+        table: bool = True,
+        device: Optional[str] = None,
+        source: str = "huggingface",
     ) -> None:
         """
-        Safely write content to a file, ensuring the filename is valid
+        Run mineru command line tool
 
         Args:
-            writer: The writer object to use
-            content: The content to write
-            filename: The filename to write to
+            input_path: Path to input file or directory
+            output_dir: Output directory path
+            method: Parsing method (auto, txt, ocr)
+            lang: Document language for OCR optimization
+            backend: Parsing backend
+            start_page: Starting page number (0-based)
+            end_page: Ending page number (0-based)
+            formula: Enable formula parsing
+            table: Enable table parsing
+            device: Inference device
+            source: Model source
         """
-        # Ensure the filename isn't too long
-        if len(filename) > 200:  # Most filesystems have limits around 255 characters
-            # Truncate the filename while keeping the extension
-            base, ext = os.path.splitext(filename)
-            filename = base[:190] + ext  # Leave room for the extension and some margin
+        cmd = [
+            "mineru",
+            "-p",
+            str(input_path),
+            "-o",
+            str(output_dir),
+            "-m",
+            method,
+            "-b",
+            backend,
+            "--source",
+            source,
+        ]
 
-        # Handle specific content types
-        if isinstance(content, str):
-            # Ensure str content is encoded to bytes if required
+        if lang:
+            cmd.extend(["-l", lang])
+        if start_page is not None:
+            cmd.extend(["-s", str(start_page)])
+        if end_page is not None:
+            cmd.extend(["-e", str(end_page)])
+        if not formula:
+            cmd.extend(["-f", "false"])
+        if not table:
+            cmd.extend(["-t", "false"])
+        if device:
+            cmd.extend(["-d", device])
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            print("MinerU command executed successfully")
+            if result.stdout:
+                print(f"Output: {result.stdout}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error running mineru command: {e}")
+            if e.stderr:
+                print(f"Error details: {e.stderr}")
+            raise
+        except FileNotFoundError:
+            raise RuntimeError(
+                "mineru command not found. Please ensure MinerU 2.0 is properly installed:\n"
+                "pip install -U 'mineru[core]' or uv pip install -U 'mineru[core]'"
+            )
+
+    @staticmethod
+    def _read_output_files(
+        output_dir: Path, file_stem: str
+    ) -> Tuple[List[Dict[str, Any]], str]:
+        """
+        Read the output files generated by mineru
+
+        Args:
+            output_dir: Output directory
+            file_stem: File name without extension
+
+        Returns:
+            Tuple containing (content list JSON, Markdown text)
+        """
+        # Look for the generated files
+        md_file = output_dir / f"{file_stem}.md"
+        json_file = (
+            output_dir / f"{file_stem}.json"
+        )  # MinerU 2.0 uses .json instead of _content_list.json
+
+        # Try alternative naming patterns if files not found
+        if not md_file.exists():
+            # Check for files in subdirectory (MinerU 2.0 may create subdirectories)
+            subdir = output_dir / file_stem
+            if subdir.exists():
+                md_file = subdir / f"{file_stem}.md"
+                json_file = subdir / f"{file_stem}.json"
+
+        # Read markdown content
+        md_content = ""
+        if md_file.exists():
             try:
-                writer.write(content, filename)
-            except TypeError:
-                # If the writer expects bytes, convert string to bytes
-                writer.write(content.encode("utf-8"), filename)
-        else:
-            # For dict/list content, always encode as JSON string first
-            if isinstance(content, (dict, list)):
+                with open(md_file, "r", encoding="utf-8") as f:
+                    md_content = f.read()
+            except Exception as e:
+                print(f"Warning: Could not read markdown file {md_file}: {e}")
+
+        # Read JSON content list
+        content_list = []
+        if json_file.exists():
+            try:
+                with open(json_file, "r", encoding="utf-8") as f:
+                    content_list = json.load(f)
+            except Exception as e:
+                print(f"Warning: Could not read JSON file {json_file}: {e}")
+
+        # If standard files not found, look for any .md and .json files in the directory
+        if not md_content and not content_list:
+            for file_path in output_dir.rglob("*.md"):
                 try:
-                    writer.write(
-                        json.dumps(content, ensure_ascii=False, indent=4), filename
-                    )
-                except TypeError:
-                    # If the writer expects bytes, convert JSON string to bytes
-                    writer.write(
-                        json.dumps(content, ensure_ascii=False, indent=4).encode(
-                            "utf-8"
-                        ),
-                        filename,
-                    )
-            else:
-                # Regular content (assumed to be bytes or compatible)
-                writer.write(content, filename)
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        md_content = f.read()
+                    break
+                except Exception:
+                    continue
+
+            for file_path in output_dir.rglob("*.json"):
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, list):  # Likely content list
+                            content_list = data
+                            break
+                except Exception:
+                    continue
+
+        return content_list, md_content
 
     @staticmethod
     def parse_pdf(
         pdf_path: Union[str, Path],
         output_dir: Optional[str] = None,
-        use_ocr: bool = False,
+        method: str = "auto",
+        lang: Optional[str] = None,
+        **kwargs,
     ) -> Tuple[List[Dict[str, Any]], str]:
         """
-        Parse PDF document
+        Parse PDF document using MinerU 2.0
 
         Args:
             pdf_path: Path to the PDF file
             output_dir: Output directory path
-            use_ocr: Whether to force OCR parsing
+            method: Parsing method (auto, txt, ocr)
+            lang: Document language for OCR optimization
+            **kwargs: Additional parameters for mineru command
 
         Returns:
             Tuple[List[Dict[str, Any]], str]: Tuple containing (content list JSON, Markdown text)
@@ -142,198 +212,54 @@ class MineruParser:
         try:
             # Convert to Path object for easier handling
             pdf_path = Path(pdf_path)
+            if not pdf_path.exists():
+                raise FileNotFoundError(f"PDF file does not exist: {pdf_path}")
+
             name_without_suff = pdf_path.stem
 
-            # Prepare output directories - ensure file name is in path
+            # Prepare output directory
             if output_dir:
                 base_output_dir = Path(output_dir)
-                local_md_dir = base_output_dir / name_without_suff
             else:
-                local_md_dir = pdf_path.parent / name_without_suff
+                base_output_dir = pdf_path.parent / "mineru_output"
 
-            local_image_dir = local_md_dir / "images"
-            image_dir = local_image_dir.name
+            base_output_dir.mkdir(parents=True, exist_ok=True)
 
-            # Create directories
-            os.makedirs(local_image_dir, exist_ok=True)
-            os.makedirs(local_md_dir, exist_ok=True)
+            # Run mineru command
+            MineruParser._run_mineru_command(
+                input_path=pdf_path,
+                output_dir=base_output_dir,
+                method=method,
+                lang=lang,
+                **kwargs,
+            )
 
-            # Initialize writers and reader
-            image_writer = FileBasedDataWriter(str(local_image_dir))  # type: ignore
-            md_writer = FileBasedDataWriter(str(local_md_dir))  # type: ignore
-            reader = FileBasedDataReader("")  # type: ignore
+            # Read the generated output files
+            content_list, md_content = MineruParser._read_output_files(
+                base_output_dir, name_without_suff
+            )
 
-            # Read PDF bytes
-            pdf_bytes = reader.read(str(pdf_path))  # type: ignore
-
-            # Create dataset instance
-            ds = PymuDocDataset(pdf_bytes)  # type: ignore
-
-            # Process based on PDF type and user preference
-            if use_ocr or ds.classify() == SupportedPdfParseMethod.OCR:  # type: ignore
-                infer_result = ds.apply(doc_analyze, ocr=True)  # type: ignore
-                pipe_result = infer_result.pipe_ocr_mode(image_writer)  # type: ignore
-            else:
-                infer_result = ds.apply(doc_analyze, ocr=False)  # type: ignore
-                pipe_result = infer_result.pipe_txt_mode(image_writer)  # type: ignore
-
-            # Draw visualizations
-            try:
-                infer_result.draw_model(
-                    os.path.join(local_md_dir, f"{name_without_suff}_model.pdf")
-                )  # type: ignore
-                pipe_result.draw_layout(
-                    os.path.join(local_md_dir, f"{name_without_suff}_layout.pdf")
-                )  # type: ignore
-                pipe_result.draw_span(
-                    os.path.join(local_md_dir, f"{name_without_suff}_spans.pdf")
-                )  # type: ignore
-            except Exception as e:
-                print(f"Warning: Failed to draw visualizations: {str(e)}")
-
-            # Get data using API methods
-            md_content = pipe_result.get_markdown(image_dir)  # type: ignore
-            content_list = pipe_result.get_content_list(image_dir)  # type: ignore
-
-            # Save files using dump methods (consistent with API)
-            pipe_result.dump_md(md_writer, f"{name_without_suff}.md", image_dir)  # type: ignore
-            pipe_result.dump_content_list(
-                md_writer, f"{name_without_suff}_content_list.json", image_dir
-            )  # type: ignore
-            pipe_result.dump_middle_json(md_writer, f"{name_without_suff}_middle.json")  # type: ignore
-
-            # Save model result - convert JSON string to bytes before writing
-            model_inference_result = infer_result.get_infer_res()  # type: ignore
-            json_str = json.dumps(model_inference_result, ensure_ascii=False, indent=4)
-
-            try:
-                # Try to write to a file manually to avoid FileBasedDataWriter issues
-                model_file_path = os.path.join(
-                    local_md_dir, f"{name_without_suff}_model.json"
-                )
-                with open(model_file_path, "w", encoding="utf-8") as f:
-                    f.write(json_str)
-            except Exception as e:
-                print(
-                    f"Warning: Failed to save model result using file write: {str(e)}"
-                )
-                try:
-                    # If direct file write fails, try using the writer with bytes encoding
-                    md_writer.write(
-                        json_str.encode("utf-8"), f"{name_without_suff}_model.json"
-                    )  # type: ignore
-                except Exception as e2:
-                    print(
-                        f"Warning: Failed to save model result using writer: {str(e2)}"
-                    )
-
-            return cast(Tuple[List[Dict[str, Any]], str], (content_list, md_content))
+            return content_list, md_content
 
         except Exception as e:
             print(f"Error in parse_pdf: {str(e)}")
             raise
 
     @staticmethod
-    def parse_office_doc(
-        doc_path: Union[str, Path], output_dir: Optional[str] = None
-    ) -> Tuple[List[Dict[str, Any]], str]:
-        """
-        Parse office document (Word, PPT, etc.)
-
-        Args:
-            doc_path: Path to the document file
-            output_dir: Output directory path
-
-        Returns:
-            Tuple[List[Dict[str, Any]], str]: Tuple containing (content list JSON, Markdown text)
-        """
-        try:
-            # Convert to Path object for easier handling
-            doc_path = Path(doc_path)
-            name_without_suff = doc_path.stem
-
-            # Prepare output directories - ensure file name is in path
-            if output_dir:
-                base_output_dir = Path(output_dir)
-                local_md_dir = base_output_dir / name_without_suff
-            else:
-                local_md_dir = doc_path.parent / name_without_suff
-
-            local_image_dir = local_md_dir / "images"
-            image_dir = local_image_dir.name
-
-            # Create directories
-            os.makedirs(local_image_dir, exist_ok=True)
-            os.makedirs(local_md_dir, exist_ok=True)
-
-            # Initialize writers
-            image_writer = FileBasedDataWriter(str(local_image_dir))  # type: ignore
-            md_writer = FileBasedDataWriter(str(local_md_dir))  # type: ignore
-
-            # Read office document
-            ds = read_local_office(str(doc_path))[0]  # type: ignore
-
-            # Apply chain of operations according to API documentation
-            # This follows the pattern shown in MS-Office example in the API docs
-            ds.apply(doc_analyze, ocr=True).pipe_txt_mode(image_writer).dump_md(
-                md_writer, f"{name_without_suff}.md", image_dir
-            )  # type: ignore
-
-            # Re-execute for getting the content data
-            infer_result = ds.apply(doc_analyze, ocr=True)  # type: ignore
-            pipe_result = infer_result.pipe_txt_mode(image_writer)  # type: ignore
-
-            # Get data for return values and additional outputs
-            md_content = pipe_result.get_markdown(image_dir)  # type: ignore
-            content_list = pipe_result.get_content_list(image_dir)  # type: ignore
-
-            # Save additional output files
-            pipe_result.dump_content_list(
-                md_writer, f"{name_without_suff}_content_list.json", image_dir
-            )  # type: ignore
-            pipe_result.dump_middle_json(md_writer, f"{name_without_suff}_middle.json")  # type: ignore
-
-            # Save model result - convert JSON string to bytes before writing
-            model_inference_result = infer_result.get_infer_res()  # type: ignore
-            json_str = json.dumps(model_inference_result, ensure_ascii=False, indent=4)
-
-            try:
-                # Try to write to a file manually to avoid FileBasedDataWriter issues
-                model_file_path = os.path.join(
-                    local_md_dir, f"{name_without_suff}_model.json"
-                )
-                with open(model_file_path, "w", encoding="utf-8") as f:
-                    f.write(json_str)
-            except Exception as e:
-                print(
-                    f"Warning: Failed to save model result using file write: {str(e)}"
-                )
-                try:
-                    # If direct file write fails, try using the writer with bytes encoding
-                    md_writer.write(
-                        json_str.encode("utf-8"), f"{name_without_suff}_model.json"
-                    )  # type: ignore
-                except Exception as e2:
-                    print(
-                        f"Warning: Failed to save model result using writer: {str(e2)}"
-                    )
-
-            return cast(Tuple[List[Dict[str, Any]], str], (content_list, md_content))
-
-        except Exception as e:
-            print(f"Error in parse_office_doc: {str(e)}")
-            raise
-
-    @staticmethod
     def parse_image(
-        image_path: Union[str, Path], output_dir: Optional[str] = None
+        image_path: Union[str, Path],
+        output_dir: Optional[str] = None,
+        lang: Optional[str] = None,
+        **kwargs,
     ) -> Tuple[List[Dict[str, Any]], str]:
         """
-        Parse image document
+        Parse image document using MinerU 2.0
 
         Args:
             image_path: Path to the image file
             output_dir: Output directory path
+            lang: Document language for OCR optimization
+            **kwargs: Additional parameters for mineru command
 
         Returns:
             Tuple[List[Dict[str, Any]], str]: Tuple containing (content list JSON, Markdown text)
@@ -341,95 +267,129 @@ class MineruParser:
         try:
             # Convert to Path object for easier handling
             image_path = Path(image_path)
+            if not image_path.exists():
+                raise FileNotFoundError(f"Image file does not exist: {image_path}")
+
             name_without_suff = image_path.stem
 
-            # Prepare output directories - ensure file name is in path
+            # Prepare output directory
             if output_dir:
                 base_output_dir = Path(output_dir)
-                local_md_dir = base_output_dir / name_without_suff
             else:
-                local_md_dir = image_path.parent / name_without_suff
+                base_output_dir = image_path.parent / "mineru_output"
 
-            local_image_dir = local_md_dir / "images"
-            image_dir = local_image_dir.name
+            base_output_dir.mkdir(parents=True, exist_ok=True)
 
-            # Create directories
-            os.makedirs(local_image_dir, exist_ok=True)
-            os.makedirs(local_md_dir, exist_ok=True)
+            # Run mineru command (images are processed with OCR method)
+            MineruParser._run_mineru_command(
+                input_path=image_path,
+                output_dir=base_output_dir,
+                method="ocr",  # Images require OCR method
+                lang=lang,
+                **kwargs,
+            )
 
-            # Initialize writers
-            image_writer = FileBasedDataWriter(str(local_image_dir))  # type: ignore
-            md_writer = FileBasedDataWriter(str(local_md_dir))  # type: ignore
+            # Read the generated output files
+            content_list, md_content = MineruParser._read_output_files(
+                base_output_dir, name_without_suff
+            )
 
-            # Read image
-            ds = read_local_images(str(image_path))[0]  # type: ignore
-
-            # Apply chain of operations according to API documentation
-            # This follows the pattern shown in Image example in the API docs
-            ds.apply(doc_analyze, ocr=True).pipe_ocr_mode(image_writer).dump_md(
-                md_writer, f"{name_without_suff}.md", image_dir
-            )  # type: ignore
-
-            # Re-execute for getting the content data
-            infer_result = ds.apply(doc_analyze, ocr=True)  # type: ignore
-            pipe_result = infer_result.pipe_ocr_mode(image_writer)  # type: ignore
-
-            # Get data for return values and additional outputs
-            md_content = pipe_result.get_markdown(image_dir)  # type: ignore
-            content_list = pipe_result.get_content_list(image_dir)  # type: ignore
-
-            # Save additional output files
-            pipe_result.dump_content_list(
-                md_writer, f"{name_without_suff}_content_list.json", image_dir
-            )  # type: ignore
-            pipe_result.dump_middle_json(md_writer, f"{name_without_suff}_middle.json")  # type: ignore
-
-            # Save model result - convert JSON string to bytes before writing
-            model_inference_result = infer_result.get_infer_res()  # type: ignore
-            json_str = json.dumps(model_inference_result, ensure_ascii=False, indent=4)
-
-            try:
-                # Try to write to a file manually to avoid FileBasedDataWriter issues
-                model_file_path = os.path.join(
-                    local_md_dir, f"{name_without_suff}_model.json"
-                )
-                with open(model_file_path, "w", encoding="utf-8") as f:
-                    f.write(json_str)
-            except Exception as e:
-                print(
-                    f"Warning: Failed to save model result using file write: {str(e)}"
-                )
-                try:
-                    # If direct file write fails, try using the writer with bytes encoding
-                    md_writer.write(
-                        json_str.encode("utf-8"), f"{name_without_suff}_model.json"
-                    )  # type: ignore
-                except Exception as e2:
-                    print(
-                        f"Warning: Failed to save model result using writer: {str(e2)}"
-                    )
-
-            return cast(Tuple[List[Dict[str, Any]], str], (content_list, md_content))
+            return content_list, md_content
 
         except Exception as e:
             print(f"Error in parse_image: {str(e)}")
             raise
 
     @staticmethod
-    def parse_document(
-        file_path: Union[str, Path],
-        parse_method: str = "auto",
-        output_dir: Optional[str] = None,
-        save_results: bool = True,
+    def parse_office_doc(
+        doc_path: Union[str, Path], output_dir: Optional[str] = None, **kwargs
     ) -> Tuple[List[Dict[str, Any]], str]:
         """
-        Parse document using MinerU based on file extension
+        Parse office document by first converting to PDF, then parsing with MinerU 2.0
+
+        Note: This method requires LibreOffice to be installed separately for PDF conversion.
+        MinerU 2.0 no longer includes built-in Office document conversion.
+
+        Args:
+            doc_path: Path to the document file (.doc, .docx, .ppt, .pptx)
+            output_dir: Output directory path
+            **kwargs: Additional parameters for mineru command
+
+        Returns:
+            Tuple[List[Dict[str, Any]], str]: Tuple containing (content list JSON, Markdown text)
+        """
+        try:
+            doc_path = Path(doc_path)
+            if not doc_path.exists():
+                raise FileNotFoundError(f"Document file does not exist: {doc_path}")
+
+            # Check if LibreOffice is available
+            try:
+                subprocess.run(
+                    ["libreoffice", "--version"], capture_output=True, check=True
+                )
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                raise RuntimeError(
+                    "LibreOffice is required for Office document conversion. "
+                    "Please install LibreOffice or convert the document to PDF manually. "
+                    "MinerU 2.0 no longer includes built-in Office document conversion."
+                )
+
+            # Create temporary directory for PDF conversion
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir)
+
+                # Convert to PDF using LibreOffice
+                print(f"Converting {doc_path.name} to PDF...")
+                cmd = [
+                    "libreoffice",
+                    "--headless",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
+                    str(temp_path),
+                    str(doc_path),
+                ]
+
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                if result.returncode != 0:
+                    raise RuntimeError(
+                        f"LibreOffice conversion failed: {result.stderr}"
+                    )
+
+                # Find the generated PDF
+                pdf_files = list(temp_path.glob("*.pdf"))
+                if not pdf_files:
+                    raise RuntimeError("PDF conversion failed - no PDF file generated")
+
+                pdf_path = pdf_files[0]
+
+                # Parse the converted PDF
+                return MineruParser.parse_pdf(
+                    pdf_path=pdf_path, output_dir=output_dir, **kwargs
+                )
+
+        except Exception as e:
+            print(f"Error in parse_office_doc: {str(e)}")
+            raise
+
+    @staticmethod
+    def parse_document(
+        file_path: Union[str, Path],
+        method: str = "auto",
+        output_dir: Optional[str] = None,
+        lang: Optional[str] = None,
+        **kwargs,
+    ) -> Tuple[List[Dict[str, Any]], str]:
+        """
+        Parse document using MinerU 2.0 based on file extension
 
         Args:
             file_path: Path to the file to be parsed
-            parse_method: Parsing method, supports "auto", "ocr", "txt", default is "auto"
-            output_dir: Output directory path, if None, use the directory of the input file
-            save_results: Whether to save parsing results to files
+            method: Parsing method (auto, txt, ocr)
+            output_dir: Output directory path
+            lang: Document language for OCR optimization
+            **kwargs: Additional parameters for mineru command
 
         Returns:
             Tuple[List[Dict[str, Any]], str]: Tuple containing (content list JSON, Markdown text)
@@ -443,67 +403,155 @@ class MineruParser:
         ext = file_path.suffix.lower()
 
         # Choose appropriate parser based on file type
-        if ext in [".pdf"]:
-            return MineruParser.parse_pdf(
-                file_path, output_dir, use_ocr=(parse_method == "ocr")
-            )
+        if ext == ".pdf":
+            return MineruParser.parse_pdf(file_path, output_dir, method, lang, **kwargs)
         elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
-            return MineruParser.parse_image(file_path, output_dir)
+            return MineruParser.parse_image(file_path, output_dir, lang, **kwargs)
         elif ext in [".doc", ".docx", ".ppt", ".pptx"]:
-            return MineruParser.parse_office_doc(file_path, output_dir)
-        else:
-            # For unsupported file types, default to PDF parsing
             print(
-                f"Warning: Unsupported file extension '{ext}', trying generic PDF parser"
+                f"Warning: Office document detected ({ext}). "
+                f"MinerU 2.0 requires conversion to PDF first."
             )
-            return MineruParser.parse_pdf(
-                file_path, output_dir, use_ocr=(parse_method == "ocr")
+            return MineruParser.parse_office_doc(file_path, output_dir, **kwargs)
+        else:
+            # For unsupported file types, try as PDF
+            print(
+                f"Warning: Unsupported file extension '{ext}', "
+                f"attempting to parse as PDF"
             )
+            return MineruParser.parse_pdf(file_path, output_dir, method, lang, **kwargs)
+
+    @staticmethod
+    def check_installation() -> bool:
+        """
+        Check if MinerU 2.0 is properly installed
+
+        Returns:
+            bool: True if installation is valid, False otherwise
+        """
+        try:
+            result = subprocess.run(
+                ["mineru", "--version"], capture_output=True, text=True, check=True
+            )
+            print(f"MinerU version: {result.stdout.strip()}")
+            return True
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print(
+                "MinerU 2.0 is not properly installed. "
+                "Please install it using: pip install -U 'mineru[core]'"
+            )
+            return False
 
 
 def main():
     """
-    Main function to run the MinerU parser from command line
+    Main function to run the MinerU 2.0 parser from command line
     """
-    parser = argparse.ArgumentParser(description="Parse documents using MinerU")
+    parser = argparse.ArgumentParser(description="Parse documents using MinerU 2.0")
     parser.add_argument("file_path", help="Path to the document to parse")
     parser.add_argument("--output", "-o", help="Output directory path")
     parser.add_argument(
         "--method",
         "-m",
-        choices=["auto", "ocr", "txt"],
+        choices=["auto", "txt", "ocr"],
         default="auto",
-        help="Parsing method (auto, ocr, txt)",
+        help="Parsing method (auto, txt, ocr)",
+    )
+    parser.add_argument(
+        "--lang",
+        "-l",
+        help="Document language for OCR optimization (e.g., ch, en, ja)",
+    )
+    parser.add_argument(
+        "--backend",
+        "-b",
+        choices=[
+            "pipeline",
+            "vlm-transformers",
+            "vlm-sglang-engine",
+            "vlm-sglang-client",
+        ],
+        default="pipeline",
+        help="Parsing backend",
+    )
+    parser.add_argument(
+        "--device",
+        "-d",
+        help="Inference device (e.g., cpu, cuda, cuda:0, npu, mps)",
+    )
+    parser.add_argument(
+        "--source",
+        choices=["huggingface", "modelscope", "local"],
+        default="huggingface",
+        help="Model source",
+    )
+    parser.add_argument(
+        "--no-formula",
+        action="store_true",
+        help="Disable formula parsing",
+    )
+    parser.add_argument(
+        "--no-table",
+        action="store_true",
+        help="Disable table parsing",
     )
     parser.add_argument(
         "--stats", action="store_true", help="Display content statistics"
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Check MinerU installation",
+    )
 
     args = parser.parse_args()
+
+    # Check installation if requested
+    if args.check:
+        if MineruParser.check_installation():
+            print("✅ MinerU 2.0 is properly installed")
+            return 0
+        else:
+            print("❌ MinerU 2.0 installation check failed")
+            return 1
 
     try:
         # Parse the document
         content_list, md_content = MineruParser.parse_document(
-            file_path=args.file_path, parse_method=args.method, output_dir=args.output
+            file_path=args.file_path,
+            method=args.method,
+            output_dir=args.output,
+            lang=args.lang,
+            backend=args.backend,
+            device=args.device,
+            source=args.source,
+            formula=not args.no_formula,
+            table=not args.no_table,
         )
+
+        print(f"✅ Successfully parsed: {args.file_path}")
+        print(f"📝 Generated {len(md_content)} characters of markdown")
+        print(f"📊 Extracted {len(content_list)} content blocks")
 
         # Display statistics if requested
         if args.stats:
-            print("\nDocument Statistics:")
+            print("\n📈 Document Statistics:")
             print(f"Total content blocks: {len(content_list)}")
 
             # Count different types of content
             content_types = {}
             for item in content_list:
-                content_type = item.get("type", "unknown")
-                content_types[content_type] = content_types.get(content_type, 0) + 1
+                if isinstance(item, dict):
+                    content_type = item.get("type", "unknown")
+                    content_types[content_type] = content_types.get(content_type, 0) + 1
 
-            print("\nContent Type Distribution:")
-            for content_type, count in content_types.items():
-                print(f"- {content_type}: {count}")
+            if content_types:
+                print("\n📋 Content Type Distribution:")
+                for content_type, count in sorted(content_types.items()):
+                    print(f"  • {content_type}: {count}")
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"❌ Error: {str(e)}")
         return 1
 
     return 0

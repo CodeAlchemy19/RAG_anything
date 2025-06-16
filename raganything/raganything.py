@@ -21,10 +21,10 @@ from lightrag import LightRAG, QueryParam
 from lightrag.utils import EmbeddingFunc, setup_logger
 
 # Import parser and multimodal processors
-from lightrag.mineru_parser import MineruParser
+from raganything.mineru_parser import MineruParser
 
 # Import specialized processors
-from lightrag.modalprocessors import (
+from raganything.modalprocessors import (
     ImageModalProcessor,
     TableModalProcessor,
     EquationModalProcessor,
@@ -112,6 +112,14 @@ class RAGAnything:
         if self.lightrag is not None:
             return
 
+        # Check MinerU 2.0 installation
+        if not MineruParser.check_installation():
+            raise RuntimeError(
+                "MinerU 2.0 is not properly installed. "
+                "Please install it using: pip install -U 'mineru[core]' "
+                "or uv pip install -U 'mineru[core]'"
+            )
+
         # Validate required functions
         if self.llm_model_func is None:
             raise ValueError(
@@ -174,20 +182,20 @@ class RAGAnything:
         try:
             if ext in [".pdf"]:
                 self.logger.info(
-                    f"Detected PDF file, using PDF parser (OCR={parse_method == 'ocr'})..."
+                    f"Detected PDF file, using PDF parser (method={parse_method})..."
                 )
                 content_list, md_content = MineruParser.parse_pdf(
-                    file_path, output_dir, use_ocr=(parse_method == "ocr")
+                    pdf_path=file_path, output_dir=output_dir, method=parse_method
                 )
             elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
                 self.logger.info("Detected image file, using image parser...")
                 content_list, md_content = MineruParser.parse_image(
-                    file_path, output_dir
+                    image_path=file_path, output_dir=output_dir
                 )
             elif ext in [".doc", ".docx", ".ppt", ".pptx"]:
                 self.logger.info("Detected Office document, using Office parser...")
                 content_list, md_content = MineruParser.parse_office_doc(
-                    file_path, output_dir
+                    doc_path=file_path, output_dir=output_dir
                 )
             else:
                 # For other or unknown formats, use generic parser
@@ -195,7 +203,7 @@ class RAGAnything:
                     f"Using generic parser for {ext} file (method={parse_method})..."
                 )
                 content_list, md_content = MineruParser.parse_document(
-                    file_path, parse_method=parse_method, output_dir=output_dir
+                    file_path=file_path, method=parse_method, output_dir=output_dir
                 )
 
         except Exception as e:
@@ -203,7 +211,7 @@ class RAGAnything:
             self.logger.warning("Falling back to generic parser...")
             # If specific parser fails, fall back to generic parser
             content_list, md_content = MineruParser.parse_document(
-                file_path, parse_method=parse_method, output_dir=output_dir
+                file_path=file_path, method=parse_method, output_dir=output_dir
             )
 
         self.logger.info(
@@ -627,13 +635,26 @@ class RAGAnything:
 
         return result
 
+    def check_mineru_installation(self) -> bool:
+        """
+        Check if MinerU 2.0 is properly installed
+
+        Returns:
+            bool: True if MinerU 2.0 is properly installed
+        """
+        return MineruParser.check_installation()
+
     def get_processor_info(self) -> Dict[str, Any]:
         """Get processor information"""
         if not self.modal_processors:
-            return {"status": "Not initialized"}
+            return {
+                "status": "Not initialized",
+                "mineru_installed": MineruParser.check_installation(),
+            }
 
         info = {
             "status": "Initialized",
+            "mineru_installed": MineruParser.check_installation(),
             "processors": {},
             "models": {
                 "llm_model": "External function"

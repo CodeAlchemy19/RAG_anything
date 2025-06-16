@@ -138,12 +138,31 @@ pip install -e .
 ```
 
 #### MinerU Dependencies (Optional)
-For document parsing capabilities:
+For document parsing capabilities with MinerU 2.0:
 ```bash
-pip install "magic-pdf[full]>=1.2.2" huggingface_hub
+# Install MinerU 2.0
+pip install -U 'mineru[core]'
+
+# Or using uv (faster)
+uv pip install -U 'mineru[core]'
 ```
 
-Download MinerU models:
+> **⚠️ Important Changes in MinerU 2.0:**
+> - Package name changed from `magic-pdf` to `mineru`
+> - LibreOffice integration removed (Office documents require manual PDF conversion)
+> - Simplified command-line interface with `mineru` command
+> - New backend options and improved performance
+
+Check MinerU installation:
+```bash
+# Verify installation
+mineru --version
+
+# Check if properly configured
+python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ MinerU installed properly' if rag.check_mineru_installation() else '❌ MinerU installation issue')"
+```
+
+Models are downloaded automatically on first use. Manual download (if needed):
 ```bash
 # Option 1: Hugging Face
 wget https://github.com/opendatalab/MinerU/raw/master/scripts/download_models_hf.py
@@ -232,7 +251,7 @@ if __name__ == "__main__":
 ```python
 import asyncio
 from lightrag import LightRAG
-from lightrag.modalprocessors import ImageModalProcessor, TableModalProcessor
+from raganything.modalprocessors import ImageModalProcessor, TableModalProcessor
 
 async def process_multimodal_content():
     # Initialize LightRAG
@@ -352,19 +371,47 @@ OPENAI_BASE_URL=your_base_url  # Optional
 
 ### MinerU Configuration
 
-The system automatically uses MinerU's configuration file `magic-pdf.json` in your user directory. You can customize:
-- Model directory paths
-- OCR engine settings
-- GPU acceleration options
-- Cache settings
+MinerU 2.0 uses a simplified configuration approach:
+
+```bash
+# MinerU 2.0 uses command-line parameters instead of config files
+# Check available options:
+mineru --help
+
+# Common configurations:
+mineru -p input.pdf -o output_dir -m auto    # Automatic parsing mode
+mineru -p input.pdf -o output_dir -m ocr     # OCR-focused parsing
+mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU acceleration
+```
+
+You can also configure MinerU through RAGAnything parameters:
+```python
+# Configure parsing behavior
+await rag.process_document_complete(
+    file_path="document.pdf",
+    parse_method="auto",     # or "ocr", "txt"
+    device="cuda",           # GPU acceleration
+    backend="pipeline",      # parsing backend
+    lang="en"               # language optimization
+)
+```
+
+> **Note**: MinerU 2.0 no longer uses the `magic-pdf.json` configuration file. All settings are now passed as command-line parameters or function arguments.
 
 ## 🧪 Supported Content Types
 
 ### Document Formats
 - **PDFs**: Research papers, reports, presentations
-- **Office Documents**: DOC, DOCX, PPT, PPTX
+- **Office Documents**: DOC, DOCX, PPT, PPTX ⚠️
 - **Images**: JPG, PNG, BMP, TIFF
 - **Text Files**: TXT, MD
+
+> **⚠️ Office Document Processing in MinerU 2.0:**
+>
+> Due to MinerU 2.0's architectural changes, Office documents require additional setup:
+> - **Automatic conversion**: Requires LibreOffice installation for PDF conversion
+> - **Manual conversion**: Convert to PDF beforehand for optimal performance
+> - **Recommended approach**: Use PDF format when possible for best results
 
 ### Multimodal Elements
 - **Images**: Photographs, diagrams, charts, screenshots
