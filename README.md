@@ -493,21 +493,21 @@ If you find RAG-Anything useful in your research, please cite our paper:
 
 ## Star History
 
-<!-- <a href="https://star-history.com/#HKUDS/RAGAnything&Date">
+<a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAGAnything&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAGAnything&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAGAnything&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
  </picture>
-</a> -->
+</a>
 
 ## Contribution
 
 We thank all our contributors for their valuable contributions.
 
-<!-- <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=HKUDS/RAGAnything" />
-</a> -->
+<a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" />
+</a>
 
 ---
 
