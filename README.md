@@ -450,6 +450,7 @@ await rag.process_document_complete(
 > - **Conversion requirements**: PIL/Pillow library (`pip install Pillow`)
 > - **Processing workflow**: Non-native formats are converted to PNG, then processed by MinerU
 > - **Quality preservation**: Conversion maintains image quality while ensuring compatibility
+
 > **⚠️ Text File Processing Requirements:**
 >
 > RAG-Anything supports text file processing through automatic PDF conversion:
