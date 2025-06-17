@@ -125,7 +125,7 @@ pip install raganything
 #### 选项2：从源码安装
 ```bash
 git clone https://github.com/HKUDS/RAG-Anything.git
-cd RAGAnything
+cd RAG-Anything
 pip install -e .
 ```
 
