@@ -162,16 +162,7 @@ mineru --version
 python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ MinerU installed properly' if rag.check_mineru_installation() else '❌ MinerU installation issue')"
 ```
 
-Models are downloaded automatically on first use. Manual download (if needed):
-```bash
-# Option 1: Hugging Face
-wget https://github.com/opendatalab/MinerU/raw/master/scripts/download_models_hf.py
-python download_models_hf.py
-
-# Option 2: ModelScope (for users in China)
-wget https://github.com/opendatalab/MinerU/raw/master/scripts/download_models.py
-python download_models.py
-```
+Models are downloaded automatically on first use. For manual download, refer to [MinerU Model Source Configuration](https://github.com/opendatalab/MinerU/blob/master/README.md#22-model-source-configuration).
 
 ### Usage
 

@@ -154,16 +154,7 @@ mineru --version
 python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ MinerU安装正常' if rag.check_mineru_installation() else '❌ MinerU安装有问题')"
 ```
 
-模型在首次使用时自动下载。手动下载（如果需要）：
-```bash
-# 选项1：Hugging Face
-wget https://github.com/opendatalab/MinerU/raw/master/scripts/download_models_hf.py
-python download_models_hf.py
-
-# 选项2：ModelScope（适用于中国用户）
-wget https://github.com/opendatalab/MinerU/raw/master/scripts/download_models.py
-python download_models.py
-```
+模型在首次使用时自动下载。手动下载参考[MinerU模型源配置](https://github.com/opendatalab/MinerU/blob/master/README_zh-CN.md#22-%E6%A8%A1%E5%9E%8B%E6%BA%90%E9%85%8D%E7%BD%AE)：
 
 ### 使用方法
 
