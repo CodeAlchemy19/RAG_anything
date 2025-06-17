@@ -1,192 +1,310 @@
-<center><h1>🚀 RAG-Anything: All-in-One RAG System</h1></center>
+<div align="center">
+
+```
+██████╗  █████╗  ██████╗      █████╗ ███╗   ██╗██╗   ██╗████████╗██╗  ██╗██╗███╗   ██╗ ██████╗ 
+██╔══██╗██╔══██╗██╔════╝     ██╔══██╗████╗  ██║╚██╗ ██╔╝╚══██╔══╝██║  ██║██║████╗  ██║██╔════╝ 
+██████╔╝███████║██║  ███╗    ███████║██╔██╗ ██║ ╚████╔╝    ██║   ███████║██║██╔██╗ ██║██║  ███╗
+██╔══██╗██╔══██║██║   ██║    ██╔══██║██║╚██╗██║  ╚██╔╝     ██║   ██╔══██║██║██║╚██╗██║██║   ██║
+██║  ██║██║  ██║╚██████╔╝    ██║  ██║██║ ╚████║   ██║      ██║   ██║  ██║██║██║ ╚████║╚██████╔╝
+╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ 
+```
+
+<div style="margin: 20px 0;">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=35&duration=3000&pause=1000&color=00F5FF&background=0D001100&center=true&vCenter=true&width=1000&height=100&lines=🔥+NEXT-GEN+MULTIMODAL+RAG+SYSTEM+🔥;⚡+CYBER-ENHANCED+AI+INTELLIGENCE+⚡;🚀+QUANTUM+LEAP+IN+DOCUMENT+PROCESSING+🚀" alt="Typing SVG" />
+</div>
+
+<div style="background: linear-gradient(45deg, #FF0080, #00F5FF); padding: 2px; border-radius: 15px; margin: 20px 0;">
+  <div style="background: #0a0a0a; padding: 20px; border-radius: 13px;">
+    <img src="./assets/logo.png" width="120" height="120" alt="raganything" style="border-radius: 50%; border: 3px solid #00F5FF; box-shadow: 0 0 30px #00F5FF;">
+  </div>
+</div>
+
+<div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0;">
+  <a href='https://github.com/HKUDS/RAG-Anything'>
+    <img src='https://img.shields.io/badge/🔥_PROJECT-NEXUS-FF0080?style=for-the-badge&logo=github&logoColor=white&labelColor=0a0a0a' alt="Project">
+  </a>
+  <a href='https://arxiv.org/abs/2410.05779'>
+    <img src='https://img.shields.io/badge/📚_ARXIV-2410.05779-00F5FF?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=0a0a0a' alt="arXiv">
+  </a>
+  <a href='https://github.com/HKUDS/LightRAG'>
+    <img src='https://img.shields.io/badge/⚡_POWERED_BY-LIGHTRAG-39FF14?style=for-the-badge&logo=lightning&logoColor=white&labelColor=0a0a0a' alt="LightRAG">
+  </a>
+</div>
+
+<div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0;">
+  <img src='https://img.shields.io/github/stars/HKUDS/RAG-Anything?color=FF0080&style=for-the-badge&logo=star&logoColor=white&labelColor=0a0a0a' alt="Stars">
+  <img src="https://img.shields.io/badge/PYTHON-3.9+-00F5FF?style=for-the-badge&logo=python&logoColor=white&labelColor=0a0a0a" alt="Python">
+  <img src="https://img.shields.io/pypi/v/raganything.svg?color=39FF14&style=for-the-badge&logo=pypi&logoColor=white&labelColor=0a0a0a" alt="PyPI">
+</div>
+
+<div style="margin: 30px 0;">
+  <a href="README_zh.md" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/🇨🇳_中文版-FF6B35?style=for-the-badge&logoColor=white&labelColor=0a0a0a" alt="Chinese">
+  </a>
+  <span style="color: #666; margin: 0 10px;">|</span>
+  <a href="README.md" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/🇺🇸_ENGLISH-4CAF50?style=for-the-badge&logoColor=white&labelColor=0a0a0a" alt="English">
+  </a>
+</div>
+
+</div>
+
+---
+
+## 🌀 **NEURAL GENESIS** 
 
 <div align="center">
-<table border="0" width="100%">
-<tr>
-<td width="100" align="center">
-<img src="./assets/logo.png" width="80" height="80" alt="raganything">
-</td>
-<td>
-
-<div>
-    <p>
-        <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/Project-Page-Green'></a>
-        <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/arXiv-2410.05779-b31b1b'></a>
-        <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/Based%20on-LightRAG-blue'></a>
-    </p>
-    <p>
-        <img src='https://img.shields.io/github/stars/HKUDS/RAG-Anything?color=green&style=social' />
-        <img src="https://img.shields.io/badge/python-3.9+-blue">
-        <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg"></a>
-    </p>
-    <p>
-        <a href="README_zh.md">中文版</a> | <a href="README.md">English</a>
-    </p>
-</div>
-</td>
-</tr>
-</table>
-
-<!-- Add architecture diagram here when available -->
-<!-- <img src="./assets/raganything_architecture.png" width="800" alt="RAGAnything Architecture"> -->
-
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=200&color=gradient&customColorList=12,20,3&text=MULTIMODAL%20AI%20REVOLUTION&fontSize=40&fontColor=ffffff&animation=twinkling" />
 </div>
 
-## 🌟 Overview
+In the **cybernetic landscape** of modern AI, documents have evolved beyond mere text into **multi-dimensional data matrices** containing interleaved visual intelligence, structured knowledge graphs, and mathematical abstractions. Traditional RAG systems, trapped in their **monochrome reality**, cannot perceive this rich multimodal spectrum.
 
-Modern documents increasingly contain diverse multimodal content—text, images, tables, equations, charts, and multimedia—that traditional text-focused RAG systems cannot effectively process. **RAG-Anything** addresses this challenge as a comprehensive **All-in-One Multimodal Document Processing RAG system** built on [LightRAG](https://github.com/HKUDS/LightRAG).
+**RAG-Anything** emerges as the **quantum leap** in AI document processing—a **neural-enhanced, cyberpunk-grade** multimodal RAG system that **shatters conventional boundaries**. Built on the lightning-fast [LightRAG](https://github.com/HKUDS/LightRAG) architecture, it transforms the impossible into inevitable.
 
-As a unified solution, RAG-Anything **eliminates the need for multiple specialized tools**. It provides **seamless processing and querying across all content modalities** within a single integrated framework. Unlike conventional RAG approaches that struggle with non-textual elements, our all-in-one system delivers **comprehensive multimodal retrieval capabilities**.
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=25&duration=2000&pause=500&color=FF0080&center=true&vCenter=true&width=800&lines=🔮+UNIFIED+MULTIMODAL+INTELLIGENCE;💎+SEAMLESS+CROSS-MODAL+FUSION;🛸+ENTERPRISE-GRADE+PERFORMANCE;⚔️+ZERO-COMPROMISE+ACCURACY" alt="Features" />
+</div>
 
-Users can query documents containing **interleaved text**, **visual diagrams**, **structured tables**, and **mathematical formulations** through **one cohesive interface**. This consolidated approach makes RAG-Anything particularly valuable for academic research, technical documentation, financial reports, and enterprise knowledge management where rich, mixed-content documents demand a **unified processing framework**.
+### 🔥 **CYBERNETIC CAPABILITIES**
 
-### Key Features of RAG-Anything
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0;">
 
-- 🔄 **End-to-End Multimodal Pipeline**: Complete workflow from document ingestion and parsing to intelligent multimodal query answering.
+<div style="background: linear-gradient(135deg, #FF008080, #FF008020); padding: 20px; border-radius: 15px; border: 1px solid #FF0080;">
+  <h4>🚀 <strong>QUANTUM PIPELINE</strong></h4>
+  <p>End-to-end multimodal workflow with <strong>neural-optimized</strong> document ingestion, parsing, and intelligent query synthesis</p>
+</div>
 
-- 📄 **Universal Document Support**: Seamless processing of PDFs, Office documents (DOC/DOCX/PPT/PPTX/XLS/XLSX), images, and diverse file formats.
+<div style="background: linear-gradient(135deg, #00F5FF80, #00F5FF20); padding: 20px; border-radius: 15px; border: 1px solid #00F5FF;">
+  <h4>📡 <strong>UNIVERSAL COMPATIBILITY</strong></h4>
+  <p>Seamless processing across <strong>all known formats</strong>: PDFs, Office suites, images, and emerging data structures</p>
+</div>
 
-- 🧠 **Specialized Content Analysis**: Dedicated processors for images, tables, mathematical equations, and heterogeneous content types.
+<div style="background: linear-gradient(135deg, #39FF1480, #39FF1420); padding: 20px; border-radius: 15px; border: 1px solid #39FF14;">
+  <h4>🧠 <strong>MULTI-MODAL COGNITION</strong></h4>
+  <p>Specialized neural processors for images, tables, equations, and <strong>heterogeneous content matrices</strong></p>
+</div>
 
-- 🔗 **Multimodal Knowledge Graph**: Automatic entity extraction and cross-modal relationship discovery for enhanced understanding.
+<div style="background: linear-gradient(135deg, #FF6B3580, #FF6B3520); padding: 20px; border-radius: 15px; border: 1px solid #FF6B35;">
+  <h4>🕸️ <strong>KNOWLEDGE NEXUS</strong></h4>
+  <p>Self-assembling multimodal knowledge graphs with <strong>cross-dimensional relationship mapping</strong></p>
+</div>
 
-- ⚡ **Adaptive Processing Modes**: Flexible MinerU-based parsing or direct multimodal content injection workflows.
+<div style="background: linear-gradient(135deg, #8A2BE280, #8A2BE220); padding: 20px; border-radius: 15px; border: 1px solid #8A2BE2;">
+  <h4>⚡ <strong>ADAPTIVE PROTOCOLS</strong></h4>
+  <p>Flexible MinerU-powered parsing with <strong>real-time content injection</strong> workflows</p>
+</div>
 
-- 🎯 **Hybrid Intelligent Retrieval**: Advanced search capabilities spanning textual and multimodal content with contextual understanding.
+<div style="background: linear-gradient(135deg, #FF147580, #FF147520); padding: 20px; border-radius: 15px; border: 1px solid #FF1475;">
+  <h4>🎯 <strong>HYBRID INTELLIGENCE</strong></h4>
+  <p>Advanced retrieval spanning textual and multimodal domains with <strong>contextual consciousness</strong></p>
+</div>
 
-## 🏗️ Algorithm & Architecture
+</div>
 
-### Core Algorithm
+---
 
-**RAG-Anything** implements an effective **multi-stage multimodal pipeline** that fundamentally extends traditional RAG architectures to seamlessly handle diverse content modalities through intelligent orchestration and cross-modal understanding.
+## 🔬 **NEURAL ARCHITECTURE MATRIX**
 
-#### 1. Document Parsing Stage
-The system provides high-fidelity document extraction through adaptive content decomposition. It intelligently segments heterogeneous elements while preserving contextual relationships. Universal format compatibility is achieved via specialized optimized parsers.
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&height=100&color=gradient&customColorList=30,12,20&text=ALGORITHMIC%20CORE&fontSize=30&fontColor=ffffff" />
+</div>
 
-- **⚙️ MinerU Integration**: Leverages [MinerU](https://github.com/opendatalab/MinerU) for high-fidelity document structure extraction and semantic preservation across complex layouts.
+**RAG-Anything** implements a **revolutionary multi-stage neural pipeline** that fundamentally transcends traditional RAG architectures, orchestrating seamless multimodal understanding through **quantum-enhanced content processing**.
 
-- **🧩 Adaptive Content Decomposition**: Automatically segments documents into coherent text blocks, visual elements, structured tables, mathematical equations, and specialized content types while preserving contextual relationships.
+### 🌊 **STAGE I: DOCUMENT DECONSTRUCTION**
 
-- **📁 Universal Format Support**: Provides comprehensive handling of PDFs, Office documents (DOC/DOCX/PPT/PPTX/XLS/XLSX), images, and emerging formats through specialized parsers with format-specific optimization.
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 20px; border-radius: 15px; border-left: 5px solid #FF0080; margin: 20px 0;">
 
-#### 2. Multi-Modal Content Understanding & Processing
-The system automatically categorizes and routes content through optimized channels. It uses concurrent pipelines for parallel text and multimodal processing. Document hierarchy and relationships are preserved during transformation.
+**⚙️ MinerU Neural Integration**: Harnesses advanced [MinerU](https://github.com/opendatalab/MinerU) engines for **high-fidelity document archaeology** and semantic preservation across complex multi-dimensional layouts.
 
-- **🎯 Autonomous Content Categorization and Routing**: Automatically identify, categorize, and route different content types through optimized execution channels.
+**🧩 Adaptive Content Atomization**: Intelligently segments documents into **coherent information quanta**—text blocks, visual elements, structured matrices, mathematical expressions—while preserving **quantum entanglement** between contextual relationships.
 
-- **⚡ Concurrent Multi-Pipeline Architecture**: Implements concurrent execution of textual and multimodal content through dedicated processing pipelines. This approach maximizes throughput efficiency while preserving content integrity.
+**📁 Universal Format Transcendence**: Comprehensive handling of all known formats through **specialized neural parsers** with format-specific optimization algorithms.
 
-- **🏗️ Document Hierarchy Extraction**: Extracts and preserves original document hierarchy and inter-element relationships during content transformation.
+</div>
 
-#### 3. Multimodal Analysis Engine
-The system deploys modality-aware processing units for heterogeneous data modalities:
+### 🌀 **STAGE II: MULTIMODAL CONSCIOUSNESS**
 
-- **🔍 Visual Content Analyzer**:
-  - Integrate vision model for image analysis.
-  - Generates context-aware descriptive captions based on visual semantics.
-  - Extracts spatial relationships and hierarchical structures between visual elements.
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 20px; border-radius: 15px; border-left: 5px solid #00F5FF; margin: 20px 0;">
 
-- **📊 Structured Data Interpreter**:
-  - Performs systematic interpretation of tabular and structured data formats.
-  - Implements statistical pattern recognition algorithms for data trend analysis.
-  - Identifies semantic relationships and dependencies across multiple tabular datasets.
+**🎯 Autonomous Content Classification**: AI-powered categorization and routing through **optimized neural pathways**
 
-- **📐 Mathematical Expression Parser**:
-  - Parses complex mathematical expressions and formulas with high accuracy.
-  - Provides native LaTeX format support for seamless integration with academic workflows.
-  - Establishes conceptual mappings between mathematical equations and domain-specific knowledge bases.
+**⚡ Concurrent Multi-Pipeline Architecture**: Parallel execution of textual and multimodal processing with **maximum throughput efficiency**
 
-- **🔧 Extensible Modality Handler**:
-  - Provides configurable processing framework for custom and emerging content types.
-  - Enables dynamic integration of new modality processors through plugin architecture.
-  - Supports runtime configuration of processing pipelines for specialized use cases.
+**🏗️ Document Hierarchy Extraction**: Preserves original structural DNA during **quantum content transformation**
 
-#### 4. Multi-Modal Knowledge Graph Index
-The multi-modal knowledge graph construction module transforms document content into structured semantic representations. It extracts multimodal entities, establishes cross-modal relationships, and preserves hierarchical organization. The system applies weighted relevance scoring for optimized knowledge retrieval.
+</div>
 
-- **🔍 Multi-Modal Entity Extraction**: Transforms significant multimodal elements into structured knowledge graph entities. The process includes semantic annotations and metadata preservation.
+### 🚀 **STAGE III: MULTIMODAL ANALYSIS ENGINE**
 
-- **🔗 Cross-Modal Relationship Mapping**: Establishes semantic connections and dependencies between textual entities and multimodal components. This is achieved through automated relationship inference algorithms.
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 20px; border-radius: 15px; border-left: 5px solid #39FF14; margin: 20px 0;">
 
-- **🏗️ Hierarchical Structure Preservation**: Maintains original document organization through "belongs_to" relationship chains. These chains preserve logical content hierarchy and sectional dependencies.
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;">
 
-- **⚖️ Weighted Relationship Scoring**: Assigns quantitative relevance scores to relationship types. Scoring is based on semantic proximity and contextual significance within the document structure.
+<div style="border: 1px solid #FF0080; padding: 15px; border-radius: 10px;">
+  <h4>🔍 <strong>VISUAL NEURAL CORTEX</strong></h4>
+  <ul>
+    <li>Advanced vision model integration</li>
+    <li><strong>Context-aware semantic captioning</strong></li>
+    <li>Spatial relationship extraction</li>
+  </ul>
+</div>
 
-#### 5. Modality-Aware Retrieval
-The hybrid retrieval system combines vector similarity search with graph traversal algorithms for comprehensive content retrieval. It implements modality-aware ranking mechanisms and maintains relational coherence between retrieved elements to ensure contextually integrated information delivery.
+<div style="border: 1px solid #00F5FF; padding: 15px; border-radius: 10px;">
+  <h4>📊 <strong>STRUCTURED DATA DECODER</strong></h4>
+  <ul>
+    <li>Systematic tabular interpretation</li>
+    <li><strong>Statistical pattern recognition</strong></li>
+    <li>Cross-dataset dependency mapping</li>
+  </ul>
+</div>
 
--  **🔀 Vector-Graph Fusion**: Integrates vector similarity search with graph traversal algorithms. This approach leverages both semantic embeddings and structural relationships for comprehensive content retrieval.
+<div style="border: 1px solid #39FF14; padding: 15px; border-radius: 10px;">
+  <h4>📐 <strong>MATHEMATICAL PARSER</strong></h4>
+  <ul>
+    <li>Complex expression parsing</li>
+    <li><strong>Native LaTeX support</strong></li>
+    <li>Conceptual knowledge mapping</li>
+  </ul>
+</div>
 
-- **📊 Modality-Aware Ranking**: Implements adaptive scoring mechanisms that weight retrieval results based on content type relevance. The system adjusts rankings according to query-specific modality preferences.
+<div style="border: 1px solid #FF6B35; padding: 15px; border-radius: 10px;">
+  <h4>🔧 <strong>EXTENSIBLE MODALITY HANDLER</strong></h4>
+  <ul>
+    <li>Plugin architecture framework</li>
+    <li><strong>Runtime pipeline configuration</strong></li>
+    <li>Custom modality integration</li>
+  </ul>
+</div>
 
-- **🔗 Relational Coherence Maintenance**: Maintains semantic and structural relationships between retrieved elements. This ensures coherent information delivery and contextual integrity.
+</div>
 
-## 🚀 Quick Start
+</div>
 
-### Installation
+### 🕸️ **STAGE IV: KNOWLEDGE GRAPH GENESIS**
 
-#### Option 1: Install from PyPI (Recommended)
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 20px; border-radius: 15px; border-left: 5px solid #8A2BE2; margin: 20px 0;">
+
+**🔍 Multi-Modal Entity Synthesis**: Transform significant multimodal elements into **structured knowledge graph entities** with semantic annotations
+
+**🔗 Cross-Modal Relationship Weaving**: Establish **semantic neural networks** between textual and multimodal components through automated inference
+
+**🏗️ Hierarchical Structure Preservation**: Maintain original document organization through **"belongs_to" quantum chains**
+
+**⚖️ Weighted Relationship Scoring**: Quantitative relevance scoring based on **semantic proximity algorithms**
+
+</div>
+
+### 🎯 **STAGE V: MODALITY-AWARE RETRIEVAL**
+
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 20px; border-radius: 15px; border-left: 5px solid #FF1475; margin: 20px 0;">
+
+**🔀 Vector-Graph Fusion**: Hybrid similarity search with **graph traversal algorithms** for comprehensive content retrieval
+
+**📊 Modality-Aware Ranking**: Adaptive scoring mechanisms with **query-specific modality preferences**
+
+**🔗 Relational Coherence**: Maintains semantic relationships for **contextually integrated information delivery**
+
+</div>
+
+---
+
+## ⚡ **NEURAL INITIATION PROTOCOL**
+
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=shark&height=150&color=gradient&customColorList=12,20,3&text=QUANTUM%20INSTALLATION&fontSize=35&fontColor=ffffff&animation=twinkling" />
+</div>
+
+### 🔥 **INSTALLATION MATRIX**
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin: 30px 0;">
+
+<div style="background: linear-gradient(135deg, #FF008080, #FF008020); padding: 25px; border-radius: 15px; border: 2px solid #FF0080;">
+  <h4>🚀 <strong>OPTION α: PyPI NEXUS (RECOMMENDED)</strong></h4>
+  
 ```bash
+# Neural link establishment
 pip install raganything
 ```
+</div>
 
-#### Option 2: Install from Source
+<div style="background: linear-gradient(135deg, #00F5FF80, #00F5FF20); padding: 25px; border-radius: 15px; border: 2px solid #00F5FF;">
+  <h4>🛸 <strong>OPTION β: SOURCE MATRIX</strong></h4>
+  
 ```bash
+# Clone the neural repository
 git clone https://github.com/HKUDS/RAG-Anything.git
-cd RAG-Anything
+cd RAGAnything
 pip install -e .
 ```
+</div>
 
-#### MinerU Dependencies (Optional)
-For document parsing capabilities with MinerU 2.0:
+</div>
+
+### 🔧 **MINERU CYBERNETIC ENHANCEMENT**
+
+<div style="background: linear-gradient(45deg, #39FF1480, #39FF1420); padding: 25px; border-radius: 15px; border: 2px solid #39FF14; margin: 20px 0;">
+
 ```bash
-# Install MinerU 2.0
+# Install MinerU 2.0 Neural Engine
 pip install -U 'mineru[core]'
 
-# Or using uv (faster)
+# Or via UV hyperdrive (⚡ ULTRA-FAST)
 uv pip install -U 'mineru[core]'
 ```
 
-> **⚠️ Important Changes in MinerU 2.0:**
-> - Package name changed from `magic-pdf` to `mineru`
-> - LibreOffice integration removed (Office documents require manual PDF conversion)
-> - Simplified command-line interface with `mineru` command
-> - New backend options and improved performance
+</div>
 
-Check MinerU installation:
+<div style="background: linear-gradient(45deg, #FF6B3580, #FF6B3520); padding: 20px; border-radius: 15px; border: 1px solid #FF6B35; margin: 20px 0;">
+
+> **⚠️ CRITICAL NEURAL UPDATES IN MINERU 2.0:**
+> - Package designation: `magic-pdf` → `mineru` 
+> - LibreOffice integration deprecated (manual PDF conversion required)
+> - Streamlined CLI interface via `mineru` command
+> - Enhanced backend options with **quantum performance boost**
+
+</div>
+
+**Neural System Verification:**
 ```bash
-# Verify installation
+# Verify neural link
 mineru --version
 
-# Check if properly configured
-python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ MinerU installed properly' if rag.check_mineru_installation() else '❌ MinerU installation issue')"
+# Diagnostic protocol
+python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ Neural link established' if rag.check_mineru_installation() else '❌ Neural link compromised')"
 ```
 
-Models are downloaded automatically on first use. For manual download, refer to [MinerU Model Source Configuration](https://github.com/opendatalab/MinerU/blob/master/README.md#22-model-source-configuration).
+---
 
-### Usage
+## 💻 **NEURAL DEPLOYMENT PROTOCOLS**
 
-#### End-to-End Document Processing
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=30&duration=2500&pause=500&color=00F5FF&center=true&vCenter=true&width=900&lines=🔮+DEPLOY+MULTIMODAL+INTELLIGENCE;⚡+ACTIVATE+NEURAL+PROCESSING;🚀+LAUNCH+QUANTUM+QUERIES" alt="Deployment" />
+</div>
+
+### 🌊 **COMPLETE NEURAL WORKFLOW**
+
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 25px; border-radius: 15px; border: 2px solid #FF0080; margin: 20px 0;">
 
 ```python
 import asyncio
 from raganything import RAGAnything
 from lightrag.llm.openai import openai_complete_if_cache, openai_embed
 
-async def main():
-    # Initialize RAGAnything
+async def neural_initialization():
+    # Initialize RAG-Anything Neural Core
     rag = RAGAnything(
-        working_dir="./rag_storage",
+        working_dir="./neural_storage",
         llm_model_func=lambda prompt, system_prompt=None, history_messages=[], **kwargs: openai_complete_if_cache(
-            "gpt-4o-mini",
+            "gpt-4o-mini",  # Neural language model
             prompt,
             system_prompt=system_prompt,
             history_messages=history_messages,
-            api_key="your-api-key",
+            api_key="your-quantum-api-key",
             **kwargs,
         ),
         vision_model_func=lambda prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs: openai_complete_if_cache(
-            "gpt-4o",
+            "gpt-4o",  # Visual neural cortex
             "",
             system_prompt=None,
             history_messages=[],
@@ -200,270 +318,283 @@ async def main():
                     }
                 ]} if image_data else {"role": "user", "content": prompt}
             ],
-            api_key="your-api-key",
+            api_key="your-quantum-api-key",
             **kwargs,
         ) if image_data else openai_complete_if_cache(
             "gpt-4o-mini",
             prompt,
             system_prompt=system_prompt,
             history_messages=history_messages,
-            api_key="your-api-key",
+            api_key="your-quantum-api-key",
             **kwargs,
         ),
         embedding_func=lambda texts: openai_embed(
             texts,
-            model="text-embedding-3-large",
-            api_key="your-api-key",
+            model="text-embedding-3-large",  # Neural embedding matrix
+            api_key="your-quantum-api-key",
         ),
         embedding_dim=3072,
         max_token_size=8192
     )
 
-    # Process a document
+    # Document Neural Processing
     await rag.process_document_complete(
         file_path="path/to/your/document.pdf",
-        output_dir="./output",
+        output_dir="./neural_output",
         parse_method="auto"
     )
 
-    # Query the processed content
+    # Quantum Query Execution
     result = await rag.query_with_multimodal(
-        "What are the main findings shown in the figures and tables?",
+        "🔍 Analyze the key findings in figures and tables with cybernetic precision",
         mode="hybrid"
     )
-    print(result)
+    print(f"🚀 Neural Response: {result}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(neural_initialization())
 ```
 
-#### Direct Multimodal Content Processing
+</div>
+
+### 🧠 **DIRECT MULTIMODAL NEURAL PROCESSING**
+
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 25px; border-radius: 15px; border: 2px solid #00F5FF; margin: 20px 0;">
 
 ```python
 import asyncio
 from lightrag import LightRAG
 from raganything.modalprocessors import ImageModalProcessor, TableModalProcessor
 
-async def process_multimodal_content():
-    # Initialize LightRAG
+async def multimodal_neural_processing():
+    # Initialize LightRAG Neural Core
     rag = LightRAG(
-        working_dir="./rag_storage",
-        # ... your LLM and embedding configurations
+        working_dir="./neural_storage",
+        # ... your neural configurations
     )
     await rag.initialize_storages()
 
-    # Process an image
+    # Image Neural Processor
     image_processor = ImageModalProcessor(
         lightrag=rag,
-        modal_caption_func=your_vision_model_func
+        modal_caption_func=your_vision_neural_func
     )
 
+    # Neural image content matrix
     image_content = {
-        "img_path": "path/to/image.jpg",
-        "img_caption": ["Figure 1: Experimental results"],
-        "img_footnote": ["Data collected in 2024"]
+        "img_path": "path/to/neural_image.jpg",
+        "img_caption": ["Figure 1: Quantum experimental results"],
+        "img_footnote": ["Data acquired in neural timeline 2024"]
     }
 
+    # Process through visual neural cortex
     description, entity_info = await image_processor.process_multimodal_content(
         modal_content=image_content,
         content_type="image",
-        file_path="research_paper.pdf",
-        entity_name="Experimental Results Figure"
+        file_path="research_neural_paper.pdf",
+        entity_name="Quantum Results Figure"
     )
 
-    # Process a table
+    # Table Neural Processor
     table_processor = TableModalProcessor(
         lightrag=rag,
-        modal_caption_func=your_llm_model_func
+        modal_caption_func=your_llm_neural_func
     )
 
+    # Neural table data matrix
     table_content = {
         "table_body": """
-        | Method | Accuracy | F1-Score |
-        |--------|----------|----------|
-        | RAGAnything | 95.2% | 0.94 |
-        | Baseline | 87.3% | 0.85 |
+        | Neural Method | Accuracy | Quantum F1-Score |
+        |---------------|----------|------------------|
+        | RAG-Anything  | 95.2%    | 0.94            |
+        | Legacy System | 87.3%    | 0.85            |
         """,
-        "table_caption": ["Performance Comparison"],
-        "table_footnote": ["Results on test dataset"]
+        "table_caption": ["Neural Performance Comparison"],
+        "table_footnote": ["Results on quantum test dataset"]
     }
 
+    # Process through structured data neural decoder
     description, entity_info = await table_processor.process_multimodal_content(
         modal_content=table_content,
         content_type="table",
-        file_path="research_paper.pdf",
-        entity_name="Performance Results Table"
+        file_path="research_neural_paper.pdf",
+        entity_name="Neural Performance Results Table"
     )
 
 if __name__ == "__main__":
-    asyncio.run(process_multimodal_content())
+    asyncio.run(multimodal_neural_processing())
 ```
 
-### Batch Processing
+</div>
+
+### 🔥 **BATCH NEURAL PROCESSING**
+
+<div style="background: linear-gradient(45deg, #39FF1480, #39FF1420); padding: 20px; border-radius: 15px; border: 1px solid #39FF14; margin: 20px 0;">
 
 ```python
-# Process multiple documents
+# Mass document neural processing
 await rag.process_folder_complete(
-    folder_path="./documents",
-    output_dir="./output",
+    folder_path="./neural_documents",
+    output_dir="./neural_output",
     file_extensions=[".pdf", ".docx", ".pptx"],
     recursive=True,
-    max_workers=4
+    max_workers=4  # Parallel neural processing
 )
 ```
 
-### Custom Modal Processors
+</div>
+
+### 🚀 **QUERY NEURAL MODES**
+
+<div style="background: linear-gradient(45deg, #8A2BE280, #8A2BE220); padding: 20px; border-radius: 15px; border: 1px solid #8A2BE2; margin: 20px 0;">
 
 ```python
-from raganything.modalprocessors import GenericModalProcessor
-
-class CustomModalProcessor(GenericModalProcessor):
-    async def process_multimodal_content(self, modal_content, content_type, file_path, entity_name):
-        # Your custom processing logic
-        enhanced_description = await self.analyze_custom_content(modal_content)
-        entity_info = self.create_custom_entity(enhanced_description, entity_name)
-        return await self._create_entity_and_chunk(enhanced_description, entity_info, file_path)
+# Different neural query protocols
+result_hybrid = await rag.query_with_multimodal("Your quantum query", mode="hybrid")
+result_local = await rag.query_with_multimodal("Your quantum query", mode="local")
+result_global = await rag.query_with_multimodal("Your quantum query", mode="global")
 ```
 
-### Query Options
+</div>
 
-```python
-# Different query modes
-result_hybrid = await rag.query_with_multimodal("Your question", mode="hybrid")
-result_local = await rag.query_with_multimodal("Your question", mode="local")
-result_global = await rag.query_with_multimodal("Your question", mode="global")
-```
+---
 
-## 🛠️ Examples
+## 🔬 **NEURAL LABORATORIES**
 
-The `examples/` directory contains comprehensive usage examples:
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=120&color=gradient&customColorList=30,12,20&text=EXPERIMENTAL%20PROTOCOLS&fontSize=25&fontColor=ffffff" />
+</div>
 
-- **`raganything_example.py`**: End-to-end document processing with MinerU
-- **`modalprocessors_example.py`**: Direct multimodal content processing
-- **`office_document_test.py`**: Office document parsing test with MinerU (no API key required)
-- **`image_format_test.py`**: Image format parsing test with MinerU (no API key required)
-- **`text_format_test.py`**: Text format parsing test with MinerU (no API key required)
+The `examples/` directory contains **cutting-edge experimental protocols**:
 
-Run examples:
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 20px 0;">
+
+<div style="border: 1px solid #FF0080; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #FF008020, #FF008005);">
+  <h4>🚀 <strong>raganything_example.py</strong></h4>
+  <p>Complete neural workflow with MinerU integration</p>
+</div>
+
+<div style="border: 1px solid #00F5FF; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #00F5FF20, #00F5FF05);">
+  <h4>🧠 <strong>modalprocessors_example.py</strong></h4>
+  <p>Direct multimodal neural processing protocols</p>
+</div>
+
+<div style="border: 1px solid #39FF14; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #39FF1420, #39FF1405);">
+  <h4>📄 <strong>office_document_test.py</strong></h4>
+  <p>Office document parsing via neural networks</p>
+</div>
+
+<div style="border: 1px solid #FF6B35; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #FF6B3520, #FF6B3505);">
+  <h4>🖼️ <strong>image_format_test.py</strong></h4>
+  <p>Image format neural processing protocols</p>
+</div>
+
+</div>
+
+**Execute Neural Experiments:**
 ```bash
-# End-to-end processing
-python examples/raganything_example.py path/to/document.pdf --api-key YOUR_API_KEY
+# Complete neural processing
+python examples/raganything_example.py path/to/document.pdf --api-key YOUR_QUANTUM_KEY
 
-# Direct modal processing
-python examples/modalprocessors_example.py --api-key YOUR_API_KEY
+# Direct neural modal processing
+python examples/modalprocessors_example.py --api-key YOUR_QUANTUM_KEY
 
-# Office document parsing test (MinerU only)
+# Neural parsing tests (no API required)
 python examples/office_document_test.py --file path/to/document.docx
-
-# Image format parsing test (MinerU only)
 python examples/image_format_test.py --file path/to/image.bmp
-
-# Text format parsing test (MinerU only)
-python examples/text_format_test.py --file path/to/document.md
-
-# Check LibreOffice installation
-python examples/office_document_test.py --check-libreoffice --file dummy
-
-# Check PIL/Pillow installation
-python examples/image_format_test.py --check-pillow --file dummy
-
-# Check ReportLab installation
-python examples/text_format_test.py --check-reportlab --file dummy
 ```
 
-## 🔧 Configuration
+---
 
-### Environment Variables
+## 🔧 **NEURAL SYSTEM CONFIGURATION**
 
-Create a `.env` file (refer to `.env.example`):
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=25&duration=2000&pause=500&color=FF0080&center=true&vCenter=true&width=700&lines=⚙️+QUANTUM+CONFIGURATION;🔑+NEURAL+API+KEYS;🛠️+SYSTEM+OPTIMIZATION" alt="Config" />
+</div>
+
+### 🔑 **Neural Environment Matrix**
+
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 20px; border-radius: 15px; border: 2px solid #FF0080; margin: 20px 0;">
+
+Create `.env` neural configuration (refer to `.env.example`):
 ```bash
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_BASE_URL=your_base_url  # Optional
+OPENAI_API_KEY=your_quantum_neural_api_key
+OPENAI_BASE_URL=your_neural_base_url  # Optional quantum endpoint
 ```
 
-> **Note**: API keys are only required for full RAG processing with LLM integration. The parsing test files (`office_document_test.py` and `image_format_test.py`) only test MinerU functionality and do not require API keys.
+</div>
 
-### MinerU Configuration
+### ⚙️ **MinerU Neural Configuration**
 
-MinerU 2.0 uses a simplified configuration approach:
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 20px; border-radius: 15px; border: 2px solid #00F5FF; margin: 20px 0;">
 
 ```bash
-# MinerU 2.0 uses command-line parameters instead of config files
-# Check available options:
-mineru --help
+# MinerU 2.0 neural command protocols
+mineru --help  # Display neural options
 
-# Common configurations:
-mineru -p input.pdf -o output_dir -m auto    # Automatic parsing mode
-mineru -p input.pdf -o output_dir -m ocr     # OCR-focused parsing
-mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU acceleration
+# Common neural configurations
+mineru -p input.pdf -o neural_output -m auto      # Auto neural parsing
+mineru -p input.pdf -o neural_output -m ocr       # OCR neural focus
+mineru -p input.pdf -o neural_output -b pipeline --device cuda  # GPU acceleration
 ```
 
-You can also configure MinerU through RAGAnything parameters:
+**RAGAnything Neural Parameters:**
 ```python
-# Configure parsing behavior
+# Configure neural parsing behavior
 await rag.process_document_complete(
     file_path="document.pdf",
-    parse_method="auto",     # or "ocr", "txt"
-    device="cuda",           # GPU acceleration
-    backend="pipeline",      # parsing backend
-    lang="en"               # language optimization
+    parse_method="auto",     # Neural parsing mode
+    device="cuda",           # GPU neural acceleration
+    backend="pipeline",      # Neural parsing backend
+    lang="en"               # Language neural optimization
 )
 ```
 
-> **Note**: MinerU 2.0 no longer uses the `magic-pdf.json` configuration file. All settings are now passed as command-line parameters or function arguments.
+</div>
 
-## 🧪 Supported Content Types
+---
 
-### Document Formats
-- **PDFs**: Research papers, reports, presentations
-- **Office Documents**: DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️
-- **Images**: JPG, PNG, BMP, TIFF, GIF, WebP 📸
-- **Text Files**: TXT, MD ⚠️
+## 🌐 **SUPPORTED NEURAL FORMATS**
 
-> **⚠️ Office Document Processing Requirements:**
->
-> RAG-Anything supports comprehensive Office document processing through automatic PDF conversion:
-> - **Supported formats**: .doc, .docx, .ppt, .pptx, .xls, .xlsx
-> - **LibreOffice requirement**: Automatic conversion requires LibreOffice installation
-> - **Installation instructions**:
->   - **Windows**: Download from [LibreOffice official website](https://www.libreoffice.org/download/download/)
->   - **macOS**: `brew install --cask libreoffice`
->   - **Ubuntu/Debian**: `sudo apt-get install libreoffice`
->   - **CentOS/RHEL**: `sudo yum install libreoffice`
-> - **Alternative approach**: Convert to PDF manually for optimal performance
-> - **Processing workflow**: Office files are automatically converted to PDF, then processed by MinerU
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&height=100&color=gradient&customColorList=12,20,3&text=UNIVERSAL%20COMPATIBILITY&fontSize=25&fontColor=ffffff" />
+</div>
 
-> **📸 Image Format Support:**
->
-> RAG-Anything supports comprehensive image format processing:
-> - **MinerU native formats**: .jpg, .jpeg, .png (processed directly)
-> - **Auto-converted formats**: .bmp, .tiff/.tif, .gif, .webp (automatically converted to PNG)
-> - **Conversion requirements**: PIL/Pillow library (`pip install Pillow`)
-> - **Processing workflow**: Non-native formats are converted to PNG, then processed by MinerU
-> - **Quality preservation**: Conversion maintains image quality while ensuring compatibility
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0;">
 
-> **⚠️ Text File Processing Requirements:**
->
-> RAG-Anything supports text file processing through automatic PDF conversion:
-> - **Supported formats**: .txt, .md
-> - **ReportLab requirement**: Automatic conversion requires ReportLab library
-> - **Installation**: `pip install reportlab`
-> - **Features**: Supports multiple text encodings (UTF-8, GBK, Latin-1, CP1252)
-> - **Complete Markdown support**: Headers, paragraphs, **bold**, *italic*, ~~strikethrough~~, `inline code`, code blocks, tables, lists, quotes, links, images, and horizontal rules
-> - **Advanced features**: Auto-scaling images, nested lists, multi-level quotes, syntax-highlighted code blocks
-> - **Cross-platform fonts**: Automatic Chinese font detection for Windows/macOS
-> - **Processing workflow**: Text files are automatically converted to PDF, then processed by MinerU
+<div style="background: linear-gradient(135deg, #FF008080, #FF008020); padding: 20px; border-radius: 15px; border: 2px solid #FF0080;">
+  <h4>📄 <strong>DOCUMENT NEURAL MATRICES</strong></h4>
+  <ul>
+    <li><strong>PDFs</strong>: Research papers, reports, presentations</li>
+    <li><strong>Office Neural Docs</strong>: DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️</li>
+    <li><strong>Images</strong>: JPG, PNG, BMP, TIFF, GIF, WebP 📸</li>
+    <li><strong>Text Files</strong>: TXT, MD ⚠️</li>
+  </ul>
+</div>
 
+<div style="background: linear-gradient(135deg, #00F5FF80, #00F5FF20); padding: 20px; border-radius: 15px; border: 2px solid #00F5FF;">
+  <h4>🧠 <strong>MULTIMODAL NEURAL ELEMENTS</strong></h4>
+  <ul>
+    <li><strong>Visual Intelligence</strong>: Photos, diagrams, charts, screenshots</li>
+    <li><strong>Structured Data</strong>: Tables, comparisons, statistical matrices</li>
+    <li><strong>Mathematical Expressions</strong>: LaTeX formulas, equations</li>
+    <li><strong>Custom Neural Content</strong>: Extensible processors</li>
+  </ul>
+</div>
 
-### Multimodal Elements
-- **Images**: Photographs, diagrams, charts, screenshots
-- **Tables**: Data tables, comparison charts, statistical summaries
-- **Equations**: Mathematical formulas in LaTeX format
-- **Generic Content**: Custom content types via extensible processors
+</div>
 
-## 📖 Citation
+---
 
-If you find RAG-Anything useful in your research, please cite our paper:
+## 📚 **ACADEMIC NEURAL CITATION**
+
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=30&duration=3000&pause=1000&color=39FF14&center=true&vCenter=true&width=800&lines=🎓+CITE+OUR+NEURAL+RESEARCH;📖+ACADEMIC+RECOGNITION;🏆+SCIENTIFIC+CONTRIBUTION" alt="Citation" />
+</div>
+
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 25px; border-radius: 15px; border: 2px solid #39FF14; margin: 20px 0;">
+
+If you find **RAG-Anything** useful in your neural research, please cite our groundbreaking paper:
 
 ```bibtex
 @article{guo2024lightrag,
@@ -476,36 +607,82 @@ If you find RAG-Anything useful in your research, please cite our paper:
 }
 ```
 
-## 🔗 Related Projects
+</div>
 
-- [LightRAG](https://github.com/HKUDS/LightRAG): **Simple and Fast RAG**
-- [VideoRAG](https://github.com/HKUDS/VideoRAG): **Extreme Long-Context Video RAG**
-- [MiniRAG](https://github.com/HKUDS/MiniRAG): **Extremely Simple RAG**
+---
 
-## Star History
+## 🔗 **NEURAL NETWORK ECOSYSTEM**
 
-<a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
- </picture>
-</a>
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=150&color=gradient&customColorList=30,20,12&text=CONNECTED%20INTELLIGENCE&fontSize=30&fontColor=ffffff&animation=twinkling" />
+</div>
 
-## Contribution
+<div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 30px 0;">
+  <a href="https://github.com/HKUDS/LightRAG">
+    <img src="https://img.shields.io/badge/⚡_LIGHTRAG-SIMPLE_FAST_RAG-FF0080?style=for-the-badge&logo=lightning&logoColor=white&labelColor=0a0a0a" alt="LightRAG">
+  </a>
+  <a href="https://github.com/HKUDS/VideoRAG">
+    <img src="https://img.shields.io/badge/🎬_VIDEORAG-EXTREME_LONG_CONTEXT-00F5FF?style=for-the-badge&logo=video&logoColor=white&labelColor=0a0a0a" alt="VideoRAG">
+  </a>
+  <a href="https://github.com/HKUDS/MiniRAG">
+    <img src="https://img.shields.io/badge/🔬_MINIRAG-EXTREMELY_SIMPLE-39FF14?style=for-the-badge&logo=atom&logoColor=white&labelColor=0a0a0a" alt="MiniRAG">
+  </a>
+</div>
 
-We thank all our contributors for their valuable contributions.
+---
 
-<a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" />
-</a>
+## ⭐ **NEURAL EVOLUTION TIMELINE**
+
+<div align="center">
+  <a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
+      <img alt="Neural Evolution Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" style="border-radius: 15px; border: 2px solid #00F5FF;" />
+    </picture>
+  </a>
+</div>
+
+---
+
+## 🤝 **NEURAL CONTRIBUTORS**
+
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=25&duration=2000&pause=500&color=FF6B35&center=true&vCenter=true&width=600&lines=🧠+COLLECTIVE+INTELLIGENCE;🤖+NEURAL+COLLABORATION;🚀+COMMUNITY+DRIVEN" alt="Contributors" />
+</div>
+
+We thank all our **neural contributors** for their quantum contributions to the multimodal AI revolution.
+
+<div align="center" style="margin: 30px 0;">
+  <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" style="border-radius: 15px; border: 2px solid #FF6B35;" />
+  </a>
+</div>
 
 ---
 
 <div align="center">
-    <p>
-        <a href="https://github.com/HKUDS/RAG-Anything">⭐ Star us on GitHub</a> |
-        <a href="https://github.com/HKUDS/RAG-Anything/issues">🐛 Report Issues</a> |
-        <a href="https://github.com/HKUDS/RAG-Anything/discussions">💬 Discussions</a>
-    </p>
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=200&color=gradient&customColorList=12,20,3,30&text=JOIN%20THE%20NEURAL%20REVOLUTION&fontSize=35&fontColor=ffffff&animation=twinkling" />
+</div>
+
+<div align="center" style="margin: 40px 0;">
+  <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+    <a href="https://github.com/HKUDS/RAG-Anything" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/⭐_STAR_NEURAL_REPO-FF0080?style=for-the-badge&logo=github&logoColor=white&labelColor=0a0a0a" alt="Star">
+    </a>
+    <a href="https://github.com/HKUDS/RAG-Anything/issues" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/🐛_REPORT_NEURAL_BUGS-00F5FF?style=for-the-badge&logo=bug&logoColor=white&labelColor=0a0a0a" alt="Issues">
+    </a>
+    <a href="https://github.com/HKUDS/RAG-Anything/discussions" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/💬_NEURAL_DISCUSSIONS-39FF14?style=for-the-badge&logo=chat&logoColor=white&labelColor=0a0a0a" alt="Discussions">
+    </a>
+  </div>
+</div>
+
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=20&duration=4000&pause=1000&color=8A2BE2&center=true&vCenter=true&width=1000&lines=🌟+THE+FUTURE+OF+MULTIMODAL+AI+IS+NOW+🌟;⚡+TRANSCEND+TRADITIONAL+BOUNDARIES+⚡;🚀+EMBRACE+THE+NEURAL+REVOLUTION+🚀" alt="Footer" />
+</div>
+
+<div align="center" style="margin: 20px 0;">
+  <img src="https://komarev.com/ghpvc/?username=HKUDS&repo=RAG-Anything&color=FF0080&style=for-the-badge&label=NEURAL+VISITORS" alt="Visitor Count" />
 </div>
