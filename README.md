@@ -1,38 +1,55 @@
-<center><h1>🚀 RAG-Anything: All-in-One RAG System</h1></center>
+<div align="center">
+
+# 🚀 RAG-Anything: All-in-One RAG System
 
 <div align="center">
-<table border="0" width="100%">
-<tr>
-<td width="100" align="center">
-<img src="./assets/logo.png" width="80" height="80" alt="raganything">
-</td>
-<td>
-
-<div>
-    <p>
-        <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/Project-Page-Green'></a>
-        <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/arXiv-2410.05779-b31b1b'></a>
-        <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/Based%20on-LightRAG-blue'></a>
-    </p>
-    <p>
-        <img src='https://img.shields.io/github/stars/HKUDS/RAG-Anything?color=green&style=social' />
-        <img src="https://img.shields.io/badge/python-3.9+-blue">
-        <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg"></a>
-    </p>
-    <p>
-        <a href="README_zh.md">中文版</a> | <a href="README.md">English</a>
-    </p>
-</div>
-</td>
-</tr>
-</table>
-
-<!-- Add architecture diagram here when available -->
-<!-- <img src="./assets/raganything_architecture.png" width="800" alt="RAGAnything Architecture"> -->
-
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=24&duration=3000&pause=1000&color=00D9FF&center=true&vCenter=true&width=600&lines=Welcome+to+RAG-Anything;Next-Gen+Multimodal+RAG+System;Powered+by+Advanced+AI+Technology" alt="Typing Animation" />
 </div>
 
-## 🌟 Overview
+<div align="center">
+  <table border="0" cellpadding="0" cellspacing="0" style="border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 20px;">
+    <tr>
+      <td width="120" align="center" style="border: none;">
+        <img src="./assets/logo.png" width="100" height="100" alt="raganything" style="border-radius: 50%; box-shadow: 0 0 30px rgba(0, 217, 255, 0.5); animation: pulse 2s infinite;">
+      </td>
+      <td style="border: none; padding-left: 20px;">
+        <div>
+          <p>
+            <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/🔥Project-Page-00d9ff?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e'></a>
+            <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/📄arXiv-2410.05779-ff6b6b?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=1a1a2e'></a>
+            <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/⚡Based%20on-LightRAG-4ecdc4?style=for-the-badge&logo=lightning&logoColor=white&labelColor=1a1a2e'></a>
+          </p>
+          <p>
+            <a href="https://github.com/HKUDS/RAG-Anything/stargazers"><img src='https://img.shields.io/github/stars/HKUDS/RAG-Anything?color=00d9ff&style=for-the-badge&logo=star&logoColor=white&labelColor=1a1a2e' /></a>
+            <img src="https://img.shields.io/badge/🐍Python-3.9+-4ecdc4?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1a2e">
+            <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=ff6b6b"></a>
+          </p>
+          <p>
+            <a href="README_zh.md"><img src="https://img.shields.io/badge/🇨🇳中文版-1a1a2e?style=for-the-badge"></a>
+            <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸English-1a1a2e?style=for-the-badge"></a>
+          </p>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div align="center" style="margin: 30px 0;">
+  <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="800">
+</div>
+
+</div>
+
+---
+
+<div align="center">
+
+## 🌟 SYSTEM OVERVIEW
+*Next-Generation Multimodal Intelligence*
+
+</div>
+
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); border-radius: 15px; padding: 25px; margin: 20px 0; border: 2px solid #00d9ff; box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);">
 
 Modern documents increasingly contain diverse multimodal content—text, images, tables, equations, charts, and multimedia—that traditional text-focused RAG systems cannot effectively process. **RAG-Anything** addresses this challenge as a comprehensive **All-in-One Multimodal Document Processing RAG system** built on [LightRAG](https://github.com/HKUDS/LightRAG).
 
@@ -40,27 +57,78 @@ As a unified solution, RAG-Anything **eliminates the need for multiple specializ
 
 Users can query documents containing **interleaved text**, **visual diagrams**, **structured tables**, and **mathematical formulations** through **one cohesive interface**. This consolidated approach makes RAG-Anything particularly valuable for academic research, technical documentation, financial reports, and enterprise knowledge management where rich, mixed-content documents demand a **unified processing framework**.
 
-### Key Features of RAG-Anything
+</div>
 
-- 🔄 **End-to-End Multimodal Pipeline**: Complete workflow from document ingestion and parsing to intelligent multimodal query answering.
+<div align="center">
 
-- 📄 **Universal Document Support**: Seamless processing of PDFs, Office documents (DOC/DOCX/PPT/PPTX/XLS/XLSX), images, and diverse file formats.
+### 🎯 CORE FEATURES
+*Advanced Capabilities Matrix*
 
-- 🧠 **Specialized Content Analysis**: Dedicated processors for images, tables, mathematical equations, and heterogeneous content types.
+</div>
 
-- 🔗 **Multimodal Knowledge Graph**: Automatic entity extraction and cross-modal relationship discovery for enhanced understanding.
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <img src="https://user-images.githubusercontent.com/74038190/212257454-16e3712e-945a-4ca2-b238-408ad0bf87e6.gif" width="100"><br>
+        <b>🔄 End-to-End Pipeline</b><br>
+        <sub>Complete multimodal workflow</sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="https://user-images.githubusercontent.com/74038190/212257468-1e9a91f1-b626-4baa-b15d-5c385dfa7763.gif" width="100"><br>
+        <b>📄 Universal Support</b><br>
+        <sub>All document formats</sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="https://user-images.githubusercontent.com/74038190/212257465-7ce8d493-cac5-494e-982a-5a9deb852c4b.gif" width="100"><br>
+        <b>🧠 AI-Powered Analysis</b><br>
+        <sub>Intelligent content processing</sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="https://user-images.githubusercontent.com/74038190/212257460-738ff738-247f-4445-a718-cdd0ca76e2db.gif" width="100"><br>
+        <b>🔗 Knowledge Graph</b><br>
+        <sub>Advanced entity relationships</sub>
+      </td>
+      <td align="center">
+        <img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100"><br>
+        <b>⚡ Adaptive Processing</b><br>
+        <sub>Flexible execution modes</sub>
+      </td>
+      <td align="center">
+        <img src="https://user-images.githubusercontent.com/74038190/212257472-08e52665-c503-4bd9-aa20-f5a4dae769b5.gif" width="100"><br>
+        <b>🎯 Hybrid Retrieval</b><br>
+        <sub>Cross-modal intelligence</sub>
+      </td>
+    </tr>
+  </table>
+</div>
 
-- ⚡ **Adaptive Processing Modes**: Flexible MinerU-based parsing or direct multimodal content injection workflows.
+---
 
-- 🎯 **Hybrid Intelligent Retrieval**: Advanced search capabilities spanning textual and multimodal content with contextual understanding.
+<div align="center">
 
-## 🏗️ Algorithm & Architecture
+## 🏗️ ALGORITHM & ARCHITECTURE
+*Quantum-Enhanced Processing Framework*
+
+</div>
+
+<div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #00d9ff;">
 
 ### Core Algorithm
 
 **RAG-Anything** implements an effective **multi-stage multimodal pipeline** that fundamentally extends traditional RAG architectures to seamlessly handle diverse content modalities through intelligent orchestration and cross-modal understanding.
 
-#### 1. Document Parsing Stage
+</div>
+
+<div align="center">
+  <img src="https://user-images.githubusercontent.com/74038190/212284087-bbe7e430-757e-4901-90bf-4cd2ce3e1852.gif" width="500">
+</div>
+
+#### 🔧 1. Document Parsing Stage
+<div style="background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #4ecdc4;">
+
 The system provides high-fidelity document extraction through adaptive content decomposition. It intelligently segments heterogeneous elements while preserving contextual relationships. Universal format compatibility is achieved via specialized optimized parsers.
 
 - **⚙️ MinerU Integration**: Leverages [MinerU](https://github.com/opendatalab/MinerU) for high-fidelity document structure extraction and semantic preservation across complex layouts.
@@ -69,7 +137,11 @@ The system provides high-fidelity document extraction through adaptive content d
 
 - **📁 Universal Format Support**: Provides comprehensive handling of PDFs, Office documents (DOC/DOCX/PPT/PPTX/XLS/XLSX), images, and emerging formats through specialized parsers with format-specific optimization.
 
-#### 2. Multi-Modal Content Understanding & Processing
+</div>
+
+#### 🤖 2. Multi-Modal Content Understanding & Processing
+<div style="background: linear-gradient(90deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #ff6b6b;">
+
 The system automatically categorizes and routes content through optimized channels. It uses concurrent pipelines for parallel text and multimodal processing. Document hierarchy and relationships are preserved during transformation.
 
 - **🎯 Autonomous Content Categorization and Routing**: Automatically identify, categorize, and route different content types through optimized execution channels.
@@ -78,7 +150,11 @@ The system automatically categorizes and routes content through optimized channe
 
 - **🏗️ Document Hierarchy Extraction**: Extracts and preserves original document hierarchy and inter-element relationships during content transformation.
 
-#### 3. Multimodal Analysis Engine
+</div>
+
+#### 🔬 3. Multimodal Analysis Engine
+<div style="background: linear-gradient(90deg, #0f3460 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #00d9ff;">
+
 The system deploys modality-aware processing units for heterogeneous data modalities:
 
 - **🔍 Visual Content Analyzer**:
@@ -101,7 +177,11 @@ The system deploys modality-aware processing units for heterogeneous data modali
   - Enables dynamic integration of new modality processors through plugin architecture.
   - Supports runtime configuration of processing pipelines for specialized use cases.
 
-#### 4. Multi-Modal Knowledge Graph Index
+</div>
+
+#### 🌐 4. Multi-Modal Knowledge Graph Index
+<div style="background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #4ecdc4;">
+
 The multi-modal knowledge graph construction module transforms document content into structured semantic representations. It extracts multimodal entities, establishes cross-modal relationships, and preserves hierarchical organization. The system applies weighted relevance scoring for optimized knowledge retrieval.
 
 - **🔍 Multi-Modal Entity Extraction**: Transforms significant multimodal elements into structured knowledge graph entities. The process includes semantic annotations and metadata preservation.
@@ -112,7 +192,11 @@ The multi-modal knowledge graph construction module transforms document content 
 
 - **⚖️ Weighted Relationship Scoring**: Assigns quantitative relevance scores to relationship types. Scoring is based on semantic proximity and contextual significance within the document structure.
 
-#### 5. Modality-Aware Retrieval
+</div>
+
+#### 🎯 5. Modality-Aware Retrieval
+<div style="background: linear-gradient(90deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #ff6b6b;">
+
 The hybrid retrieval system combines vector similarity search with graph traversal algorithms for comprehensive content retrieval. It implements modality-aware ranking mechanisms and maintains relational coherence between retrieved elements to ensure contextually integrated information delivery.
 
 -  **🔀 Vector-Graph Fusion**: Integrates vector similarity search with graph traversal algorithms. This approach leverages both semantic embeddings and structural relationships for comprehensive content retrieval.
@@ -121,9 +205,24 @@ The hybrid retrieval system combines vector similarity search with graph travers
 
 - **🔗 Relational Coherence Maintenance**: Maintains semantic and structural relationships between retrieved elements. This ensures coherent information delivery and contextual integrity.
 
-## 🚀 Quick Start
+</div>
 
-### Installation
+---
+
+<div align="center">
+
+## 🚀 QUICK START
+*Initialize Your AI Journey*
+
+</div>
+
+<div align="center">
+  <img src="https://user-images.githubusercontent.com/74038190/212284158-e840e285-664b-44d7-b79b-e264b5e54825.gif" width="400">
+</div>
+
+### 💾 Installation
+
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
 #### Option 1: Install from PyPI (Recommended)
 ```bash
@@ -147,11 +246,17 @@ pip install -U 'mineru[core]'
 uv pip install -U 'mineru[core]'
 ```
 
+</div>
+
+<div style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
+
 > **⚠️ Important Changes in MinerU 2.0:**
 > - Package name changed from `magic-pdf` to `mineru`
 > - LibreOffice integration removed (Office documents require manual PDF conversion)
 > - Simplified command-line interface with `mineru` command
 > - New backend options and improved performance
+
+</div>
 
 Check MinerU installation:
 ```bash
@@ -164,9 +269,11 @@ python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ 
 
 Models are downloaded automatically on first use. For manual download, refer to [MinerU Model Source Configuration](https://github.com/opendatalab/MinerU/blob/master/README.md#22-model-source-configuration).
 
-### Usage
+### 🎮 Usage
 
 #### End-to-End Document Processing
+
+<div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
 ```python
 import asyncio
@@ -237,7 +344,11 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+</div>
+
 #### Direct Multimodal Content Processing
+
+<div style="background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
 ```python
 import asyncio
@@ -299,7 +410,9 @@ if __name__ == "__main__":
     asyncio.run(process_multimodal_content())
 ```
 
-### Batch Processing
+</div>
+
+### 🔄 Batch Processing
 
 ```python
 # Process multiple documents
@@ -312,7 +425,7 @@ await rag.process_folder_complete(
 )
 ```
 
-### Custom Modal Processors
+### 🛠️ Custom Modal Processors
 
 ```python
 from raganything.modalprocessors import GenericModalProcessor
@@ -325,7 +438,7 @@ class CustomModalProcessor(GenericModalProcessor):
         return await self._create_entity_and_chunk(enhanced_description, entity_info, file_path)
 ```
 
-### Query Options
+### 🎯 Query Options
 
 ```python
 # Different query modes
@@ -334,15 +447,30 @@ result_local = await rag.query_with_multimodal("Your question", mode="local")
 result_global = await rag.query_with_multimodal("Your question", mode="global")
 ```
 
-## 🛠️ Examples
+---
+
+<div align="center">
+
+## 🛠️ EXAMPLES
+*Practical Implementation Demos*
+
+</div>
+
+<div align="center">
+  <img src="https://user-images.githubusercontent.com/74038190/212257455-13e3e01e-d6a6-45dc-bb92-3ab87b12dfc1.gif" width="300">
+</div>
 
 The `examples/` directory contains comprehensive usage examples:
+
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
 - **`raganything_example.py`**: End-to-end document processing with MinerU
 - **`modalprocessors_example.py`**: Direct multimodal content processing
 - **`office_document_test.py`**: Office document parsing test with MinerU (no API key required)
 - **`image_format_test.py`**: Image format parsing test with MinerU (no API key required)
 - **`text_format_test.py`**: Text format parsing test with MinerU (no API key required)
+
+</div>
 
 Run examples:
 ```bash
@@ -371,9 +499,18 @@ python examples/image_format_test.py --check-pillow --file dummy
 python examples/text_format_test.py --check-reportlab --file dummy
 ```
 
-## 🔧 Configuration
+---
+
+<div align="center">
+
+## 🔧 CONFIGURATION
+*System Optimization Parameters*
+
+</div>
 
 ### Environment Variables
+
+<div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
 Create a `.env` file (refer to `.env.example`):
 ```bash
@@ -381,7 +518,13 @@ OPENAI_API_KEY=your_openai_api_key
 OPENAI_BASE_URL=your_base_url  # Optional
 ```
 
+</div>
+
+<div style="background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
+
 > **Note**: API keys are only required for full RAG processing with LLM integration. The parsing test files (`office_document_test.py` and `image_format_test.py`) only test MinerU functionality and do not require API keys.
+
+</div>
 
 ### MinerU Configuration
 
@@ -410,15 +553,47 @@ await rag.process_document_complete(
 )
 ```
 
+<div style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
+
 > **Note**: MinerU 2.0 no longer uses the `magic-pdf.json` configuration file. All settings are now passed as command-line parameters or function arguments.
 
-## 🧪 Supported Content Types
+</div>
+
+---
+
+<div align="center">
+
+## 🧪 SUPPORTED CONTENT TYPES
+*Universal Format Compatibility Matrix*
+
+</div>
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="https://user-images.githubusercontent.com/74038190/235294015-47144047-25ab-417c-af1b-6746820a20ff.gif" width="80"><br>
+        <b>📄 Document Formats</b>
+      </td>
+      <td align="center">
+        <img src="https://user-images.githubusercontent.com/74038190/235294012-0a55e343-37ad-4b0f-924f-c8431d9612af.gif" width="80"><br>
+        <b>🎨 Multimodal Elements</b>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ### Document Formats
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
+
 - **PDFs**: Research papers, reports, presentations
 - **Office Documents**: DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️
 - **Images**: JPG, PNG, BMP, TIFF, GIF, WebP 📸
 - **Text Files**: TXT, MD ⚠️
+
+</div>
+
+<div style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
 
 > **⚠️ Office Document Processing Requirements:**
 >
@@ -433,6 +608,10 @@ await rag.process_document_complete(
 > - **Alternative approach**: Convert to PDF manually for optimal performance
 > - **Processing workflow**: Office files are automatically converted to PDF, then processed by MinerU
 
+</div>
+
+<div style="background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
+
 > **📸 Image Format Support:**
 >
 > RAG-Anything supports comprehensive image format processing:
@@ -441,6 +620,10 @@ await rag.process_document_complete(
 > - **Conversion requirements**: PIL/Pillow library (`pip install Pillow`)
 > - **Processing workflow**: Non-native formats are converted to PNG, then processed by MinerU
 > - **Quality preservation**: Conversion maintains image quality while ensuring compatibility
+
+</div>
+
+<div style="background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
 
 > **⚠️ Text File Processing Requirements:**
 >
@@ -454,16 +637,34 @@ await rag.process_document_complete(
 > - **Cross-platform fonts**: Automatic Chinese font detection for Windows/macOS
 > - **Processing workflow**: Text files are automatically converted to PDF, then processed by MinerU
 
+</div>
 
 ### Multimodal Elements
+<div style="background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
+
 - **Images**: Photographs, diagrams, charts, screenshots
 - **Tables**: Data tables, comparison charts, statistical summaries
 - **Equations**: Mathematical formulas in LaTeX format
 - **Generic Content**: Custom content types via extensible processors
 
-## 📖 Citation
+</div>
+
+---
+
+<div align="center">
+
+## 📖 CITATION
+*Academic Reference*
+
+</div>
+
+<div align="center">
+  <img src="https://user-images.githubusercontent.com/74038190/212257463-4d082cb4-7483-4eaf-bc25-6dde2628aabd.gif" width="100">
+</div>
 
 If you find RAG-Anything useful in your research, please cite our paper:
+
+<div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
 ```bibtex
 @article{guo2024lightrag,
@@ -476,36 +677,116 @@ If you find RAG-Anything useful in your research, please cite our paper:
 }
 ```
 
-## 🔗 Related Projects
-
-- [LightRAG](https://github.com/HKUDS/LightRAG): **Simple and Fast RAG**
-- [VideoRAG](https://github.com/HKUDS/VideoRAG): **Extreme Long-Context Video RAG**
-- [MiniRAG](https://github.com/HKUDS/MiniRAG): **Extremely Simple RAG**
-
-## Star History
-
-<a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
- </picture>
-</a>
-
-## Contribution
-
-We thank all our contributors for their valuable contributions.
-
-<a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" />
-</a>
+</div>
 
 ---
 
 <div align="center">
-    <p>
-        <a href="https://github.com/HKUDS/RAG-Anything">⭐ Star us on GitHub</a> |
-        <a href="https://github.com/HKUDS/RAG-Anything/issues">🐛 Report Issues</a> |
-        <a href="https://github.com/HKUDS/RAG-Anything/discussions">💬 Discussions</a>
-    </p>
+
+## 🔗 RELATED PROJECTS
+*Ecosystem & Extensions*
+
 </div>
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <a href="https://github.com/HKUDS/LightRAG">
+          <img src="https://user-images.githubusercontent.com/74038190/212257468-1e9a91f1-b626-4baa-b15d-5c385dfa7763.gif" width="100"><br>
+          <b>LightRAG</b><br>
+          <sub>Simple and Fast RAG</sub>
+        </a>
+      </td>
+      <td align="center">
+        <a href="https://github.com/HKUDS/VideoRAG">
+          <img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100"><br>
+          <b>VideoRAG</b><br>
+          <sub>Extreme Long-Context Video RAG</sub>
+        </a>
+      </td>
+      <td align="center">
+        <a href="https://github.com/HKUDS/MiniRAG">
+          <img src="https://user-images.githubusercontent.com/74038190/212257465-7ce8d493-cac5-494e-982a-5a9deb852c4b.gif" width="100"><br>
+          <b>MiniRAG</b><br>
+          <sub>Extremely Simple RAG</sub>
+        </a>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+<div align="center">
+
+## ⭐ STAR HISTORY
+*Community Growth Trajectory*
+
+</div>
+
+<div align="center">
+  <a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" style="border-radius: 15px; box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);" />
+    </picture>
+  </a>
+</div>
+
+---
+
+<div align="center">
+
+## 🤝 CONTRIBUTION
+*Join the Innovation*
+
+</div>
+
+<div align="center">
+  We thank all our contributors for their valuable contributions.
+</div>
+
+<div align="center">
+  <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" style="border-radius: 15px; box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);" />
+  </a>
+</div>
+
+---
+
+<div align="center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 30px; margin: 30px 0;">
+  <div>
+    <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="500">
+  </div>
+  <div style="margin-top: 20px;">
+    <a href="https://github.com/HKUDS/RAG-Anything" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/⭐%20Star%20us%20on%20GitHub-1a1a2e?style=for-the-badge&logo=github&logoColor=white">
+    </a>
+    <a href="https://github.com/HKUDS/RAG-Anything/issues" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/🐛%20Report%20Issues-ff6b6b?style=for-the-badge&logo=github&logoColor=white">
+    </a>
+    <a href="https://github.com/HKUDS/RAG-Anything/discussions" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/💬%20Discussions-4ecdc4?style=for-the-badge&logo=github&logoColor=white">
+    </a>
+  </div>
+</div>
+
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=20&duration=3000&pause=1000&color=00D9FF&center=true&vCenter=true&width=600&lines=Thank+you+for+visiting+RAG-Anything!;Building+the+Future+of+Multimodal+AI;Star+⭐+if+you+find+it+useful!" alt="Closing Animation" />
+</div>
+
+<style>
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 5px rgba(0, 217, 255, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(0, 217, 255, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(0, 217, 255, 0.5); }
+}
+</style>
