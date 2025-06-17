@@ -1,34 +1,103 @@
-<center><h1>🚀 RAG-Anything: All-in-One RAG System</h1></center>
+<div align="center">
+
+```
+██████╗  █████╗  ██████╗       █████╗ ███╗   ██╗██╗   ██╗████████╗██╗  ██╗██╗███╗   ██╗ ██████╗ 
+██╔══██╗██╔══██╗██╔════╝      ██╔══██╗████╗  ██║╚██╗ ██╔╝╚══██╔══╝██║  ██║██║████╗  ██║██╔════╝ 
+██████╔╝███████║██║  ███╗     ███████║██╔██╗ ██║ ╚████╔╝    ██║   ███████║██║██╔██╗ ██║██║  ███╗
+██╔══██╗██╔══██║██║   ██║     ██╔══██║██║╚██╗██║  ╚██╔╝     ██║   ██╔══██║██║██║╚██╗██║██║   ██║
+██║  ██║██║  ██║╚██████╔╝     ██║  ██║██║ ╚████║   ██║      ██║   ██║  ██║██║██║ ╚████║╚██████╔╝
+╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ 
+```
+
+<div style="margin: 20px 0;">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=35&duration=3000&pause=1000&color=00F5FF&background=0D001100&center=true&vCenter=true&width=1000&height=100&lines=🔥+下一代多模态RAG系统+🔥;⚡+赛博增强AI智能+⚡;🚀+文档处理量子飞跃+🚀" alt="Typing SVG" />
+</div>
+
+<div style="background: linear-gradient(45deg, #FF0080, #00F5FF); padding: 2px; border-radius: 15px; margin: 20px 0;">
+  <div style="background: #0a0a0a; padding: 20px; border-radius: 13px;">
+    <img src="./assets/logo.png" width="120" height="120" alt="raganything" style="border-radius: 50%; border: 3px solid #00F5FF; box-shadow: 0 0 30px #00F5FF;">
+  </div>
+</div>
+
+<div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0;">
+  <a href='https://github.com/HKUDS/RAG-Anything'>
+    <img src='https://img.shields.io/badge/🔥_项目-主站-FF0080?style=for-the-badge&logo=github&logoColor=white&labelColor=0a0a0a' alt="Project">
+  </a>
+  <a href='https://arxiv.org/abs/2410.05779'>
+    <img src='https://img.shields.io/badge/📚_ARXIV-2410.05779-00F5FF?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=0a0a0a' alt="arXiv">
+  </a>
+  <a href='https://github.com/HKUDS/LightRAG'>
+    <img src='https://img.shields.io/badge/⚡_技术底座-LIGHTRAG-39FF14?style=for-the-badge&logo=lightning&logoColor=white&labelColor=0a0a0a' alt="LightRAG">
+  </a>
+</div>
+
+<div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0;">
+  <img src='https://img.shields.io/github/stars/HKUDS/RAG-Anything?color=FF0080&style=for-the-badge&logo=star&logoColor=white&labelColor=0a0a0a' alt="Stars">
+  <img src="https://img.shields.io/badge/PYTHON-3.9+-00F5FF?style=for-the-badge&logo=python&logoColor=white&labelColor=0a0a0a" alt="Python">
+  <img src="https://img.shields.io/pypi/v/raganything.svg?color=39FF14&style=for-the-badge&logo=pypi&logoColor=white&labelColor=0a0a0a" alt="PyPI">
+</div>
+
+<div style="margin: 30px 0;">
+  <a href="README_zh.md" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/🇨🇳_中文版-FF6B35?style=for-the-badge&logoColor=white&labelColor=0a0a0a" alt="Chinese">
+  </a>
+  <span style="color: #666; margin: 0 10px;">|</span>
+  <a href="README.md" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/🇺🇸_ENGLISH-4CAF50?style=for-the-badge&logoColor=white&labelColor=0a0a0a" alt="English">
+  </a>
+</div>
+
+</div>
+
+---
+
+## 🌀 **神经创世** 
 
 <div align="center">
-<table border="0" width="100%">
-<tr>
-<td width="100" align="center">
-<img src="./assets/logo.png" width="80" height="80" alt="raganything">
-</td>
-<td>
-
-<div>
-    <p>
-        <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/项目-主页-Green'></a>
-        <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/arXiv-2410.05779-b31b1b'></a>
-        <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/基于-LightRAG-blue'></a>
-    </p>
-    <p>
-        <img src='https://img.shields.io/github/stars/HKUDS/RAGAnything?color=green&style=social' />
-        <img src="https://img.shields.io/badge/python-3.9+-blue">
-        <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg"></a>
-    </p>
-    <p>
-        <a href="README_zh.md">中文版</a> | <a href="README.md">English</a>
-    </p>
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=200&color=gradient&customColorList=12,20,3&text=多模态AI革命&fontSize=40&fontColor=ffffff&animation=twinkling" />
 </div>
-</td>
-</tr>
-</table>
 
-<!-- 在此处添加架构图 -->
-<!-- <img src="./assets/raganything_architecture.png" width="800" alt="RAGAnything架构图"> -->
+在现代AI的**赛博空间**中，文档已经超越了纯文本的界限，演化为包含交织视觉智能、结构化知识图谱和数学抽象的**多维数据矩阵**。传统的RAG系统，困囿于其**单色现实**，无法感知这种丰富的多模态光谱。
+
+**RAG-Anything**作为AI文档处理的**量子飞跃**而出现——一个**神经增强、赛博朋克级别**的多模态RAG系统，**打破传统边界**。基于闪电般快速的[LightRAG](https://github.com/HKUDS/LightRAG)架构构建，它将不可能转化为必然。
+
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=25&duration=2000&pause=500&color=FF0080&center=true&vCenter=true&width=800&lines=🔮+统一多模态智能;💎+无缝跨模态融合;🛸+企业级性能;⚔️+零妥协精度" alt="Features" />
+</div>
+
+### 🔥 **赛博能力矩阵**
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0;">
+
+<div style="background: linear-gradient(135deg, #FF008080, #FF008020); padding: 20px; border-radius: 15px; border: 1px solid #FF0080;">
+  <h4>🚀 <strong>量子流水线</strong></h4>
+  <p>端到端多模态工作流，具备<strong>神经优化</strong>的文档摄入、解析和智能查询合成</p>
+</div>
+
+<div style="background: linear-gradient(135deg, #00F5FF80, #00F5FF20); padding: 20px; border-radius: 15px; border: 1px solid #00F5FF;">
+  <h4>📡 <strong>通用兼容性</strong></h4>
+  <p>跨<strong>所有已知格式</strong>的无缝处理：PDF、Office套件、图像和新兴数据结构</p>
+</div>
+
+<div style="background: linear-gradient(135deg, #39FF1480, #39FF1420); padding: 20px; border-radius: 15px; border: 1px solid #39FF14;">
+  <h4>🧠 <strong>多模态认知</strong></h4>
+  <p>专门的神经处理器用于图像、表格、方程和<strong>异构内容矩阵</strong></p>
+</div>
+
+<div style="background: linear-gradient(135deg, #FF6B3580, #FF6B3520); padding: 20px; border-radius: 15px; border: 1px solid #FF6B35;">
+  <h4>🕸️ <strong>知识中枢</strong></h4>
+  <p>自组装多模态知识图谱，具备<strong>跨维度关系映射</strong></p>
+</div>
+
+<div style="background: linear-gradient(135deg, #8A2BE280, #8A2BE220); padding: 20px; border-radius: 15px; border: 1px solid #8A2BE2;">
+  <h4>⚡ <strong>自适应协议</strong></h4>
+  <p>灵活的MinerU驱动解析，具备<strong>实时内容注入</strong>工作流</p>
+</div>
+
+<div style="background: linear-gradient(135deg, #FF147580, #FF147520); padding: 20px; border-radius: 15px; border: 1px solid #FF1475;">
+  <h4>🎯 <strong>混合智能</strong></h4>
+  <p>跨文本和多模态领域的高级检索，具备<strong>上下文意识</strong></p>
+</div>
 
 </div>
 
@@ -404,15 +473,103 @@ await rag.process_document_complete(
 
 > **注意**：MinerU 2.0不再使用 `magic-pdf.json` 配置文件。所有设置现在通过命令行参数或函数参数传递。
 
-## 🧪 支持的内容类型
+## 🛠️ **神经实验室**
 
-### 文档格式
-- **PDF**：研究论文、报告、演示文稿
-- **Office文档**：DOC、DOCX、PPT、PPTX、XLS、XLSX ⚠️
-- **图像**：JPG、PNG、BMP、TIFF、GIF、WebP 📸
-- **文本文件**：TXT、MD ⚠️
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=120&color=gradient&customColorList=30,12,20&text=实验协议&fontSize=25&fontColor=ffffff" />
+</div>
 
-> **⚠️ Office文档处理要求：**
+`examples/` 目录包含**前沿实验协议**：
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 20px 0;">
+
+<div style="border: 1px solid #FF0080; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #FF008020, #FF008005);">
+  <h4>🚀 <strong>raganything_example.py</strong></h4>
+  <p>完整神经工作流，集成MinerU</p>
+</div>
+
+<div style="border: 1px solid #00F5FF; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #00F5FF20, #00F5FF05);">
+  <h4>🧠 <strong>modalprocessors_example.py</strong></h4>
+  <p>直接多模态神经处理协议</p>
+</div>
+
+<div style="border: 1px solid #39FF14; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #39FF1420, #39FF1405);">
+  <h4>📄 <strong>office_document_test.py</strong></h4>
+  <p>Office文档神经网络解析</p>
+</div>
+
+<div style="border: 1px solid #FF6B35; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #FF6B3520, #FF6B3505);">
+  <h4>🖼️ <strong>image_format_test.py</strong></h4>
+  <p>图像格式神经处理协议</p>
+</div>
+
+<div style="border: 1px solid #8A2BE2; padding: 15px; border-radius: 10px; background: linear-gradient(135deg, #8A2BE220, #8A2BE205);">
+  <h4>📝 <strong>text_format_test.py</strong></h4>
+  <p>文本格式神经处理协议</p>
+</div>
+
+</div>
+
+**执行神经实验：**
+```bash
+# 完整神经处理
+python examples/raganything_example.py path/to/document.pdf --api-key YOUR_QUANTUM_KEY
+
+# 直接神经模态处理
+python examples/modalprocessors_example.py --api-key YOUR_QUANTUM_KEY
+
+# 神经解析测试（无需API）
+python examples/office_document_test.py --file path/to/document.docx
+python examples/image_format_test.py --file path/to/image.bmp
+python examples/text_format_test.py --file path/to/document.md
+
+# 检查LibreOffice安装
+python examples/office_document_test.py --check-libreoffice --file dummy
+
+# 检查PIL/Pillow安装
+python examples/image_format_test.py --check-pillow --file dummy
+
+# 检查ReportLab安装
+python examples/text_format_test.py --check-reportlab --file dummy
+```
+
+> **注意**：API密钥仅在完整RAG处理和LLM集成时需要。解析测试文件（`office_document_test.py`、`image_format_test.py` 和 `text_format_test.py`）仅测试MinerU功能，无需API密钥。
+
+---
+
+## 🌐 **支持的神经格式**
+
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&height=100&color=gradient&customColorList=12,20,3&text=通用兼容性&fontSize=25&fontColor=ffffff" />
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0;">
+
+<div style="background: linear-gradient(135deg, #FF008080, #FF008020); padding: 20px; border-radius: 15px; border: 2px solid #FF0080;">
+  <h4>📄 <strong>文档神经矩阵</strong></h4>
+  <ul>
+    <li><strong>PDF</strong>：研究论文、报告、演示文稿</li>
+    <li><strong>Office神经文档</strong>：DOC、DOCX、PPT、PPTX、XLS、XLSX ⚠️</li>
+    <li><strong>图像</strong>：JPG、PNG、BMP、TIFF、GIF、WebP 📸</li>
+    <li><strong>文本文件</strong>：TXT、MD ⚠️</li>
+  </ul>
+</div>
+
+<div style="background: linear-gradient(135deg, #00F5FF80, #00F5FF20); padding: 20px; border-radius: 15px; border: 2px solid #00F5FF;">
+  <h4>🧠 <strong>多模态神经元素</strong></h4>
+  <ul>
+    <li><strong>视觉智能</strong>：照片、图表、图形、截图</li>
+    <li><strong>结构化数据</strong>：表格、对比、统计矩阵</li>
+    <li><strong>数学表达式</strong>：LaTeX公式、方程</li>
+    <li><strong>自定义神经内容</strong>：可扩展处理器</li>
+  </ul>
+</div>
+
+</div>
+
+<div style="background: linear-gradient(45deg, #FF6B3580, #FF6B3520); padding: 20px; border-radius: 15px; border: 1px solid #FF6B35; margin: 20px 0;">
+
+> **⚠️ Office文档神经处理要求：**
 >
 > RAG-Anything通过自动PDF转换支持全面的Office文档处理：
 > - **支持格式**：.doc、.docx、.ppt、.pptx、.xls、.xlsx
@@ -425,7 +582,11 @@ await rag.process_document_complete(
 > - **替代方案**：手动转换为PDF以获得最佳性能
 > - **处理流程**：Office文件自动转换为PDF，然后由MinerU处理
 
-> **📸 图像格式支持：**
+</div>
+
+<div style="background: linear-gradient(45deg, #39FF1480, #39FF1420); padding: 20px; border-radius: 15px; border: 1px solid #39FF14; margin: 20px 0;">
+
+> **📸 图像格式神经支持：**
 >
 > RAG-Anything支持全面的图像格式处理：
 > - **MinerU原生格式**：.jpg、.jpeg、.png（直接处理）
@@ -434,7 +595,11 @@ await rag.process_document_complete(
 > - **处理流程**：非原生格式自动转换为PNG，然后由MinerU处理
 > - **质量保证**：转换过程保持图像质量并确保兼容性
 
-> **⚠️ 文本文件处理要求：**
+</div>
+
+<div style="background: linear-gradient(45deg, #8A2BE280, #8A2BE220); padding: 20px; border-radius: 15px; border: 1px solid #8A2BE2; margin: 20px 0;">
+
+> **⚠️ 文本文件神经处理要求：**
 >
 > RAG-Anything通过自动PDF转换支持文本文件处理：
 > - **支持格式**：.txt、.md
@@ -446,15 +611,19 @@ await rag.process_document_complete(
 > - **跨平台字体**：Windows/macOS自动中文字体检测
 > - **处理流程**：文本文件自动转换为PDF，然后由MinerU处理
 
-### 多模态元素
-- **图像**：照片、图表、示意图、截图
-- **表格**：数据表、对比图、统计摘要
-- **公式**：LaTeX格式的数学公式
-- **通用内容**：通过可扩展处理器支持的自定义内容类型
+</div>
 
-## 📖 引用
+---
 
-如果你在研究中发现RAGAnything有用，请引用我们的论文：
+## 📚 **学术神经引用**
+
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=30&duration=3000&pause=1000&color=39FF14&center=true&vCenter=true&width=800&lines=🎓+引用我们的神经研究;📖+学术认可;🏆+科学贡献" alt="Citation" />
+</div>
+
+<div style="background: linear-gradient(45deg, #0a0a0a, #1a1a1a); padding: 25px; border-radius: 15px; border: 2px solid #39FF14; margin: 20px 0;">
+
+如果你在**神经研究**中发现RAG-Anything有用，请引用我们的开创性论文：
 
 ```bibtex
 @article{guo2024lightrag,
@@ -467,36 +636,82 @@ await rag.process_document_complete(
 }
 ```
 
-## 🔗 相关项目
+</div>
 
-- [LightRAG](https://github.com/HKUDS/LightRAG)：**简单快速的RAG系统**
-- [VideoRAG](https://github.com/HKUDS/VideoRAG)：**超长上下文视频RAG系统**
-- [MiniRAG](https://github.com/HKUDS/MiniRAG)：**极简RAG系统**
+---
 
-## Star History
+## 🔗 **神经网络生态系统**
 
-<a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
- </picture>
-</a>
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=150&color=gradient&customColorList=30,20,12&text=连接智能&fontSize=30&fontColor=ffffff&animation=twinkling" />
+</div>
 
-## 贡献者
+<div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 30px 0;">
+  <a href="https://github.com/HKUDS/LightRAG">
+    <img src="https://img.shields.io/badge/⚡_LIGHTRAG-简单快速RAG-FF0080?style=for-the-badge&logo=lightning&logoColor=white&labelColor=0a0a0a" alt="LightRAG">
+  </a>
+  <a href="https://github.com/HKUDS/VideoRAG">
+    <img src="https://img.shields.io/badge/🎬_VIDEORAG-超长上下文-00F5FF?style=for-the-badge&logo=video&logoColor=white&labelColor=0a0a0a" alt="VideoRAG">
+  </a>
+  <a href="https://github.com/HKUDS/MiniRAG">
+    <img src="https://img.shields.io/badge/🔬_MINIRAG-极简系统-39FF14?style=for-the-badge&logo=atom&logoColor=white&labelColor=0a0a0a" alt="MiniRAG">
+  </a>
+</div>
 
-感谢所有贡献者！
+---
 
-<a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" />
-</a>
+## ⭐ **神经进化时间线**
+
+<div align="center">
+  <a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
+      <img alt="神经进化图表" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" style="border-radius: 15px; border: 2px solid #00F5FF;" />
+    </picture>
+  </a>
+</div>
+
+---
+
+## 🤝 **神经贡献者**
+
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=25&duration=2000&pause=500&color=FF6B35&center=true&vCenter=true&width=600&lines=🧠+集体智慧;🤖+神经协作;🚀+社区驱动" alt="Contributors" />
+</div>
+
+我们感谢所有**神经贡献者**对多模态AI革命的量子贡献。
+
+<div align="center" style="margin: 30px 0;">
+  <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" style="border-radius: 15px; border: 2px solid #FF6B35;" />
+  </a>
+</div>
 
 ---
 
 <div align="center">
-    <p>
-        <a href="https://github.com/HKUDS/RAG-Anything">⭐ 在GitHub上为我们点星</a> |
-        <a href="https://github.com/HKUDS/RAG-Anything/issues">🐛 报告问题</a> |
-        <a href="https://github.com/HKUDS/RAG-Anything/discussions">💬 讨论交流</a>
-    </p>
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=200&color=gradient&customColorList=12,20,3,30&text=加入神经革命&fontSize=35&fontColor=ffffff&animation=twinkling" />
+</div>
+
+<div align="center" style="margin: 40px 0;">
+  <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+    <a href="https://github.com/HKUDS/RAG-Anything" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/⭐_星标神经仓库-FF0080?style=for-the-badge&logo=github&logoColor=white&labelColor=0a0a0a" alt="Star">
+    </a>
+    <a href="https://github.com/HKUDS/RAG-Anything/issues" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/🐛_报告神经缺陷-00F5FF?style=for-the-badge&logo=bug&logoColor=white&labelColor=0a0a0a" alt="Issues">
+    </a>
+    <a href="https://github.com/HKUDS/RAG-Anything/discussions" style="text-decoration: none;">
+      <img src="https://img.shields.io/badge/💬_神经讨论-39FF14?style=for-the-badge&logo=chat&logoColor=white&labelColor=0a0a0a" alt="Discussions">
+    </a>
+  </div>
+</div>
+
+<div align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=20&duration=4000&pause=1000&color=8A2BE2&center=true&vCenter=true&width=1000&lines=🌟+多模态AI的未来就是现在+🌟;⚡+超越传统边界+⚡;🚀+拥抱神经革命+🚀" alt="Footer" />
+</div>
+
+<div align="center" style="margin: 20px 0;">
+  <img src="https://komarev.com/ghpvc/?username=HKUDS&repo=RAG-Anything&color=FF0080&style=for-the-badge&label=神经访客" alt="Visitor Count" />
 </div>
