@@ -7,31 +7,22 @@
 </div>
 
 <div align="center">
-  <table border="0" cellpadding="0" cellspacing="0" style="border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 20px;">
-    <tr>
-      <td width="120" align="center" style="border: none;">
-        <img src="./assets/logo.png" width="100" height="100" alt="raganything" style="border-radius: 50%; box-shadow: 0 0 30px rgba(0, 217, 255, 0.5); animation: pulse 2s infinite;">
-      </td>
-      <td style="border: none; padding-left: 20px;">
-        <div>
-          <p>
-            <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/🔥Project-Page-00d9ff?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e'></a>
-            <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/📄arXiv-2410.05779-ff6b6b?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=1a1a2e'></a>
-            <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/⚡Based%20on-LightRAG-4ecdc4?style=for-the-badge&logo=lightning&logoColor=white&labelColor=1a1a2e'></a>
-          </p>
-          <p>
-            <a href="https://github.com/HKUDS/RAG-Anything/stargazers"><img src='https://img.shields.io/github/stars/HKUDS/RAG-Anything?color=00d9ff&style=for-the-badge&logo=star&logoColor=white&labelColor=1a1a2e' /></a>
-            <img src="https://img.shields.io/badge/🐍Python-3.9+-4ecdc4?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1a2e">
-            <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=ff6b6b"></a>
-          </p>
-          <p>
-            <a href="README_zh.md"><img src="https://img.shields.io/badge/🇨🇳中文版-1a1a2e?style=for-the-badge"></a>
-            <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸English-1a1a2e?style=for-the-badge"></a>
-          </p>
-        </div>
-      </td>
-    </tr>
-  </table>
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; text-align: center;">
+    <p>
+      <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/🔥Project-Page-00d9ff?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e'></a>
+      <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/📄arXiv-2410.05779-ff6b6b?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=1a1a2e'></a>
+      <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/⚡Based%20on-LightRAG-4ecdc4?style=for-the-badge&logo=lightning&logoColor=white&labelColor=1a1a2e'></a>
+    </p>
+    <p>
+      <a href="https://github.com/HKUDS/RAG-Anything/stargazers"><img src='https://img.shields.io/github/stars/HKUDS/RAG-Anything?color=00d9ff&style=for-the-badge&logo=star&logoColor=white&labelColor=1a1a2e' /></a>
+      <img src="https://img.shields.io/badge/🐍Python-3.9+-4ecdc4?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1a2e">
+      <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=ff6b6b"></a>
+    </p>
+    <p>
+      <a href="README_zh.md"><img src="https://img.shields.io/badge/🇨🇳中文版-1a1a2e?style=for-the-badge"></a>
+      <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸English-1a1a2e?style=for-the-badge"></a>
+    </p>
+  </div>
 </div>
 
 <div align="center" style="margin: 30px 0;">
@@ -62,47 +53,18 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 <div align="center">
 
 ### 🎯 CORE FEATURES
-*Advanced Capabilities Matrix*
 
 </div>
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="33%">
-        <img src="https://user-images.githubusercontent.com/74038190/212257454-16e3712e-945a-4ca2-b238-408ad0bf87e6.gif" width="100"><br>
-        <b>🔄 End-to-End Pipeline</b><br>
-        <sub>Complete multimodal workflow</sub>
-      </td>
-      <td align="center" width="33%">
-        <img src="https://user-images.githubusercontent.com/74038190/212257468-1e9a91f1-b626-4baa-b15d-5c385dfa7763.gif" width="100"><br>
-        <b>📄 Universal Support</b><br>
-        <sub>All document formats</sub>
-      </td>
-      <td align="center" width="33%">
-        <img src="https://user-images.githubusercontent.com/74038190/212257465-7ce8d493-cac5-494e-982a-5a9deb852c4b.gif" width="100"><br>
-        <b>🧠 AI-Powered Analysis</b><br>
-        <sub>Intelligent content processing</sub>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/212257460-738ff738-247f-4445-a718-cdd0ca76e2db.gif" width="100"><br>
-        <b>🔗 Knowledge Graph</b><br>
-        <sub>Advanced entity relationships</sub>
-      </td>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100"><br>
-        <b>⚡ Adaptive Processing</b><br>
-        <sub>Flexible execution modes</sub>
-      </td>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/212257472-08e52665-c503-4bd9-aa20-f5a4dae769b5.gif" width="100"><br>
-        <b>🎯 Hybrid Retrieval</b><br>
-        <sub>Cross-modal intelligence</sub>
-      </td>
-    </tr>
-  </table>
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
+
+- **🔄 End-to-End Multimodal Pipeline** - Complete workflow from document ingestion and parsing to intelligent multimodal query answering
+- **📄 Universal Document Support** - Seamless processing of PDFs, Office documents, images, and diverse file formats  
+- **🧠 Specialized Content Analysis** - Dedicated processors for images, tables, mathematical equations, and heterogeneous content types
+- **🔗 Multimodal Knowledge Graph** - Automatic entity extraction and cross-modal relationship discovery for enhanced understanding
+- **⚡ Adaptive Processing Modes** - Flexible MinerU-based parsing or direct multimodal content injection workflows
+- **🎯 Hybrid Intelligent Retrieval** - Advanced search capabilities spanning textual and multimodal content with contextual understanding
+
 </div>
 
 ---
@@ -564,32 +526,22 @@ await rag.process_document_complete(
 <div align="center">
 
 ## 🧪 SUPPORTED CONTENT TYPES
-*Universal Format Compatibility Matrix*
 
 </div>
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/235294015-47144047-25ab-417c-af1b-6746820a20ff.gif" width="80"><br>
-        <b>📄 Document Formats</b>
-      </td>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/235294012-0a55e343-37ad-4b0f-924f-c8431d9612af.gif" width="80"><br>
-        <b>🎨 Multimodal Elements</b>
-      </td>
-    </tr>
-  </table>
-</div>
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
 
-### Document Formats
-<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
+### 📄 Document Formats
+- **PDFs** - Research papers, reports, presentations
+- **Office Documents** - DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️ 
+- **Images** - JPG, PNG, BMP, TIFF, GIF, WebP 📸
+- **Text Files** - TXT, MD ⚠️
 
-- **PDFs**: Research papers, reports, presentations
-- **Office Documents**: DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️
-- **Images**: JPG, PNG, BMP, TIFF, GIF, WebP 📸
-- **Text Files**: TXT, MD ⚠️
+### 🎨 Multimodal Elements  
+- **Images** - Photographs, diagrams, charts, screenshots
+- **Tables** - Data tables, comparison charts, statistical summaries
+- **Equations** - Mathematical formulas in LaTeX format
+- **Generic Content** - Custom content types via extensible processors
 
 </div>
 
@@ -639,15 +591,7 @@ await rag.process_document_complete(
 
 </div>
 
-### Multimodal Elements
-<div style="background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
-- **Images**: Photographs, diagrams, charts, screenshots
-- **Tables**: Data tables, comparison charts, statistical summaries
-- **Equations**: Mathematical formulas in LaTeX format
-- **Generic Content**: Custom content types via extensible processors
-
-</div>
 
 ---
 
@@ -726,13 +670,13 @@ If you find RAG-Anything useful in your research, please cite our paper:
 </div>
 
 <div align="center">
-  <a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
+<a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
       <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" style="border-radius: 15px; box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);" />
-    </picture>
-  </a>
+ </picture>
+</a>
 </div>
 
 ---
@@ -745,13 +689,13 @@ If you find RAG-Anything useful in your research, please cite our paper:
 </div>
 
 <div align="center">
-  We thank all our contributors for their valuable contributions.
+We thank all our contributors for their valuable contributions.
 </div>
 
 <div align="center">
-  <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
+<a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
     <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" style="border-radius: 15px; box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);" />
-  </a>
+</a>
 </div>
 
 ---

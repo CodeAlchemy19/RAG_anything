@@ -7,31 +7,22 @@
 </div>
 
 <div align="center">
-  <table border="0" cellpadding="0" cellspacing="0" style="border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 20px;">
-    <tr>
-      <td width="120" align="center" style="border: none;">
-        <img src="./assets/logo.png" width="100" height="100" alt="raganything" style="border-radius: 50%; box-shadow: 0 0 30px rgba(0, 217, 255, 0.5); animation: pulse 2s infinite;">
-      </td>
-      <td style="border: none; padding-left: 20px;">
-        <div>
-          <p>
-            <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/🔥项目-主页-00d9ff?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e'></a>
-            <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/📄arXiv-2410.05779-ff6b6b?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=1a1a2e'></a>
-            <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/⚡基于-LightRAG-4ecdc4?style=for-the-badge&logo=lightning&logoColor=white&labelColor=1a1a2e'></a>
-          </p>
-          <p>
-            <a href="https://github.com/HKUDS/RAG-Anything/stargazers"><img src='https://img.shields.io/github/stars/HKUDS/RAGAnything?color=00d9ff&style=for-the-badge&logo=star&logoColor=white&labelColor=1a1a2e' /></a>
-            <img src="https://img.shields.io/badge/🐍Python-3.9+-4ecdc4?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1a2e">
-            <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=ff6b6b"></a>
-          </p>
-          <p>
-            <a href="README_zh.md"><img src="https://img.shields.io/badge/🇨🇳中文版-1a1a2e?style=for-the-badge"></a>
-            <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸English-1a1a2e?style=for-the-badge"></a>
-          </p>
-        </div>
-      </td>
-    </tr>
-  </table>
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; text-align: center;">
+    <p>
+      <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/🔥项目-主页-00d9ff?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e'></a>
+      <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/📄arXiv-2410.05779-ff6b6b?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=1a1a2e'></a>
+      <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/⚡基于-LightRAG-4ecdc4?style=for-the-badge&logo=lightning&logoColor=white&labelColor=1a1a2e'></a>
+    </p>
+    <p>
+      <a href="https://github.com/HKUDS/RAG-Anything/stargazers"><img src='https://img.shields.io/github/stars/HKUDS/RAGAnything?color=00d9ff&style=for-the-badge&logo=star&logoColor=white&labelColor=1a1a2e' /></a>
+      <img src="https://img.shields.io/badge/🐍Python-3.9+-4ecdc4?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1a2e">
+      <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=ff6b6b"></a>
+    </p>
+    <p>
+      <a href="README_zh.md"><img src="https://img.shields.io/badge/🇨🇳中文版-1a1a2e?style=for-the-badge"></a>
+      <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸English-1a1a2e?style=for-the-badge"></a>
+    </p>
+  </div>
 </div>
 
 <div align="center" style="margin: 30px 0;">
@@ -58,47 +49,18 @@
 <div align="center">
 
 ### 🎯 核心特性
-*先进功能矩阵*
 
 </div>
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="33%">
-        <img src="https://user-images.githubusercontent.com/74038190/212257454-16e3712e-945a-4ca2-b238-408ad0bf87e6.gif" width="100"><br>
-        <b>🔄 端到端流水线</b><br>
-        <sub>完整多模态工作流</sub>
-      </td>
-      <td align="center" width="33%">
-        <img src="https://user-images.githubusercontent.com/74038190/212257468-1e9a91f1-b626-4baa-b15d-5c385dfa7763.gif" width="100"><br>
-        <b>📄 通用格式支持</b><br>
-        <sub>所有文档格式</sub>
-      </td>
-      <td align="center" width="33%">
-        <img src="https://user-images.githubusercontent.com/74038190/212257465-7ce8d493-cac5-494e-982a-5a9deb852c4b.gif" width="100"><br>
-        <b>🧠 AI驱动分析</b><br>
-        <sub>智能内容处理</sub>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/212257460-738ff738-247f-4445-a718-cdd0ca76e2db.gif" width="100"><br>
-        <b>🔗 知识图谱</b><br>
-        <sub>高级实体关系</sub>
-      </td>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100"><br>
-        <b>⚡ 自适应处理</b><br>
-        <sub>灵活执行模式</sub>
-      </td>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/212257472-08e52665-c503-4bd9-aa20-f5a4dae769b5.gif" width="100"><br>
-        <b>🎯 混合检索</b><br>
-        <sub>跨模态智能</sub>
-      </td>
-    </tr>
-  </table>
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
+
+- **🔄 端到端多模态处理流水线** - 提供从文档解析到多模态查询响应的完整处理链路，确保系统的一体化运行
+- **📄 多格式文档支持** - 支持PDF、Office文档（DOC/DOCX/PPT/PPTX/XLS/XLSX）、图像等主流文档格式的统一处理和解析
+- **🧠 多模态内容分析引擎** - 针对图像、表格、公式和通用文本内容部署专门的处理器，确保各类内容的精准解析
+- **🔗 基于知识图谱索引** - 实现自动化实体提取和关系构建，建立跨模态的语义连接网络
+- **⚡ 灵活的处理架构** - 支持基于MinerU的智能解析模式和直接多模态内容插入模式，满足不同应用场景需求
+- **🎯 跨模态检索机制** - 实现跨文本和多模态内容的智能检索，提供精准的信息定位和匹配能力
+
 </div>
 
 ---
@@ -560,32 +522,22 @@ await rag.process_document_complete(
 <div align="center">
 
 ## 🧪 支持的内容类型
-*通用格式兼容性矩阵*
 
 </div>
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/235294015-47144047-25ab-417c-af1b-6746820a20ff.gif" width="80"><br>
-        <b>📄 文档格式</b>
-      </td>
-      <td align="center">
-        <img src="https://user-images.githubusercontent.com/74038190/235294012-0a55e343-37ad-4b0f-924f-c8431d9612af.gif" width="80"><br>
-        <b>🎨 多模态元素</b>
-      </td>
-    </tr>
-  </table>
-</div>
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
 
-### 文档格式
-<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
+### 📄 文档格式
+- **PDF** - 研究论文、报告、演示文稿
+- **Office文档** - DOC、DOCX、PPT、PPTX、XLS、XLSX ⚠️
+- **图像** - JPG、PNG、BMP、TIFF、GIF、WebP 📸
+- **文本文件** - TXT、MD ⚠️
 
-- **PDF**：研究论文、报告、演示文稿
-- **Office文档**：DOC、DOCX、PPT、PPTX、XLS、XLSX ⚠️
-- **图像**：JPG、PNG、BMP、TIFF、GIF、WebP 📸
-- **文本文件**：TXT、MD ⚠️
+### 🎨 多模态元素
+- **图像** - 照片、图表、示意图、截图
+- **表格** - 数据表、对比图、统计摘要
+- **公式** - LaTeX格式的数学公式
+- **通用内容** - 通过可扩展处理器支持的自定义内容类型
 
 </div>
 
@@ -635,15 +587,7 @@ await rag.process_document_complete(
 
 </div>
 
-### 多模态元素
-<div style="background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
-- **图像**：照片、图表、示意图、截图
-- **表格**：数据表、对比图、统计摘要
-- **公式**：LaTeX格式的数学公式
-- **通用内容**：通过可扩展处理器支持的自定义内容类型
-
-</div>
 
 ---
 
@@ -722,13 +666,13 @@ await rag.process_document_complete(
 </div>
 
 <div align="center">
-  <a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
+<a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
       <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" style="border-radius: 15px; box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);" />
-    </picture>
-  </a>
+ </picture>
+</a>
 </div>
 
 ---
@@ -741,13 +685,13 @@ await rag.process_document_complete(
 </div>
 
 <div align="center">
-  感谢所有贡献者！
+感谢所有贡献者！
 </div>
 
 <div align="center">
-  <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
+<a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
     <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" style="border-radius: 15px; box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);" />
-  </a>
+</a>
 </div>
 
 ---
