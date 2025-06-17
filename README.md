@@ -133,7 +133,7 @@ pip install raganything
 #### Option 2: Install from Source
 ```bash
 git clone https://github.com/HKUDS/RAG-Anything.git
-cd RAGAnything
+cd RAG-Anything
 pip install -e .
 ```
 
