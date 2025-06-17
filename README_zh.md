@@ -7,7 +7,7 @@
 </div>
 
 <div align="center">
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; text-align: center;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; text-align: center;">
     <p>
       <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/🔥项目-主页-00d9ff?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e'></a>
       <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/📄arXiv-2410.05779-ff6b6b?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=1a1a2e'></a>
@@ -27,8 +27,6 @@
 
 <div align="center" style="margin: 30px 0;">
   <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="800">
-</div>
-
 </div>
 
 ---
@@ -107,6 +105,7 @@
 </div>
 
 #### 🔧 1. 文档解析阶段
+
 <div style="background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #4ecdc4;">
 
 该系统构建了高精度文档解析平台，通过结构化提取引擎实现多模态元素的完整识别与提取。系统采用自适应内容分解机制，智能分离文档中的文本、图像、表格、公式等异构内容，并保持其语义关联性。同时支持PDF、Office文档、图像等主流格式的统一处理，提供标准化的多模态内容输出。
@@ -120,6 +119,7 @@
 </div>
 
 #### 🤖 2. 多模态内容理解与处理
+
 <div style="background: linear-gradient(90deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #ff6b6b;">
 
 该多模态内容处理系统通过自主分类路由机制实现异构内容的智能识别与优化分发。系统采用并发多流水线架构，确保文本和多模态内容的高效并行处理，在最大化吞吐量的同时保持内容完整性，并能完整提取和保持原始文档的层次结构与元素关联关系。
@@ -133,6 +133,7 @@
 </div>
 
 #### 🔬 3. 多模态分析引擎
+
 <div style="background: linear-gradient(90deg, #0f3460 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #00d9ff;">
 
 系统部署了面向异构数据模态的模态感知处理单元：
@@ -160,6 +161,7 @@
 </div>
 
 #### 🌐 4. 多模态知识图谱索引
+
 <div style="background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #4ecdc4;">
 
 多模态知识图谱构建模块将文档内容转换为结构化语义表示。系统提取多模态实体，建立跨模态关系，并保持层次化组织结构。通过加权相关性评分实现优化的知识检索。
@@ -175,6 +177,7 @@
 </div>
 
 #### 🎯 5. 模态感知检索
+
 <div style="background: linear-gradient(90deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #ff6b6b;">
 
 混合检索系统结合向量相似性搜索与图遍历算法，实现全面的内容检索。系统实现模态感知排序机制，并维护检索元素间的关系一致性，确保上下文集成的信息传递。
@@ -202,14 +205,14 @@
 
 ### 💾 安装
 
-<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
-
 #### 选项1：从PyPI安装（推荐）
+
 ```bash
 pip install raganything
 ```
 
 #### 选项2：从源码安装
+
 ```bash
 git clone https://github.com/HKUDS/RAG-Anything.git
 cd RAG-Anything
@@ -217,7 +220,9 @@ pip install -e .
 ```
 
 #### MinerU依赖（可选）
+
 用于MinerU 2.0文档解析功能：
+
 ```bash
 # 安装MinerU 2.0
 pip install -U 'mineru[core]'
@@ -226,19 +231,14 @@ pip install -U 'mineru[core]'
 uv pip install -U 'mineru[core]'
 ```
 
-</div>
-
-<div style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
-
 > **⚠️ MinerU 2.0重要变化：**
 > - 包名从 `magic-pdf` 改为 `mineru`
 > - 移除了LibreOffice集成（Office文档需要手动转换为PDF）
 > - 简化的命令行界面，使用 `mineru` 命令
 > - 新的后端选项和性能改进
 
-</div>
-
 检查MinerU安装：
+
 ```bash
 # 验证安装
 mineru --version
@@ -252,8 +252,6 @@ python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ 
 ### 🎮 使用方法
 
 #### 端到端文档处理
-
-<div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
 ```python
 import asyncio
@@ -324,11 +322,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-</div>
-
 #### 直接多模态内容处理
-
-<div style="background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
 ```python
 import asyncio
@@ -390,8 +384,6 @@ if __name__ == "__main__":
     asyncio.run(process_multimodal_content())
 ```
 
-</div>
-
 ### 🔄 批量处理
 
 ```python
@@ -442,17 +434,14 @@ result_global = await rag.query_with_multimodal("你的问题", mode="global")
 
 `examples/` 目录包含完整的使用示例：
 
-<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
-
 - **`raganything_example.py`**：基于MinerU的端到端文档处理
 - **`modalprocessors_example.py`**：直接多模态内容处理
 - **`office_document_test.py`**：Office文档解析测试（无需API密钥）
 - **`image_format_test.py`**：图像格式解析测试（无需API密钥）
 - **`text_format_test.py`**：文本格式解析测试（无需API密钥）
 
-</div>
-
 运行示例：
+
 ```bash
 # 端到端处理
 python examples/raganything_example.py path/to/document.pdf --api-key YOUR_API_KEY
@@ -479,11 +468,7 @@ python examples/image_format_test.py --check-pillow --file dummy
 python examples/text_format_test.py --check-reportlab --file dummy
 ```
 
-<div style="background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
-
 > **注意**：API密钥仅在完整RAG处理和LLM集成时需要。解析测试文件（`office_document_test.py`、`image_format_test.py` 和 `text_format_test.py`）仅测试MinerU功能，无需API密钥。
-
-</div>
 
 ---
 
@@ -496,15 +481,12 @@ python examples/text_format_test.py --check-reportlab --file dummy
 
 ### 环境变量
 
-<div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
-
 创建 `.env` 文件（参考 `.env.example`）：
+
 ```bash
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_BASE_URL=your_base_url  # 可选
 ```
-
-</div>
 
 ### MinerU配置
 
@@ -522,6 +504,7 @@ mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU加速
 ```
 
 你也可以通过RAGAnything参数配置MinerU：
+
 ```python
 # 配置解析行为
 await rag.process_document_complete(
@@ -533,11 +516,7 @@ await rag.process_document_complete(
 )
 ```
 
-<div style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
-
 > **注意**：MinerU 2.0不再使用 `magic-pdf.json` 配置文件。所有设置现在通过命令行参数或函数参数传递。
-
-</div>
 
 ---
 
@@ -547,23 +526,19 @@ await rag.process_document_complete(
 
 </div>
 
-<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
-
 ### 📄 文档格式
+
 - **PDF** - 研究论文、报告、演示文稿
 - **Office文档** - DOC、DOCX、PPT、PPTX、XLS、XLSX ⚠️
 - **图像** - JPG、PNG、BMP、TIFF、GIF、WebP 📸
 - **文本文件** - TXT、MD ⚠️
 
 ### 🎨 多模态元素
+
 - **图像** - 照片、图表、示意图、截图
 - **表格** - 数据表、对比图、统计摘要
 - **公式** - LaTeX格式的数学公式
 - **通用内容** - 通过可扩展处理器支持的自定义内容类型
-
-</div>
-
-<div style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
 
 > **⚠️ Office文档处理要求：**
 >
@@ -578,10 +553,6 @@ await rag.process_document_complete(
 > - **替代方案**：手动转换为PDF以获得最佳性能
 > - **处理流程**：Office文件自动转换为PDF，然后由MinerU处理
 
-</div>
-
-<div style="background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
-
 > **📸 图像格式支持：**
 >
 > RAG-Anything支持全面的图像格式处理：
@@ -590,10 +561,6 @@ await rag.process_document_complete(
 > - **转换要求**：PIL/Pillow库（`pip install Pillow`）
 > - **处理流程**：非原生格式自动转换为PNG，然后由MinerU处理
 > - **质量保证**：转换过程保持图像质量并确保兼容性
-
-</div>
-
-<div style="background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%); border-radius: 10px; padding: 20px; margin: 15px 0; color: white;">
 
 > **⚠️ 文本文件处理要求：**
 >
@@ -606,10 +573,6 @@ await rag.process_document_complete(
 > - **高级功能**：自动缩放图像、嵌套列表、多级引用、语法高亮代码块
 > - **跨平台字体**：Windows/macOS自动中文字体检测
 > - **处理流程**：文本文件自动转换为PDF，然后由MinerU处理
-
-</div>
-
-
 
 ---
 
@@ -629,8 +592,6 @@ await rag.process_document_complete(
   </div>
 </div>
 
-<div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
-
 ```bibtex
 @article{guo2024lightrag,
   title={LightRAG: Simple and Fast Retrieval-Augmented Generation},
@@ -641,8 +602,6 @@ await rag.process_document_complete(
   primaryClass={cs.IR}
 }
 ```
-
-</div>
 
 ---
 
@@ -697,13 +656,13 @@ await rag.process_document_complete(
 </div>
 
 <div align="center">
-<a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
+  <a href="https://star-history.com/#HKUDS/RAG-Anything&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" />
       <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/RAG-Anything&type=Date" style="border-radius: 15px; box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);" />
- </picture>
-</a>
+    </picture>
+  </a>
 </div>
 
 ---
@@ -716,13 +675,13 @@ await rag.process_document_complete(
 </div>
 
 <div align="center">
-感谢所有贡献者！
+  感谢所有贡献者！
 </div>
 
 <div align="center">
-<a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
+  <a href="https://github.com/HKUDS/RAG-Anything/graphs/contributors">
     <img src="https://contrib.rocks/image?repo=HKUDS/RAG-Anything" style="border-radius: 15px; box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);" />
-</a>
+  </a>
 </div>
 
 ---
