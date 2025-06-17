@@ -25,10 +25,8 @@
   </div>
 </div>
 
-<div align="center" style="margin: 30px 0;">
-  <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="800">
-</div>
-
+<div align="center">
+  <div style="width: 100%; height: 2px; margin: 20px 0; background: linear-gradient(90deg, transparent, #00d9ff, transparent);"></div>
 </div>
 
 ---
@@ -85,7 +83,29 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 </div>
 
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/74038190/212284087-bbe7e430-757e-4901-90bf-4cd2ce3e1852.gif" width="500">
+  <div style="width: 100%; max-width: 600px; margin: 20px auto; padding: 20px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2);">
+    <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 10px;">📄</div>
+        <div style="font-size: 14px; color: #00d9ff;">Document Parsing</div>
+      </div>
+      <div style="font-size: 20px; color: #00d9ff;">→</div>
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 10px;">🧠</div>
+        <div style="font-size: 14px; color: #00d9ff;">Content Analysis</div>
+      </div>
+      <div style="font-size: 20px; color: #00d9ff;">→</div>
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
+        <div style="font-size: 14px; color: #00d9ff;">Knowledge Graph</div>
+      </div>
+      <div style="font-size: 20px; color: #00d9ff;">→</div>
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 10px;">🎯</div>
+        <div style="font-size: 14px; color: #00d9ff;">Intelligent Retrieval</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 #### 🔧 1. Document Parsing Stage
@@ -603,12 +623,17 @@ await rag.process_document_complete(
 </div>
 
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/74038190/212257463-4d082cb4-7483-4eaf-bc25-6dde2628aabd.gif" width="100">
+  <div style="width: 60px; height: 60px; margin: 20px auto; position: relative;">
+    <div style="width: 100%; height: 100%; border: 2px solid #00d9ff; border-radius: 50%; position: relative;">
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #00d9ff;">📖</div>
+    </div>
+    <div style="position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; background: white; border-right: 2px solid #00d9ff; border-bottom: 2px solid #00d9ff; transform: rotate(45deg);"></div>
+  </div>
 </div>
 
-If you find RAG-Anything useful in your research, please cite our paper:
-
 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
+
+If you find RAG-Anything useful in your research, please cite our paper:
 
 ```bibtex
 @article{guo2024lightrag,
@@ -637,21 +662,27 @@ If you find RAG-Anything useful in your research, please cite our paper:
     <tr>
       <td align="center">
         <a href="https://github.com/HKUDS/LightRAG">
-          <img src="https://user-images.githubusercontent.com/74038190/212257468-1e9a91f1-b626-4baa-b15d-5c385dfa7763.gif" width="100"><br>
+          <div style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <span style="font-size: 32px;">⚡</span>
+          </div>
           <b>LightRAG</b><br>
           <sub>Simple and Fast RAG</sub>
         </a>
       </td>
       <td align="center">
         <a href="https://github.com/HKUDS/VideoRAG">
-          <img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100"><br>
+          <div style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <span style="font-size: 32px;">🎥</span>
+          </div>
           <b>VideoRAG</b><br>
           <sub>Extreme Long-Context Video RAG</sub>
         </a>
       </td>
       <td align="center">
         <a href="https://github.com/HKUDS/MiniRAG">
-          <img src="https://user-images.githubusercontent.com/74038190/212257465-7ce8d493-cac5-494e-982a-5a9deb852c4b.gif" width="100"><br>
+          <div style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <span style="font-size: 32px;">✨</span>
+          </div>
           <b>MiniRAG</b><br>
           <sub>Extremely Simple RAG</sub>
         </a>
@@ -718,19 +749,12 @@ We thank all our contributors for their valuable contributions.
 </div>
 
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=20&duration=3000&pause=1000&color=00D9FF&center=true&vCenter=true&width=600&lines=Thank+you+for+visiting+RAG-Anything!;Building+the+Future+of+Multimodal+AI;Star+⭐+if+you+find+it+useful!" alt="Closing Animation" />
+  <div style="width: 100%; max-width: 600px; margin: 20px auto; padding: 20px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2);">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+      <span style="font-size: 24px;">⭐</span>
+      <span style="color: #00d9ff; font-size: 18px;">Thank you for visiting RAG-Anything!</span>
+      <span style="font-size: 24px;">⭐</span>
+    </div>
+    <div style="margin-top: 10px; color: #00d9ff; font-size: 16px;">Building the Future of Multimodal AI</div>
+  </div>
 </div>
-
-<style>
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-@keyframes glow {
-  0% { box-shadow: 0 0 5px rgba(0, 217, 255, 0.5); }
-  50% { box-shadow: 0 0 20px rgba(0, 217, 255, 0.8); }
-  100% { box-shadow: 0 0 5px rgba(0, 217, 255, 0.5); }
-}
-</style>

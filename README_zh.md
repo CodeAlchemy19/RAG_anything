@@ -3,7 +3,7 @@
 # 🚀 RAG-Anything: All-in-One RAG System
 
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&size=24&duration=3000&pause=1000&color=00D9FF&center=true&vCenter=true&width=600&lines=欢迎使用+RAG-Anything;下一代多模态RAG系统;由先进AI技术驱动" alt="Typing Animation" />
+  <div style="width: 100%; height: 2px; margin: 20px 0; background: linear-gradient(90deg, transparent, #00d9ff, transparent);"></div>
 </div>
 
 <div align="center">
@@ -14,7 +14,7 @@
       <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/⚡基于-LightRAG-4ecdc4?style=for-the-badge&logo=lightning&logoColor=white&labelColor=1a1a2e'></a>
     </p>
     <p>
-      <a href="https://github.com/HKUDS/RAG-Anything/stargazers"><img src='https://img.shields.io/github/stars/HKUDS/RAGAnything?color=00d9ff&style=for-the-badge&logo=star&logoColor=white&labelColor=1a1a2e' /></a>
+      <a href="https://github.com/HKUDS/RAG-Anything/stargazers"><img src='https://img.shields.io/github/stars/HKUDS/RAG-Anything?color=00d9ff&style=for-the-badge&logo=star&logoColor=white&labelColor=1a1a2e' /></a>
       <img src="https://img.shields.io/badge/🐍Python-3.9+-4ecdc4?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1a2e">
       <a href="https://pypi.org/project/raganything/"><img src="https://img.shields.io/pypi/v/raganything.svg?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=ff6b6b"></a>
     </p>
@@ -81,7 +81,29 @@
 </div>
 
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/74038190/212284087-bbe7e430-757e-4901-90bf-4cd2ce3e1852.gif" width="500">
+  <div style="width: 100%; max-width: 600px; margin: 20px auto; padding: 20px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2);">
+    <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 10px;">📄</div>
+        <div style="font-size: 14px; color: #00d9ff;">文档解析</div>
+      </div>
+      <div style="font-size: 20px; color: #00d9ff;">→</div>
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 10px;">🧠</div>
+        <div style="font-size: 14px; color: #00d9ff;">内容分析</div>
+      </div>
+      <div style="font-size: 20px; color: #00d9ff;">→</div>
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
+        <div style="font-size: 14px; color: #00d9ff;">知识图谱</div>
+      </div>
+      <div style="font-size: 20px; color: #00d9ff;">→</div>
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 10px;">🎯</div>
+        <div style="font-size: 14px; color: #00d9ff;">智能检索</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 #### 🔧 1. 文档解析阶段
@@ -599,10 +621,13 @@ await rag.process_document_complete(
 </div>
 
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/74038190/212257463-4d082cb4-7483-4eaf-bc25-6dde2628aabd.gif" width="100">
+  <div style="width: 60px; height: 60px; margin: 20px auto; position: relative;">
+    <div style="width: 100%; height: 100%; border: 2px solid #00d9ff; border-radius: 50%; position: relative;">
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #00d9ff;">📖</div>
+    </div>
+    <div style="position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; background: white; border-right: 2px solid #00d9ff; border-bottom: 2px solid #00d9ff; transform: rotate(45deg);"></div>
+  </div>
 </div>
-
-如果你在研究中发现RAGAnything有用，请引用我们的论文：
 
 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 10px; padding: 20px; margin: 15px 0;">
 
@@ -633,21 +658,27 @@ await rag.process_document_complete(
     <tr>
       <td align="center">
         <a href="https://github.com/HKUDS/LightRAG">
-          <img src="https://user-images.githubusercontent.com/74038190/212257468-1e9a91f1-b626-4baa-b15d-5c385dfa7763.gif" width="100"><br>
+          <div style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <span style="font-size: 32px;">⚡</span>
+          </div>
           <b>LightRAG</b><br>
           <sub>简单快速的RAG系统</sub>
         </a>
       </td>
       <td align="center">
         <a href="https://github.com/HKUDS/VideoRAG">
-          <img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100"><br>
+          <div style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <span style="font-size: 32px;">🎥</span>
+          </div>
           <b>VideoRAG</b><br>
           <sub>超长上下文视频RAG系统</sub>
         </a>
       </td>
       <td align="center">
         <a href="https://github.com/HKUDS/MiniRAG">
-          <img src="https://user-images.githubusercontent.com/74038190/212257465-7ce8d493-cac5-494e-982a-5a9deb852c4b.gif" width="100"><br>
+          <div style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <span style="font-size: 32px;">✨</span>
+          </div>
           <b>MiniRAG</b><br>
           <sub>极简RAG系统</sub>
         </a>
@@ -710,6 +741,17 @@ await rag.process_document_complete(
     <a href="https://github.com/HKUDS/RAG-Anything/discussions" style="text-decoration: none;">
       <img src="https://img.shields.io/badge/💬%20讨论交流-4ecdc4?style=for-the-badge&logo=github&logoColor=white">
     </a>
+  </div>
+</div>
+
+<div align="center">
+  <div style="width: 100%; max-width: 600px; margin: 20px auto; padding: 20px; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%); border-radius: 15px; border: 1px solid rgba(0, 217, 255, 0.2);">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+      <span style="font-size: 24px;">⭐</span>
+      <span style="color: #00d9ff; font-size: 18px;">感谢您访问RAG-Anything!</span>
+      <span style="font-size: 24px;">⭐</span>
+    </div>
+    <div style="margin-top: 10px; color: #00d9ff; font-size: 16px;">构建多模态AI的未来</div>
   </div>
 </div>
 
