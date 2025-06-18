@@ -56,7 +56,7 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
 
 - **🔄 End-to-End Multimodal Pipeline** - Complete workflow from document ingestion and parsing to intelligent multimodal query answering
-- **📄 Universal Document Support** - Seamless processing of PDFs, Office documents, images, and diverse file formats  
+- **📄 Universal Document Support** - Seamless processing of PDFs, Office documents, images, and diverse file formats
 - **🧠 Specialized Content Analysis** - Dedicated processors for images, tables, mathematical equations, and heterogeneous content types
 - **🔗 Multimodal Knowledge Graph** - Automatic entity extraction and cross-modal relationship discovery for enhanced understanding
 - **⚡ Adaptive Processing Modes** - Flexible MinerU-based parsing or direct multimodal content injection workflows
@@ -523,11 +523,11 @@ await rag.process_document_complete(
 ### Document Formats
 
 - **PDFs** - Research papers, reports, presentations
-- **Office Documents** - DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️ 
+- **Office Documents** - DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️
 - **Images** - JPG, PNG, BMP, TIFF, GIF, WebP 📸
 - **Text Files** - TXT, MD ⚠️
 
-### Multimodal Elements  
+### Multimodal Elements
 
 - **Images** - Photographs, diagrams, charts, screenshots
 - **Tables** - Data tables, comparison charts, statistical summaries
