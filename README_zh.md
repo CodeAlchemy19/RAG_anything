@@ -64,13 +64,13 @@
 
 ## 🏗️ 算法原理与架构
 
-*量子增强处理框架*
+*RAG-Anything处理框架*
 
 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #00d9ff;">
 
 ### 核心算法
 
-**RAGAnything** 采用灵活的分层架构设计，实现多阶段多模态处理流水线，将传统RAG系统扩展为支持异构内容类型的综合处理平台。
+**RAG-Anything** 采用灵活的分层架构设计，实现多阶段多模态处理流水线，将传统RAG系统扩展为支持异构内容类型的综合处理平台。
 
 </div>
 
