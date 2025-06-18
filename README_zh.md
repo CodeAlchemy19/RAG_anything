@@ -45,6 +45,8 @@
 
 **RAG-Anything**是一个综合性多模态文档处理RAG系统。该系统能够无缝处理和查询包含文本、图像、表格、公式等多模态内容的复杂文档，提供完整的检索增强(RAG)生成解决方案。
 
+<img src="assets/rag_anything_framework.png" alt="RAG-Anything" />
+
 </div>
 
 ### 🎯 核心特性
@@ -63,8 +65,6 @@
 ---
 
 ## 🏗️ 算法原理与架构
-
-<img src="assets/rag_anything_framework.png" alt="RAG-Anything" />
 
 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #00d9ff;">
 
