@@ -56,6 +56,8 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 
 ## 🏗️ Algorithm & Architecture
 
+<img src="assets/rag_anything_framework.png" alt="RAG-Anything" />
+
 ### Core Algorithm
 
 **RAG-Anything** implements an effective **multi-stage multimodal pipeline** that fundamentally extends traditional RAG architectures to seamlessly handle diverse content modalities through intelligent orchestration and cross-modal understanding.
