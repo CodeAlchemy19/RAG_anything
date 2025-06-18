@@ -68,7 +68,7 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 
 ## 🏗️ Algorithm & Architecture
 
-*Quantum-Enhanced Processing Framework*
+<img src="assets/rag_anything_framework.png" alt="RAG-Anything" />
 
 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 15px; padding: 25px; margin: 20px 0; border-left: 5px solid #00d9ff;">
 
