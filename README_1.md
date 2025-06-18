@@ -40,6 +40,8 @@ As a unified solution, RAG-Anything **eliminates the need for multiple specializ
 
 Users can query documents containing **interleaved text**, **visual diagrams**, **structured tables**, and **mathematical formulations** through **one cohesive interface**. This consolidated approach makes RAG-Anything particularly valuable for academic research, technical documentation, financial reports, and enterprise knowledge management where rich, mixed-content documents demand a **unified processing framework**.
 
+<img src="assets/rag_anything_framework.png" alt="RAG-Anything" />
+
 ### Key Features of RAG-Anything
 
 - 🔄 **End-to-End Multimodal Pipeline**: Complete workflow from document ingestion and parsing to intelligent multimodal query answering.
@@ -55,8 +57,6 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 - 🎯 **Hybrid Intelligent Retrieval**: Advanced search capabilities spanning textual and multimodal content with contextual understanding.
 
 ## 🏗️ Algorithm & Architecture
-
-<img src="assets/rag_anything_framework.png" alt="RAG-Anything" />
 
 ### Core Algorithm
 
