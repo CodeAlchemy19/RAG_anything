@@ -226,18 +226,6 @@ cd RAG-Anything
 pip install -e .
 ```
 
-#### 选项3：MinerU依赖（可选）
-
-用于MinerU 2.0文档解析功能：
-
-```bash
-# 安装MinerU 2.0
-pip install -U 'mineru[core]'
-
-# 或使用uv（更快）
-uv pip install -U 'mineru[core]'
-```
-
 > **⚠️ MinerU 2.0重要变化：**
 > - 包名从 `magic-pdf` 改为 `mineru`
 > - 移除了LibreOffice集成（Office文档需要手动转换为PDF）

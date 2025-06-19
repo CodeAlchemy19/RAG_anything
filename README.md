@@ -230,18 +230,6 @@ cd RAG-Anything
 pip install -e .
 ```
 
-#### Option 3: MinerU Dependencies (Optional)
-
-For document parsing capabilities with MinerU 2.0:
-
-```bash
-# Install MinerU 2.0
-pip install -U 'mineru[core]'
-
-# Or using uv (faster)
-uv pip install -U 'mineru[core]'
-```
-
 > **⚠️ Important Changes in MinerU 2.0:**
 > - Package name changed from `magic-pdf` to `mineru`
 > - LibreOffice integration removed (Office documents require manual PDF conversion)
