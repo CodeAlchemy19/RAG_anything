@@ -411,6 +411,94 @@ result_local = await rag.query_with_multimodal("你的问题", mode="local")
 result_global = await rag.query_with_multimodal("你的问题", mode="global")
 ```
 
+#### 6. 加载已存在的LightRAG实例
+
+```python
+import asyncio
+from raganything import RAGAnything
+from lightrag import LightRAG
+from lightrag.llm.openai import openai_complete_if_cache, openai_embed
+import os
+
+async def load_existing_lightrag():
+    # 首先，创建或加载已存在的LightRAG实例
+    lightrag_working_dir = "./existing_lightrag_storage"
+
+    # 检查是否存在之前的LightRAG实例
+    if os.path.exists(lightrag_working_dir) and os.listdir(lightrag_working_dir):
+        print("✅ 发现已存在的LightRAG实例，正在加载...")
+    else:
+        print("❌ 未找到已存在的LightRAG实例，将创建新实例")
+
+    # 使用您的配置创建/加载LightRAG实例
+    lightrag_instance = LightRAG(
+        working_dir=lightrag_working_dir,
+        llm_model_func=lambda prompt, system_prompt=None, history_messages=[], **kwargs: openai_complete_if_cache(
+            "gpt-4o-mini",
+            prompt,
+            system_prompt=system_prompt,
+            history_messages=history_messages,
+            api_key="your-api-key",
+            **kwargs,
+        ),
+        embedding_func=lambda texts: openai_embed(
+            texts,
+            model="text-embedding-3-large",
+            api_key="your-api-key",
+        ),
+        embedding_dim=3072,
+        max_token_size=8192
+    )
+
+    # 初始化存储（如果有现有数据，这将加载它们）
+    await lightrag_instance.initialize_storages()
+
+    # 现在使用已存在的LightRAG实例初始化RAGAnything
+    rag = RAGAnything(
+        lightrag=lightrag_instance,  # 传入已存在的LightRAG实例
+        # 只需要为多模态处理配置vision model
+        vision_model_func=lambda prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs: openai_complete_if_cache(
+            "gpt-4o",
+            "",
+            system_prompt=None,
+            history_messages=[],
+            messages=[
+                {"role": "system", "content": system_prompt} if system_prompt else None,
+                {"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
+                ]} if image_data else {"role": "user", "content": prompt}
+            ],
+            api_key="your-api-key",
+            **kwargs,
+        ) if image_data else openai_complete_if_cache(
+            "gpt-4o-mini",
+            prompt,
+            system_prompt=system_prompt,
+            history_messages=history_messages,
+            api_key="your-api-key",
+            **kwargs,
+        )
+        # 注意：working_dir、llm_model_func、embedding_func等都从lightrag_instance继承
+    )
+
+    # 查询已存在的知识库
+    result = await rag.query_with_multimodal(
+        "这个LightRAG实例中处理了哪些数据？",
+        mode="hybrid"
+    )
+    print("查询结果:", result)
+
+    # 向已存在的LightRAG实例添加新的多模态文档
+    await rag.process_document_complete(
+        file_path="path/to/new/multimodal_document.pdf",
+        output_dir="./output"
+    )
+
+if __name__ == "__main__":
+    asyncio.run(load_existing_lightrag())
+```
+
 ---
 
 ## 🛠️ 示例
