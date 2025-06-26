@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from lightrag import LightRAG, QueryParam
-from lightrag.utils import EmbeddingFunc, setup_logger
+from lightrag.utils import setup_logger
 
 # Import parser and multimodal processors
 from raganything.mineru_parser import MineruParser
@@ -42,8 +42,6 @@ class RAGAnything:
         vision_model_func: Optional[Callable] = None,
         embedding_func: Optional[Callable] = None,
         working_dir: str = "./rag_storage",
-        embedding_dim: int = 3072,
-        max_token_size: int = 8192,
     ):
         """
         Initialize Multimodal Document Processing Pipeline
@@ -54,15 +52,11 @@ class RAGAnything:
             vision_model_func: Vision model function for image analysis
             embedding_func: Embedding function for text vectorization
             working_dir: Working directory for storage (used when creating new RAG)
-            embedding_dim: Embedding dimension (used when creating new RAG)
-            max_token_size: Maximum token size for embeddings (used when creating new RAG)
         """
         self.working_dir = working_dir
         self.llm_model_func = llm_model_func
         self.vision_model_func = vision_model_func
         self.embedding_func = embedding_func
-        self.embedding_dim = embedding_dim
-        self.max_token_size = max_token_size
 
         # Set up logging
         setup_logger("RAGAnything")
@@ -136,11 +130,7 @@ class RAGAnything:
         self.lightrag = LightRAG(
             working_dir=self.working_dir,
             llm_model_func=self.llm_model_func,
-            embedding_func=EmbeddingFunc(
-                embedding_dim=self.embedding_dim,
-                max_token_size=self.max_token_size,
-                func=self.embedding_func,
-            ),
+            embedding_func=self.embedding_func,
         )
 
         await self.lightrag.initialize_storages()

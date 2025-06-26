@@ -292,8 +292,6 @@ async def main():
             model="text-embedding-3-large",
             api_key="your-api-key",
         ),
-        embedding_dim=3072,
-        max_token_size=8192
     )
 
     # 处理文档
@@ -418,6 +416,7 @@ import asyncio
 from raganything import RAGAnything
 from lightrag import LightRAG
 from lightrag.llm.openai import openai_complete_if_cache, openai_embed
+from lightrag.utils import EmbeddingFunc
 import os
 
 async def load_existing_lightrag():
@@ -441,13 +440,16 @@ async def load_existing_lightrag():
             api_key="your-api-key",
             **kwargs,
         ),
-        embedding_func=lambda texts: openai_embed(
-            texts,
-            model="text-embedding-3-large",
-            api_key="your-api-key",
-        ),
-        embedding_dim=3072,
-        max_token_size=8192
+        embedding_func=EmbeddingFunc(
+            embedding_dim=3072,
+            max_token_size=8192,
+            func=lambda texts: openai_embed(
+                texts,
+                model="text-embedding-3-large",
+                api_key=api_key,
+                base_url=base_url,
+            ),
+        )
     )
 
     # 初始化存储（如果有现有数据，这将加载它们）
