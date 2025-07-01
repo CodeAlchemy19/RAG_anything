@@ -39,6 +39,12 @@
   <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="800">
 </div>
 
+<div align="center">
+  <a href="#🚀-快速开始" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/快速开始-立即开始使用-00d9ff?style=for-the-badge&logo=rocket&logoColor=white&labelColor=1a1a2e">
+  </a>
+</div>
+
 ---
 
 ## 🌟 系统概述
