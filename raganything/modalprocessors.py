@@ -25,6 +25,9 @@ from lightrag.lightrag import LightRAG
 from dataclasses import asdict
 from lightrag.kg.shared_storage import get_namespace_data, get_pipeline_status_lock
 
+# Import prompt templates
+from raganything.prompt import PROMPTS
+
 
 class BaseModalProcessor:
     """Base class for modal processors"""
@@ -264,30 +267,14 @@ class ImageModalProcessor(BaseModalProcessor):
             footnotes = content_data.get("img_footnote", [])
 
             # Build detailed visual analysis prompt
-            vision_prompt = f"""Please analyze this image in detail and provide a JSON response with the following structure:
-
-                {{
-                    "detailed_description": "A comprehensive and detailed visual description of the image following these guidelines:
-                    - Describe the overall composition and layout
-                    - Identify all objects, people, text, and visual elements
-                    - Explain relationships between elements
-                    - Note colors, lighting, and visual style
-                    - Describe any actions or activities shown
-                    - Include technical details if relevant (charts, diagrams, etc.)
-                    - Always use specific names instead of pronouns",
-                    "entity_info": {{
-                        "entity_name": "{entity_name if entity_name else 'unique descriptive name for this image'}",
-                        "entity_type": "image",
-                        "summary": "concise summary of the image content and its significance (max 100 words)"
-                    }}
-                }}
-
-                Additional context:
-                - Image Path: {image_path}
-                - Captions: {captions if captions else 'None'}
-                - Footnotes: {footnotes if footnotes else 'None'}
-
-                Focus on providing accurate, detailed visual analysis that would be useful for knowledge retrieval."""
+            vision_prompt = PROMPTS["vision_prompt"].format(
+                entity_name=entity_name
+                if entity_name
+                else "unique descriptive name for this image",
+                image_path=image_path,
+                captions=captions if captions else "None",
+                footnotes=footnotes if footnotes else "None",
+            )
 
             # If image path exists, try to encode image
             image_base64 = ""
@@ -300,34 +287,32 @@ class ImageModalProcessor(BaseModalProcessor):
                 response = await self.modal_caption_func(
                     vision_prompt,
                     image_data=image_base64,
-                    system_prompt="You are an expert image analyst. Provide detailed, accurate descriptions.",
+                    system_prompt=PROMPTS["IMAGE_ANALYSIS_SYSTEM"],
                 )
             else:
                 # Analyze based on existing text information
-                text_prompt = f"""Based on the following image information, provide analysis:
-
-                    Image Path: {image_path}
-                    Captions: {captions}
-                    Footnotes: {footnotes}
-
-                    {vision_prompt}"""
+                text_prompt = PROMPTS["text_prompt"].format(
+                    image_path=image_path,
+                    captions=captions,
+                    footnotes=footnotes,
+                    vision_prompt=vision_prompt,
+                )
 
                 response = await self.modal_caption_func(
                     text_prompt,
-                    system_prompt="You are an expert image analyst. Provide detailed analysis based on available information.",
+                    system_prompt=PROMPTS["IMAGE_ANALYSIS_FALLBACK_SYSTEM"],
                 )
 
             # Parse response
             enhanced_caption, entity_info = self._parse_response(response, entity_name)
 
             # Build complete image content
-            modal_chunk = f"""
-                    Image Content Analysis:
-                    Image Path: {image_path}
-                    Captions: {', '.join(captions) if captions else 'None'}
-                    Footnotes: {', '.join(footnotes) if footnotes else 'None'}
-
-                    Visual Analysis: {enhanced_caption}"""
+            modal_chunk = PROMPTS["image_chunk"].format(
+                image_path=image_path,
+                captions=", ".join(captions) if captions else "None",
+                footnotes=", ".join(footnotes) if footnotes else "None",
+                enhanced_caption=enhanced_caption,
+            )
 
             return await self._create_entity_and_chunk(
                 modal_chunk, entity_info, file_path
@@ -411,35 +396,19 @@ class TableModalProcessor(BaseModalProcessor):
         table_footnote = content_data.get("table_footnote", [])
 
         # Build table analysis prompt
-        table_prompt = f"""Please analyze this table content and provide a JSON response with the following structure:
-
-            {{
-                "detailed_description": "A comprehensive analysis of the table including:
-                - Table structure and organization
-                - Column headers and their meanings
-                - Key data points and patterns
-                - Statistical insights and trends
-                - Relationships between data elements
-                - Significance of the data presented
-                Always use specific names and values instead of general references.",
-                "entity_info": {{
-                    "entity_name": "{entity_name if entity_name else 'descriptive name for this table'}",
-                    "entity_type": "table",
-                    "summary": "concise summary of the table's purpose and key findings (max 100 words)"
-                }}
-            }}
-
-            Table Information:
-            Image Path: {table_img_path}
-            Caption: {table_caption if table_caption else 'None'}
-            Body: {table_body}
-            Footnotes: {table_footnote if table_footnote else 'None'}
-
-            Focus on extracting meaningful insights and relationships from the tabular data."""
+        table_prompt = PROMPTS["table_prompt"].format(
+            entity_name=entity_name
+            if entity_name
+            else "descriptive name for this table",
+            table_img_path=table_img_path,
+            table_caption=table_caption if table_caption else "None",
+            table_body=table_body,
+            table_footnote=table_footnote if table_footnote else "None",
+        )
 
         response = await self.modal_caption_func(
             table_prompt,
-            system_prompt="You are an expert data analyst. Provide detailed table analysis with specific insights.",
+            system_prompt=PROMPTS["TABLE_ANALYSIS_SYSTEM"],
         )
 
         # Parse response
@@ -450,13 +419,13 @@ class TableModalProcessor(BaseModalProcessor):
         # TODO: Add Retry Mechanism
 
         # Build complete table content
-        modal_chunk = f"""Table Analysis:
-            Image Path: {table_img_path}
-            Caption: {', '.join(table_caption) if table_caption else 'None'}
-            Structure: {table_body}
-            Footnotes: {', '.join(table_footnote) if table_footnote else 'None'}
-
-            Analysis: {enhanced_caption}"""
+        modal_chunk = PROMPTS["table_chunk"].format(
+            table_img_path=table_img_path,
+            table_caption=", ".join(table_caption) if table_caption else "None",
+            table_body=table_body,
+            table_footnote=", ".join(table_footnote) if table_footnote else "None",
+            enhanced_caption=enhanced_caption,
+        )
 
         return await self._create_entity_and_chunk(modal_chunk, entity_info, file_path)
 
@@ -524,34 +493,17 @@ class EquationModalProcessor(BaseModalProcessor):
         equation_format = content_data.get("text_format", "")
 
         # Build equation analysis prompt
-        equation_prompt = f"""Please analyze this mathematical equation and provide a JSON response with the following structure:
-
-            {{
-                "detailed_description": "A comprehensive analysis of the equation including:
-                - Mathematical meaning and interpretation
-                - Variables and their definitions
-                - Mathematical operations and functions used
-                - Application domain and context
-                - Physical or theoretical significance
-                - Relationship to other mathematical concepts
-                - Practical applications or use cases
-                Always use specific mathematical terminology.",
-                "entity_info": {{
-                    "entity_name": "{entity_name if entity_name else 'descriptive name for this equation'}",
-                    "entity_type": "equation",
-                    "summary": "concise summary of the equation's purpose and significance (max 100 words)"
-                }}
-            }}
-
-            Equation Information:
-            Equation: {equation_text}
-            Format: {equation_format}
-
-            Focus on providing mathematical insights and explaining the equation's significance."""
+        equation_prompt = PROMPTS["equation_prompt"].format(
+            equation_text=equation_text,
+            equation_format=equation_format,
+            entity_name=entity_name
+            if entity_name
+            else "descriptive name for this equation",
+        )
 
         response = await self.modal_caption_func(
             equation_prompt,
-            system_prompt="You are an expert mathematician. Provide detailed mathematical analysis.",
+            system_prompt=PROMPTS["EQUATION_ANALYSIS_SYSTEM"],
         )
 
         # Parse response
@@ -560,11 +512,11 @@ class EquationModalProcessor(BaseModalProcessor):
         )
 
         # Build complete equation content
-        modal_chunk = f"""Mathematical Equation Analysis:
-            Equation: {equation_text}
-            Format: {equation_format}
-
-            Mathematical Analysis: {enhanced_caption}"""
+        modal_chunk = PROMPTS["equation_chunk"].format(
+            equation_text=equation_text,
+            equation_format=equation_format,
+            enhanced_caption=enhanced_caption,
+        )
 
         return await self._create_entity_and_chunk(modal_chunk, entity_info, file_path)
 
@@ -620,30 +572,19 @@ class GenericModalProcessor(BaseModalProcessor):
     ) -> Tuple[str, Dict[str, Any]]:
         """Process generic modal content"""
         # Build generic analysis prompt
-        generic_prompt = f"""Please analyze this {content_type} content and provide a JSON response with the following structure:
-
-            {{
-                "detailed_description": "A comprehensive analysis of the content including:
-                - Content structure and organization
-                - Key information and elements
-                - Relationships between components
-                - Context and significance
-                - Relevant details for knowledge retrieval
-                Always use specific terminology appropriate for {content_type} content.",
-                "entity_info": {{
-                    "entity_name": "{entity_name if entity_name else f'descriptive name for this {content_type}'}",
-                    "entity_type": "{content_type}",
-                    "summary": "concise summary of the content's purpose and key points (max 100 words)"
-                }}
-            }}
-
-            Content: {str(modal_content)}
-
-            Focus on extracting meaningful information that would be useful for knowledge retrieval."""
+        generic_prompt = PROMPTS["generic_prompt"].format(
+            content_type=content_type,
+            entity_name=entity_name
+            if entity_name
+            else f"descriptive name for this {content_type}",
+            content=str(modal_content),
+        )
 
         response = await self.modal_caption_func(
             generic_prompt,
-            system_prompt=f"You are an expert content analyst specializing in {content_type} content.",
+            system_prompt=PROMPTS["GENERIC_ANALYSIS_SYSTEM"].format(
+                content_type=content_type
+            ),
         )
 
         # Parse response
@@ -652,10 +593,11 @@ class GenericModalProcessor(BaseModalProcessor):
         )
 
         # Build complete content
-        modal_chunk = f"""{content_type.title()} Content Analysis:
-            Content: {str(modal_content)}
-
-            Analysis: {enhanced_caption}"""
+        modal_chunk = PROMPTS["generic_chunk"].format(
+            content_type=content_type.title(),
+            content=str(modal_content),
+            enhanced_caption=enhanced_caption,
+        )
 
         return await self._create_entity_and_chunk(modal_chunk, entity_info, file_path)
 
