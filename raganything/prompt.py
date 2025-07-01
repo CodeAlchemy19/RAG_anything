@@ -12,14 +12,26 @@ from typing import Any
 PROMPTS: dict[str, Any] = {}
 
 # System prompts for different analysis types
-PROMPTS["IMAGE_ANALYSIS_SYSTEM"] = "You are an expert image analyst. Provide detailed, accurate descriptions."
-PROMPTS["IMAGE_ANALYSIS_FALLBACK_SYSTEM"] = "You are an expert image analyst. Provide detailed analysis based on available information."
-PROMPTS["TABLE_ANALYSIS_SYSTEM"] = "You are an expert data analyst. Provide detailed table analysis with specific insights."
-PROMPTS["EQUATION_ANALYSIS_SYSTEM"] = "You are an expert mathematician. Provide detailed mathematical analysis."
-PROMPTS["GENERIC_ANALYSIS_SYSTEM"] = "You are an expert content analyst specializing in {content_type} content."
+PROMPTS["IMAGE_ANALYSIS_SYSTEM"] = (
+    "You are an expert image analyst. Provide detailed, accurate descriptions."
+)
+PROMPTS["IMAGE_ANALYSIS_FALLBACK_SYSTEM"] = (
+    "You are an expert image analyst. Provide detailed analysis based on available information."
+)
+PROMPTS["TABLE_ANALYSIS_SYSTEM"] = (
+    "You are an expert data analyst. Provide detailed table analysis with specific insights."
+)
+PROMPTS["EQUATION_ANALYSIS_SYSTEM"] = (
+    "You are an expert mathematician. Provide detailed mathematical analysis."
+)
+PROMPTS["GENERIC_ANALYSIS_SYSTEM"] = (
+    "You are an expert content analyst specializing in {content_type} content."
+)
 
 # Image analysis prompt template
-PROMPTS["vision_prompt"] = """Please analyze this image in detail and provide a JSON response with the following structure:
+PROMPTS[
+    "vision_prompt"
+] = """Please analyze this image in detail and provide a JSON response with the following structure:
 
 {{
     "detailed_description": "A comprehensive and detailed visual description of the image following these guidelines:
@@ -54,7 +66,9 @@ Footnotes: {footnotes}
 {vision_prompt}"""
 
 # Table analysis prompt template
-PROMPTS["table_prompt"] = """Please analyze this table content and provide a JSON response with the following structure:
+PROMPTS[
+    "table_prompt"
+] = """Please analyze this table content and provide a JSON response with the following structure:
 
 {{
     "detailed_description": "A comprehensive analysis of the table including:
@@ -81,7 +95,9 @@ Footnotes: {table_footnote}
 Focus on extracting meaningful insights and relationships from the tabular data."""
 
 # Equation analysis prompt template
-PROMPTS["equation_prompt"] = """Please analyze this mathematical equation and provide a JSON response with the following structure:
+PROMPTS[
+    "equation_prompt"
+] = """Please analyze this mathematical equation and provide a JSON response with the following structure:
 
 {{
     "detailed_description": "A comprehensive analysis of the equation including:
@@ -107,7 +123,9 @@ Format: {equation_format}
 Focus on providing mathematical insights and explaining the equation's significance."""
 
 # Generic content analysis prompt template
-PROMPTS["generic_prompt"] = """Please analyze this {content_type} content and provide a JSON response with the following structure:
+PROMPTS[
+    "generic_prompt"
+] = """Please analyze this {content_type} content and provide a JSON response with the following structure:
 
 {{
     "detailed_description": "A comprehensive analysis of the content including:
@@ -154,4 +172,4 @@ Mathematical Analysis: {enhanced_caption}"""
 PROMPTS["generic_chunk"] = """{content_type} Content Analysis:
 Content: {content}
 
-Analysis: {enhanced_caption}""" 
+Analysis: {enhanced_caption}"""
