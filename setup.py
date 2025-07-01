@@ -44,7 +44,9 @@ def read_requirements():
     deps = []
     try:
         with open("./requirements.txt") as f:
-            deps = [line.strip() for line in f if line.strip()]
+            deps = [
+                line.strip() for line in f if line.strip() and not line.startswith("#")
+            ]
     except FileNotFoundError:
         print(
             "Warning: 'requirements.txt' not found. No dependencies will be installed."
@@ -55,6 +57,14 @@ def read_requirements():
 metadata = retrieve_metadata()
 long_description = read_long_description()
 requirements = read_requirements()
+
+# Define extras_require for optional features
+extras_require = {
+    "image": ["Pillow>=10.0.0"],  # For image format conversion (BMP, TIFF, GIF, WebP)
+    "text": ["reportlab>=4.0.0"],  # For text file to PDF conversion (TXT, MD)
+    "office": [],  # Office document processing requires LibreOffice (external program)
+    "all": ["Pillow>=10.0.0", "reportlab>=4.0.0"],  # All optional features
+}
 
 setuptools.setup(
     name="raganything",
@@ -77,6 +87,7 @@ setuptools.setup(
     ],
     python_requires=">=3.9",
     install_requires=requirements,
+    extras_require=extras_require,
     include_package_data=True,  # Includes non-code files from MANIFEST.in
     project_urls={  # Additional project metadata
         "Documentation": metadata.get("__url__", ""),

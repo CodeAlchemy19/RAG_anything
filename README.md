@@ -219,7 +219,14 @@ The hybrid retrieval system combines vector similarity search with graph travers
 #### Option 1: Install from PyPI (Recommended)
 
 ```bash
+# Basic installation
 pip install raganything
+
+# With optional dependencies for extended format support:
+pip install raganything[all]              # All optional features
+pip install raganything[image]            # Image format conversion (BMP, TIFF, GIF, WebP)
+pip install raganything[text]             # Text file processing (TXT, MD)
+pip install raganything[image,text]       # Multiple features
 ```
 
 #### Option 2: Install from Source
@@ -228,13 +235,24 @@ pip install raganything
 git clone https://github.com/HKUDS/RAG-Anything.git
 cd RAG-Anything
 pip install -e .
+
+# With optional dependencies
+pip install -e .[all]
 ```
 
-> **⚠️ Important Changes in MinerU 2.0:**
-> - Package name changed from `magic-pdf` to `mineru`
-> - LibreOffice integration removed (Office documents require manual PDF conversion)
-> - Simplified command-line interface with `mineru` command
-> - New backend options and improved performance
+#### Optional Dependencies
+
+- **`[image]`** - Enables processing of BMP, TIFF, GIF, WebP image formats (requires Pillow)
+- **`[text]`** - Enables processing of TXT and MD files (requires ReportLab)
+- **`[all]`** - Includes all Python optional dependencies
+
+> **⚠️ Office Document Processing Requirements:**
+> - Office documents (.doc, .docx, .ppt, .pptx, .xls, .xlsx) require **LibreOffice** installation
+> - Download from [LibreOffice official website](https://www.libreoffice.org/download/download/)
+> - **Windows**: Download installer from official website
+> - **macOS**: `brew install --cask libreoffice`
+> - **Ubuntu/Debian**: `sudo apt-get install libreoffice`
+> - **CentOS/RHEL**: `sudo yum install libreoffice`
 
 **Check MinerU installation:**
 
@@ -604,6 +622,16 @@ await rag.process_document_complete(
 
 > **Note**: MinerU 2.0 no longer uses the `magic-pdf.json` configuration file. All settings are now passed as command-line parameters or function arguments.
 
+### Processing Requirements
+
+Different content types require specific optional dependencies:
+
+- **Office Documents** (.doc, .docx, .ppt, .pptx, .xls, .xlsx): Install [LibreOffice](https://www.libreoffice.org/download/download/)
+- **Extended Image Formats** (.bmp, .tiff, .gif, .webp): Install with `pip install raganything[image]`
+- **Text Files** (.txt, .md): Install with `pip install raganything[text]`
+
+> **📋 Quick Install**: Use `pip install raganything[all]` to enable all format support (Python dependencies only - LibreOffice still needs separate installation)
+
 ---
 
 ## 🧪 Supported Content Types
@@ -611,9 +639,9 @@ await rag.process_document_complete(
 ### Document Formats
 
 - **PDFs** - Research papers, reports, presentations
-- **Office Documents** - DOC, DOCX, PPT, PPTX, XLS, XLSX ⚠️
-- **Images** - JPG, PNG, BMP, TIFF, GIF, WebP 📸
-- **Text Files** - TXT, MD ⚠️
+- **Office Documents** - DOC, DOCX, PPT, PPTX, XLS, XLSX
+- **Images** - JPG, PNG, BMP, TIFF, GIF, WebP
+- **Text Files** - TXT, MD
 
 ### Multimodal Elements
 
@@ -622,41 +650,7 @@ await rag.process_document_complete(
 - **Equations** - Mathematical formulas in LaTeX format
 - **Generic Content** - Custom content types via extensible processors
 
-### Processing Requirements
-
-> **⚠️ Office Document Processing Requirements:**
->
-> RAG-Anything supports comprehensive Office document processing through automatic PDF conversion:
-> - **Supported formats**: .doc, .docx, .ppt, .pptx, .xls, .xlsx
-> - **LibreOffice requirement**: Automatic conversion requires LibreOffice installation
-> - **Installation instructions**:
->   - **Windows**: Download from [LibreOffice official website](https://www.libreoffice.org/download/download/)
->   - **macOS**: `brew install --cask libreoffice`
->   - **Ubuntu/Debian**: `sudo apt-get install libreoffice`
->   - **CentOS/RHEL**: `sudo yum install libreoffice`
-> - **Alternative approach**: Convert to PDF manually for optimal performance
-> - **Processing workflow**: Office files are automatically converted to PDF, then processed by MinerU
-
-> **📸 Image Format Support:**
->
-> RAG-Anything supports comprehensive image format processing:
-> - **MinerU native formats**: .jpg, .jpeg, .png (processed directly)
-> - **Auto-converted formats**: .bmp, .tiff/.tif, .gif, .webp (automatically converted to PNG)
-> - **Conversion requirements**: PIL/Pillow library (`pip install Pillow`)
-> - **Processing workflow**: Non-native formats are converted to PNG, then processed by MinerU
-> - **Quality preservation**: Conversion maintains image quality while ensuring compatibility
-
-> **⚠️ Text File Processing Requirements:**
->
-> RAG-Anything supports text file processing through automatic PDF conversion:
-> - **Supported formats**: .txt, .md
-> - **ReportLab requirement**: Automatic conversion requires ReportLab library
-> - **Installation**: `pip install reportlab`
-> - **Features**: Supports multiple text encodings (UTF-8, GBK, Latin-1, CP1252)
-> - **Complete Markdown support**: Headers, paragraphs, **bold**, *italic*, ~~strikethrough~~, `inline code`, code blocks, tables, lists, quotes, links, images, and horizontal rules
-> - **Advanced features**: Auto-scaling images, nested lists, multi-level quotes, syntax-highlighted code blocks
-> - **Cross-platform fonts**: Automatic Chinese font detection for Windows/macOS
-> - **Processing workflow**: Text files are automatically converted to PDF, then processed by MinerU
+*For installation of format-specific dependencies, see the [Configuration](#🔧-configuration) section.*
 
 ---
 

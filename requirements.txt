@@ -5,14 +5,10 @@ lightrag-hku
 # MinerU 2.0 packages (replaces magic-pdf)
 mineru[core]
 
-# Image processing (for format conversion)
-Pillow>=10.0.0
-
-# Note: MinerU 2.0 has breaking changes from magic-pdf
-# - Package name changed from magic-pdf to mineru
-# - LibreOffice integration removed
-# - Simplified command-line interface
+# Note: Optional dependencies are now defined in setup.py extras_require:
+# - [image]: Pillow>=10.0.0 (for BMP, TIFF, GIF, WebP format conversion)
+# - [text]: reportlab>=4.0.0 (for TXT, MD to PDF conversion)
+# - [office]: requires LibreOffice (external program, not Python package)
+# - [all]: includes all optional dependencies
 #
-# Note: Pillow is required for image format conversion
-# - Converts BMP, TIFF, GIF, WebP to PNG for MinerU compatibility
-# - Handles transparency and color mode conversion
+# Install with: pip install raganything[image,text] or pip install raganything[all]

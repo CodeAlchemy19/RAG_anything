@@ -215,7 +215,14 @@
 #### 选项1：从PyPI安装（推荐）
 
 ```bash
+# 基础安装
 pip install raganything
+
+# 安装包含扩展格式支持的可选依赖：
+pip install raganything[all]              # 所有可选功能
+pip install raganything[image]            # 图像格式转换 (BMP, TIFF, GIF, WebP)
+pip install raganything[text]             # 文本文件处理 (TXT, MD)
+pip install raganything[image,text]       # 多个功能组合
 ```
 
 #### 选项2：从源码安装
@@ -224,13 +231,24 @@ pip install raganything
 git clone https://github.com/HKUDS/RAG-Anything.git
 cd RAG-Anything
 pip install -e .
+
+# 安装可选依赖
+pip install -e .[all]
 ```
 
-> **⚠️ MinerU 2.0重要变化：**
-> - 包名从 `magic-pdf` 改为 `mineru`
-> - 移除了LibreOffice集成（Office文档需要手动转换为PDF）
-> - 简化的命令行界面，使用 `mineru` 命令
-> - 新的后端选项和性能改进
+#### 可选依赖
+
+- **`[image]`** - 启用BMP、TIFF、GIF、WebP图像格式处理（需要Pillow）
+- **`[text]`** - 启用TXT和MD文件处理（需要ReportLab）
+- **`[all]`** - 包含所有Python可选依赖
+
+> **⚠️ Office文档处理配置要求：**
+> - Office文档 (.doc, .docx, .ppt, .pptx, .xls, .xlsx) 需要安装 **LibreOffice**
+> - 从[LibreOffice官网](https://www.libreoffice.org/download/download/)下载安装
+> - **Windows**：从官网下载安装包
+> - **macOS**：`brew install --cask libreoffice`
+> - **Ubuntu/Debian**：`sudo apt-get install libreoffice`
+> - **CentOS/RHEL**：`sudo yum install libreoffice`
 
 **检查MinerU安装：**
 
@@ -600,6 +618,16 @@ await rag.process_document_complete(
 
 > **注意**：MinerU 2.0不再使用 `magic-pdf.json` 配置文件。所有设置现在通过命令行参数或函数参数传递。
 
+### 处理要求
+
+不同内容类型需要特定的可选依赖：
+
+- **Office文档** (.doc, .docx, .ppt, .pptx, .xls, .xlsx): 安装并配置 [LibreOffice](https://www.libreoffice.org/download/download/)
+- **扩展图像格式** (.bmp, .tiff, .gif, .webp): 使用 `pip install raganything[image]` 安装
+- **文本文件** (.txt, .md): 使用 `pip install raganything[text]` 安装
+
+> **📋 快速安装**: 使用 `pip install raganything[all]` 启用所有格式支持（仅Python依赖 - LibreOffice仍需单独安装）
+
 ---
 
 ## 🧪 支持的内容类型
@@ -607,9 +635,9 @@ await rag.process_document_complete(
 ### 文档格式
 
 - **PDF** - 研究论文、报告、演示文稿
-- **Office文档** - DOC、DOCX、PPT、PPTX、XLS、XLSX ⚠️
-- **图像** - JPG、PNG、BMP、TIFF、GIF、WebP 📸
-- **文本文件** - TXT、MD ⚠️
+- **Office文档** - DOC、DOCX、PPT、PPTX、XLS、XLSX
+- **图像** - JPG、PNG、BMP、TIFF、GIF、WebP
+- **文本文件** - TXT、MD
 
 ### 多模态元素
 
@@ -618,41 +646,7 @@ await rag.process_document_complete(
 - **公式** - LaTeX格式的数学公式
 - **通用内容** - 通过可扩展处理器支持的自定义内容类型
 
-### 处理要求
-
-> **⚠️ Office文档处理要求：**
->
-> RAG-Anything通过自动PDF转换支持全面的Office文档处理：
-> - **支持格式**：.doc、.docx、.ppt、.pptx、.xls、.xlsx
-> - **LibreOffice要求**：自动转换需要安装LibreOffice
-> - **安装说明**：
->   - **Windows**：从[LibreOffice官网](https://www.libreoffice.org/download/download/)下载安装
->   - **macOS**：`brew install --cask libreoffice`
->   - **Ubuntu/Debian**：`sudo apt-get install libreoffice`
->   - **CentOS/RHEL**：`sudo yum install libreoffice`
-> - **替代方案**：手动转换为PDF以获得最佳性能
-> - **处理流程**：Office文件自动转换为PDF，然后由MinerU处理
-
-> **📸 图像格式支持：**
->
-> RAG-Anything支持全面的图像格式处理：
-> - **MinerU原生格式**：.jpg、.jpeg、.png（直接处理）
-> - **自动转换格式**：.bmp、.tiff/.tif、.gif、.webp（自动转换为PNG）
-> - **转换要求**：PIL/Pillow库（`pip install Pillow`）
-> - **处理流程**：非原生格式自动转换为PNG，然后由MinerU处理
-> - **质量保证**：转换过程保持图像质量并确保兼容性
-
-> **⚠️ 文本文件处理要求：**
->
-> RAG-Anything通过自动PDF转换支持文本文件处理：
-> - **支持格式**：.txt、.md
-> - **ReportLab要求**：自动转换需要ReportLab库
-> - **安装**：`pip install reportlab`
-> - **功能特性**：支持多种文本编码（UTF-8、GBK、Latin-1、CP1252）
-> - **完整Markdown支持**：标题、段落、**粗体**、*斜体*、~~删除线~~、`行内代码`、代码块、表格、列表、引用、链接、图像和分隔线
-> - **高级功能**：自动缩放图像、嵌套列表、多级引用、语法高亮代码块
-> - **跨平台字体**：Windows/macOS自动中文字体检测
-> - **处理流程**：文本文件自动转换为PDF，然后由MinerU处理
+*格式特定依赖的安装说明请参见[配置](#🔧-配置)部分。*
 
 ---
 
