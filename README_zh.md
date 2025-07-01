@@ -40,7 +40,7 @@
 </div>
 
 <div align="center">
-  <a href="#🚀-快速开始" style="text-decoration: none;">
+  <a href="#-快速开始" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/快速开始-立即开始使用-00d9ff?style=for-the-badge&logo=rocket&logoColor=white&labelColor=1a1a2e">
   </a>
 </div>
@@ -652,7 +652,7 @@ await rag.process_document_complete(
 - **公式** - LaTeX格式的数学公式
 - **通用内容** - 通过可扩展处理器支持的自定义内容类型
 
-*格式特定依赖的安装说明请参见[配置](#🔧-配置)部分。*
+*格式特定依赖的安装说明请参见[配置](#-配置)部分。*
 
 ---
 
