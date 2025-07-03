@@ -444,6 +444,9 @@ class RAGAnything:
 
         file_name = os.path.basename(file_path)
 
+        # Collect all chunk results for batch processing (similar to text content processing)
+        all_chunk_results = []
+
         for i, item in enumerate(multimodal_items):
             try:
                 content_type = item.get("type", "unknown")
@@ -455,14 +458,20 @@ class RAGAnything:
                 processor = self._get_processor_for_type(content_type)
 
                 if processor:
+                    # Process content and get chunk results instead of immediately merging
                     (
                         enhanced_caption,
                         entity_info,
-                    ) = await processor.process_multimodal_content(
+                        chunk_results,
+                    ) = await processor.process_multimodal_content_batch(
                         modal_content=item,
                         content_type=content_type,
                         file_path=file_name,
                     )
+
+                    # Collect chunk results for batch processing
+                    all_chunk_results.extend(chunk_results)
+
                     self.logger.info(
                         f"{content_type} processing complete: {entity_info.get('entity_name', 'Unknown')}"
                     )
@@ -475,6 +484,32 @@ class RAGAnything:
                 self.logger.error(f"Error processing multimodal content: {str(e)}")
                 self.logger.debug("Exception details:", exc_info=True)
                 continue
+
+        # Batch merge all multimodal content results (similar to text content processing)
+        if all_chunk_results:
+            from lightrag.operate import merge_nodes_and_edges
+            from lightrag.kg.shared_storage import (
+                get_namespace_data,
+                get_pipeline_status_lock,
+            )
+
+            # Get pipeline status and lock from shared storage
+            pipeline_status = await get_namespace_data("pipeline_status")
+            pipeline_status_lock = get_pipeline_status_lock()
+
+            await merge_nodes_and_edges(
+                chunk_results=all_chunk_results,
+                knowledge_graph_inst=self.lightrag.chunk_entity_relation_graph,
+                entity_vdb=self.lightrag.entities_vdb,
+                relationships_vdb=self.lightrag.relationships_vdb,
+                global_config=self.lightrag.__dict__,
+                pipeline_status=pipeline_status,
+                pipeline_status_lock=pipeline_status_lock,
+                llm_response_cache=self.lightrag.llm_response_cache,
+                current_file_number=1,
+                total_files=1,
+                file_path=file_name,
+            )
 
         self.logger.info("Multimodal content processing complete")
 
