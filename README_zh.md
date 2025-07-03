@@ -225,10 +225,10 @@
 pip install raganything
 
 # 安装包含扩展格式支持的可选依赖：
-pip install raganything[all]              # 所有可选功能
-pip install raganything[image]            # 图像格式转换 (BMP, TIFF, GIF, WebP)
-pip install raganything[text]             # 文本文件处理 (TXT, MD)
-pip install raganything[image,text]       # 多个功能组合
+pip install 'raganything[all]'              # 所有可选功能
+pip install 'raganything[image]'            # 图像格式转换 (BMP, TIFF, GIF, WebP)
+pip install 'raganything[text]'             # 文本文件处理 (TXT, MD)
+pip install 'raganything[image,text]'       # 多个功能组合
 ```
 
 #### 选项2：从源码安装
@@ -239,7 +239,7 @@ cd RAG-Anything
 pip install -e .
 
 # 安装可选依赖
-pip install -e .[all]
+pip install -e '.[all]'
 ```
 
 #### 可选依赖

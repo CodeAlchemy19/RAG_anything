@@ -229,10 +229,10 @@ The hybrid retrieval system combines vector similarity search with graph travers
 pip install raganything
 
 # With optional dependencies for extended format support:
-pip install raganything[all]              # All optional features
-pip install raganything[image]            # Image format conversion (BMP, TIFF, GIF, WebP)
-pip install raganything[text]             # Text file processing (TXT, MD)
-pip install raganything[image,text]       # Multiple features
+pip install 'raganything[all]'              # All optional features
+pip install 'raganything[image]'            # Image format conversion (BMP, TIFF, GIF, WebP)
+pip install 'raganything[text]'             # Text file processing (TXT, MD)
+pip install 'raganything[image,text]'       # Multiple features
 ```
 
 #### Option 2: Install from Source
@@ -243,7 +243,7 @@ cd RAG-Anything
 pip install -e .
 
 # With optional dependencies
-pip install -e .[all]
+pip install -e '.[all]'
 ```
 
 #### Optional Dependencies
