@@ -9,16 +9,21 @@ This script integrates:
 
 import os
 import asyncio
-import logging
 from pathlib import Path
 from typing import Dict, List, Any, Tuple, Optional, Callable
 import sys
+from dataclasses import dataclass, field
 
 # Add project root directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from lightrag import LightRAG, QueryParam
-from lightrag.utils import setup_logger
+from lightrag.utils import get_env_value, logger
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+# The OS environment variables take precedence over the .env file
+load_dotenv(dotenv_path=".env", override=False)
 
 # Import parser and multimodal processors
 from raganything.mineru_parser import MineruParser
@@ -32,47 +37,128 @@ from raganything.modalprocessors import (
 )
 
 
+@dataclass
+class RAGAnythingConfig:
+    """Configuration class for RAGAnything with environment variable support"""
+
+    # Directory Configuration
+    # ---
+    working_dir: str = field(default=get_env_value("WORKING_DIR", "./rag_storage", str))
+    """Directory where RAG storage and cache files are stored."""
+
+    # MinerU Parser Configuration
+    # ---
+    mineru_parse_method: str = field(
+        default=get_env_value("MINERU_PARSE_METHOD", "auto", str)
+    )
+    """Default parsing method for MinerU: 'auto', 'ocr', or 'txt'."""
+
+    mineru_output_dir: str = field(
+        default=get_env_value("MINERU_OUTPUT_DIR", "./output", str)
+    )
+    """Default output directory for MinerU parsed content."""
+
+    display_content_stats: bool = field(
+        default=get_env_value("DISPLAY_CONTENT_STATS", True, bool)
+    )
+    """Whether to display content statistics during parsing."""
+
+    # Multimodal Processing Configuration
+    # ---
+    enable_image_processing: bool = field(
+        default=get_env_value("ENABLE_IMAGE_PROCESSING", True, bool)
+    )
+    """Enable image content processing."""
+
+    enable_table_processing: bool = field(
+        default=get_env_value("ENABLE_TABLE_PROCESSING", True, bool)
+    )
+    """Enable table content processing."""
+
+    enable_equation_processing: bool = field(
+        default=get_env_value("ENABLE_EQUATION_PROCESSING", True, bool)
+    )
+    """Enable equation content processing."""
+
+    # Batch Processing Configuration
+    # ---
+    max_concurrent_files: int = field(
+        default=get_env_value("MAX_CONCURRENT_FILES", 1, int)
+    )
+    """Maximum number of files to process concurrently."""
+
+    supported_file_extensions: List[str] = field(
+        default_factory=lambda: get_env_value(
+            "SUPPORTED_FILE_EXTENSIONS",
+            ".pdf,.jpg,.jpeg,.png,.bmp,.tiff,.tif,.gif,.webp,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md",
+            str,
+        ).split(",")
+    )
+    """List of supported file extensions for batch processing."""
+
+    recursive_folder_processing: bool = field(
+        default=get_env_value("RECURSIVE_FOLDER_PROCESSING", True, bool)
+    )
+    """Whether to recursively process subfolders in batch mode."""
+
+
+@dataclass
 class RAGAnything:
     """Multimodal Document Processing Pipeline - Complete document parsing and insertion pipeline"""
 
-    def __init__(
-        self,
-        lightrag: Optional[LightRAG] = None,
-        llm_model_func: Optional[Callable] = None,
-        vision_model_func: Optional[Callable] = None,
-        embedding_func: Optional[Callable] = None,
-        working_dir: str = "./rag_storage",
-    ):
-        """
-        Initialize Multimodal Document Processing Pipeline
+    # Core Components
+    # ---
+    lightrag: Optional[LightRAG] = field(default=None)
+    """Optional pre-initialized LightRAG instance."""
 
-        Args:
-            lightrag: Optional pre-initialized LightRAG instance
-            llm_model_func: LLM model function for text analysis
-            vision_model_func: Vision model function for image analysis
-            embedding_func: Embedding function for text vectorization
-            working_dir: Working directory for storage (used when creating new RAG)
-        """
-        self.working_dir = working_dir
-        self.llm_model_func = llm_model_func
-        self.vision_model_func = vision_model_func
-        self.embedding_func = embedding_func
+    llm_model_func: Optional[Callable] = field(default=None)
+    """LLM model function for text analysis."""
 
-        # Set up logging
-        setup_logger("RAGAnything")
-        self.logger = logging.getLogger("RAGAnything")
+    vision_model_func: Optional[Callable] = field(default=None)
+    """Vision model function for image analysis."""
+
+    embedding_func: Optional[Callable] = field(default=None)
+    """Embedding function for text vectorization."""
+
+    config: Optional[RAGAnythingConfig] = field(default=None)
+    """Configuration object, if None will create with environment variables."""
+
+    # Internal State
+    # ---
+    modal_processors: Dict[str, Any] = field(default_factory=dict, init=False)
+    """Dictionary of multimodal processors."""
+
+    def __post_init__(self):
+        """Post-initialization setup following LightRAG pattern"""
+        # Initialize configuration if not provided
+        if self.config is None:
+            self.config = RAGAnythingConfig()
+
+        # Set working directory
+        self.working_dir = self.config.working_dir
+
+        # Set up logger (use existing logger, don't configure it)
+        self.logger = logger
 
         # Create working directory if needed
-        if not os.path.exists(working_dir):
-            os.makedirs(working_dir)
-
-        # Use provided LightRAG or mark for later initialization
-        self.lightrag = lightrag
-        self.modal_processors = {}
+        if not os.path.exists(self.working_dir):
+            os.makedirs(self.working_dir)
+            self.logger.info(f"Created working directory: {self.working_dir}")
 
         # If LightRAG is provided, initialize processors immediately
         if self.lightrag is not None:
             self._initialize_processors()
+
+        # Log configuration info
+        self.logger.info("RAGAnything initialized with config:")
+        self.logger.info(f"  Working directory: {self.config.working_dir}")
+        self.logger.info(f"  MinerU parse method: {self.config.mineru_parse_method}")
+        self.logger.info(
+            f"  Multimodal processing - Image: {self.config.enable_image_processing}, "
+            f"Table: {self.config.enable_table_processing}, "
+            f"Equation: {self.config.enable_equation_processing}"
+        )
+        self.logger.info(f"  Max concurrent files: {self.config.max_concurrent_files}")
 
     def _initialize_processors(self):
         """Initialize multimodal processors with appropriate model functions"""
@@ -81,25 +167,41 @@ class RAGAnything:
                 "LightRAG instance must be initialized before creating processors"
             )
 
-        # Create different multimodal processors
-        self.modal_processors = {
-            "image": ImageModalProcessor(
+        # Create different multimodal processors based on configuration
+        self.modal_processors = {}
+
+        if self.config.enable_image_processing:
+            self.modal_processors["image"] = ImageModalProcessor(
                 lightrag=self.lightrag,
                 modal_caption_func=self.vision_model_func or self.llm_model_func,
-            ),
-            "table": TableModalProcessor(
+            )
+
+        if self.config.enable_table_processing:
+            self.modal_processors["table"] = TableModalProcessor(
                 lightrag=self.lightrag, modal_caption_func=self.llm_model_func
-            ),
-            "equation": EquationModalProcessor(
+            )
+
+        if self.config.enable_equation_processing:
+            self.modal_processors["equation"] = EquationModalProcessor(
                 lightrag=self.lightrag, modal_caption_func=self.llm_model_func
-            ),
-            "generic": GenericModalProcessor(
-                lightrag=self.lightrag, modal_caption_func=self.llm_model_func
-            ),
-        }
+            )
+
+        # Always include generic processor as fallback
+        self.modal_processors["generic"] = GenericModalProcessor(
+            lightrag=self.lightrag, modal_caption_func=self.llm_model_func
+        )
 
         self.logger.info("Multimodal processors initialized")
         self.logger.info(f"Available processors: {list(self.modal_processors.keys())}")
+
+    def update_config(self, **kwargs):
+        """Update configuration with new values"""
+        for key, value in kwargs.items():
+            if hasattr(self.config, key):
+                setattr(self.config, key, value)
+                self.logger.debug(f"Updated config: {key} = {value}")
+            else:
+                self.logger.warning(f"Unknown config parameter: {key}")
 
     async def _ensure_lightrag_initialized(self):
         """Ensure LightRAG instance is initialized, create if necessary"""
@@ -144,22 +246,30 @@ class RAGAnything:
     def parse_document(
         self,
         file_path: str,
-        output_dir: str = "./output",
-        parse_method: str = "auto",
-        display_stats: bool = True,
+        output_dir: str = None,
+        parse_method: str = None,
+        display_stats: bool = None,
     ) -> Tuple[List[Dict[str, Any]], str]:
         """
         Parse document using MinerU
 
         Args:
             file_path: Path to the file to parse
-            output_dir: Output directory
-            parse_method: Parse method ("auto", "ocr", "txt")
-            display_stats: Whether to display content statistics
+            output_dir: Output directory (defaults to config.mineru_output_dir)
+            parse_method: Parse method (defaults to config.mineru_parse_method)
+            display_stats: Whether to display content statistics (defaults to config.display_content_stats)
 
         Returns:
             (content_list, md_content): Content list and markdown text
         """
+        # Use config defaults if not provided
+        if output_dir is None:
+            output_dir = self.config.mineru_output_dir
+        if parse_method is None:
+            parse_method = self.config.mineru_parse_method
+        if display_stats is None:
+            display_stats = self.config.display_content_stats
+
         self.logger.info(f"Starting document parsing: {file_path}")
 
         file_path = Path(file_path)
@@ -392,9 +502,9 @@ class RAGAnything:
     async def process_document_complete(
         self,
         file_path: str,
-        output_dir: str = "./output",
-        parse_method: str = "auto",
-        display_stats: bool = True,
+        output_dir: str = None,
+        parse_method: str = None,
+        display_stats: bool = None,
         split_by_character: str | None = None,
         split_by_character_only: bool = False,
         doc_id: str | None = None,
@@ -404,15 +514,23 @@ class RAGAnything:
 
         Args:
             file_path: Path to the file to process
-            output_dir: MinerU output directory
-            parse_method: Parse method
-            display_stats: Whether to display content statistics
+            output_dir: MinerU output directory (defaults to config.mineru_output_dir)
+            parse_method: Parse method (defaults to config.mineru_parse_method)
+            display_stats: Whether to display content statistics (defaults to config.display_content_stats)
             split_by_character: Optional character to split the text by
             split_by_character_only: If True, split only by the specified character
             doc_id: Optional document ID, if not provided MD5 hash will be generated
         """
         # Ensure LightRAG is initialized
         await self._ensure_lightrag_initialized()
+
+        # Use config defaults if not provided
+        if output_dir is None:
+            output_dir = self.config.mineru_output_dir
+        if parse_method is None:
+            parse_method = self.config.mineru_parse_method
+        if display_stats is None:
+            display_stats = self.config.display_content_stats
 
         self.logger.info(f"Starting complete document processing: {file_path}")
 
@@ -444,31 +562,45 @@ class RAGAnything:
     async def process_folder_complete(
         self,
         folder_path: str,
-        output_dir: str = "./output",
-        parse_method: str = "auto",
-        display_stats: bool = False,
+        output_dir: str = None,
+        parse_method: str = None,
+        display_stats: bool = None,
         split_by_character: str | None = None,
         split_by_character_only: bool = False,
         file_extensions: Optional[List[str]] = None,
-        recursive: bool = True,
-        max_workers: int = 1,
+        recursive: bool = None,
+        max_workers: int = None,
     ):
         """
         Process all files in a folder in batch
 
         Args:
             folder_path: Path to the folder to process
-            output_dir: MinerU output directory
-            parse_method: Parse method
-            display_stats: Whether to display content statistics for each file (recommended False for batch processing)
+            output_dir: MinerU output directory (defaults to config.mineru_output_dir)
+            parse_method: Parse method (defaults to config.mineru_parse_method)
+            display_stats: Whether to display content statistics for each file (defaults to False for batch processing)
             split_by_character: Optional character to split text by
             split_by_character_only: If True, split only by the specified character
-            file_extensions: List of file extensions to process, e.g. [".pdf", ".docx"]. If None, process all supported formats
-            recursive: Whether to recursively process subfolders
-            max_workers: Maximum number of concurrent workers
+            file_extensions: List of file extensions to process (defaults to config.supported_file_extensions)
+            recursive: Whether to recursively process subfolders (defaults to config.recursive_folder_processing)
+            max_workers: Maximum number of concurrent workers (defaults to config.max_concurrent_files)
         """
         # Ensure LightRAG is initialized
         await self._ensure_lightrag_initialized()
+
+        # Use config defaults if not provided
+        if output_dir is None:
+            output_dir = self.config.mineru_output_dir
+        if parse_method is None:
+            parse_method = self.config.mineru_parse_method
+        if display_stats is None:
+            display_stats = False  # Default to False for batch processing
+        if recursive is None:
+            recursive = self.config.recursive_folder_processing
+        if max_workers is None:
+            max_workers = self.config.max_concurrent_files
+        if file_extensions is None:
+            file_extensions = self.config.supported_file_extensions
 
         folder_path = Path(folder_path)
         if not folder_path.exists() or not folder_path.is_dir():
@@ -476,38 +608,13 @@ class RAGAnything:
                 f"Folder does not exist or is not a valid directory: {folder_path}"
             )
 
-        # Supported file formats
-        supported_extensions = {
-            ".pdf",
-            ".jpg",
-            ".jpeg",
-            ".png",
-            ".bmp",
-            ".tiff",
-            ".tif",
-            ".gif",
-            ".webp",
-            ".doc",
-            ".docx",
-            ".ppt",
-            ".pptx",
-            ".xls",
-            ".xlsx",
-            ".txt",
-            ".md",
-        }
+        # Convert file extensions to set for faster lookup
+        target_extensions = set(ext.lower().strip() for ext in file_extensions)
 
-        # Use specified extensions or all supported formats
-        if file_extensions:
-            target_extensions = set(ext.lower() for ext in file_extensions)
-            # Validate if all are supported formats
-            unsupported = target_extensions - supported_extensions
-            if unsupported:
-                self.logger.warning(
-                    f"The following file formats may not be fully supported: {unsupported}"
-                )
-        else:
-            target_extensions = supported_extensions
+        # Log the extensions being used
+        self.logger.info(
+            f"Processing files with extensions: {sorted(target_extensions)}"
+        )
 
         # Collect all files to process
         files_to_process = []
@@ -647,18 +754,41 @@ class RAGAnything:
         """
         return MineruParser.check_installation()
 
+    def get_config_info(self) -> Dict[str, Any]:
+        """Get current configuration information"""
+        return {
+            "directory": {
+                "working_dir": self.config.working_dir,
+                "mineru_output_dir": self.config.mineru_output_dir,
+            },
+            "parsing": {
+                "mineru_parse_method": self.config.mineru_parse_method,
+                "display_content_stats": self.config.display_content_stats,
+            },
+            "multimodal_processing": {
+                "enable_image_processing": self.config.enable_image_processing,
+                "enable_table_processing": self.config.enable_table_processing,
+                "enable_equation_processing": self.config.enable_equation_processing,
+            },
+            "batch_processing": {
+                "max_concurrent_files": self.config.max_concurrent_files,
+                "supported_file_extensions": self.config.supported_file_extensions,
+                "recursive_folder_processing": self.config.recursive_folder_processing,
+            },
+            "logging": {
+                "note": "Logging fields have been removed - configure logging externally",
+                "log_level": getattr(self.config, "log_level", "Removed (deprecated)"),
+                "verbose_logging": getattr(
+                    self.config, "verbose_logging", "Removed (deprecated)"
+                ),
+            },
+        }
+
     def get_processor_info(self) -> Dict[str, Any]:
         """Get processor information"""
-        if not self.modal_processors:
-            return {
-                "status": "Not initialized",
-                "mineru_installed": MineruParser.check_installation(),
-            }
-
-        info = {
-            "status": "Initialized",
+        base_info = {
             "mineru_installed": MineruParser.check_installation(),
-            "processors": {},
+            "config": self.get_config_info(),
             "models": {
                 "llm_model": "External function"
                 if self.llm_model_func
@@ -672,13 +802,21 @@ class RAGAnything:
             },
         }
 
-        for proc_type, processor in self.modal_processors.items():
-            info["processors"][proc_type] = {
-                "class": processor.__class__.__name__,
-                "supports": self._get_processor_supports(proc_type),
-            }
+        if not self.modal_processors:
+            base_info["status"] = "Not initialized"
+            base_info["processors"] = {}
+        else:
+            base_info["status"] = "Initialized"
+            base_info["processors"] = {}
 
-        return info
+            for proc_type, processor in self.modal_processors.items():
+                base_info["processors"][proc_type] = {
+                    "class": processor.__class__.__name__,
+                    "supports": self._get_processor_supports(proc_type),
+                    "enabled": True,
+                }
+
+        return base_info
 
     def _get_processor_supports(self, proc_type: str) -> List[str]:
         """Get processor supported features"""
