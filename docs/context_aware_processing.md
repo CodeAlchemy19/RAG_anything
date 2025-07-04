@@ -117,8 +117,8 @@ rag_anything.update_context_config(
 
 ```python
 from raganything.modalprocessors import (
-    ContextExtractor, 
-    ContextConfig, 
+    ContextExtractor,
+    ContextConfig,
     ImageModalProcessor
 )
 
@@ -371,4 +371,4 @@ Check out these example files for complete usage demonstrations:
 For detailed API documentation, see the docstrings in:
 - `raganything/modalprocessors.py` - Context extraction and modal processors
 - `raganything/config.py` - Configuration options
-- `raganything/raganything.py` - Main RAGAnything class integration 
+- `raganything/raganything.py` - Main RAGAnything class integration

@@ -96,7 +96,7 @@ async def process_image_example(lightrag: LightRAG, vision_model_func):
     }
 
     # Process image
-    description, entity_info = await image_processor.process_multimodal_content(
+    (description, entity_info, _) = await image_processor.process_multimodal_content(
         modal_content=image_content,
         content_type="image",
         file_path="image_example.jpg",
@@ -128,7 +128,7 @@ async def process_table_example(lightrag: LightRAG, llm_model_func):
     }
 
     # Process table
-    description, entity_info = await table_processor.process_multimodal_content(
+    (description, entity_info, _) = await table_processor.process_multimodal_content(
         modal_content=table_content,
         content_type="table",
         file_path="table_example.md",
@@ -151,7 +151,7 @@ async def process_equation_example(lightrag: LightRAG, llm_model_func):
     equation_content = {"text": "E = mc^2", "text_format": "LaTeX"}
 
     # Process equation
-    description, entity_info = await equation_processor.process_multimodal_content(
+    (description, entity_info, _) = await equation_processor.process_multimodal_content(
         modal_content=equation_content,
         content_type="equation",
         file_path="equation_example.txt",
