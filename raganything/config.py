@@ -71,4 +71,4 @@ class RAGAnythingConfig:
     recursive_folder_processing: bool = field(
         default=get_env_value("RECURSIVE_FOLDER_PROCESSING", True, bool)
     )
-    """Whether to recursively process subfolders in batch mode.""" 
+    """Whether to recursively process subfolders in batch mode."""

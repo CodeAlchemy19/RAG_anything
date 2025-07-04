@@ -8,7 +8,9 @@ from typing import Dict, List, Any, Tuple
 from lightrag.utils import logger
 
 
-def separate_content(content_list: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
+def separate_content(
+    content_list: List[Dict[str, Any]],
+) -> Tuple[str, List[Dict[str, Any]]]:
     """
     Separate text content and multimodal content
 
@@ -137,4 +139,4 @@ def get_processor_supports(proc_type: str) -> List[str]:
             "Entity extraction",
         ],
     }
-    return supports_map.get(proc_type, ["Basic processing"]) 
+    return supports_map.get(proc_type, ["Basic processing"])

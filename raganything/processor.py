@@ -7,9 +7,12 @@ Contains methods for parsing documents and processing multimodal content
 import os
 from typing import Dict, List, Any, Tuple
 from pathlib import Path
-from lightrag.utils import logger
 from raganything.mineru_parser import MineruParser
-from raganything.utils import separate_content, insert_text_content, get_processor_for_type
+from raganything.utils import (
+    separate_content,
+    insert_text_content,
+    get_processor_for_type,
+)
 
 
 class ProcessorMixin:
@@ -266,4 +269,4 @@ class ProcessorMixin:
         if multimodal_items:
             await self._process_multimodal_content(multimodal_items, file_path)
 
-        self.logger.info(f"Document {file_path} processing complete!") 
+        self.logger.info(f"Document {file_path} processing complete!")

@@ -7,7 +7,6 @@ Contains methods for processing multiple files in batches
 import asyncio
 from typing import Optional, List
 from pathlib import Path
-from lightrag.utils import logger
 
 
 class BatchMixin:
@@ -173,4 +172,4 @@ class BatchMixin:
             "success": processed_count,
             "failed": len(failed_files),
             "failed_files": failed_files,
-        } 
+        }
