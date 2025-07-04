@@ -155,15 +155,24 @@ class ProcessorMixin:
                 processor = get_processor_for_type(self.modal_processors, content_type)
 
                 if processor:
+                    # Prepare item info for context extraction
+                    item_info = {
+                        "page_idx": item.get("page_idx", 0),
+                        "index": i,
+                        "type": content_type,
+                    }
+
                     # Process content and get chunk results instead of immediately merging
                     (
                         enhanced_caption,
                         entity_info,
                         chunk_results,
-                    ) = await processor.process_multimodal_content_batch(
+                    ) = await processor.process_multimodal_content(
                         modal_content=item,
                         content_type=content_type,
                         file_path=file_name,
+                        item_info=item_info,  # Pass item info for context extraction
+                        batch_mode=True,
                     )
 
                     # Collect chunk results for batch processing
@@ -207,6 +216,8 @@ class ProcessorMixin:
                 total_files=1,
                 file_path=file_name,
             )
+
+            await self.lightrag._insert_done()
 
         self.logger.info("Multimodal content processing complete")
 
@@ -252,6 +263,15 @@ class ProcessorMixin:
 
         # Step 2: Separate text and multimodal content
         text_content, multimodal_items = separate_content(content_list)
+
+        # Step 2.5: Set content source for context extraction in multimodal processing
+        if hasattr(self, "set_content_source_for_context") and multimodal_items:
+            self.logger.info(
+                "Setting content source for context-aware multimodal processing..."
+            )
+            self.set_content_source_for_context(
+                content_list, self.config.content_format
+            )
 
         # Step 3: Insert pure text content with all parameters
         if text_content.strip():

@@ -72,3 +72,34 @@ class RAGAnythingConfig:
         default=get_env_value("RECURSIVE_FOLDER_PROCESSING", True, bool)
     )
     """Whether to recursively process subfolders in batch mode."""
+
+    # Context Extraction Configuration
+    # ---
+    context_window: int = field(default=get_env_value("CONTEXT_WINDOW", 1, int))
+    """Number of pages/chunks to include before and after current item for context."""
+
+    context_mode: str = field(default=get_env_value("CONTEXT_MODE", "page", str))
+    """Context extraction mode: 'page' for page-based, 'chunk' for chunk-based."""
+
+    max_context_tokens: int = field(
+        default=get_env_value("MAX_CONTEXT_TOKENS", 2000, int)
+    )
+    """Maximum number of tokens in extracted context."""
+
+    include_headers: bool = field(default=get_env_value("INCLUDE_HEADERS", True, bool))
+    """Whether to include document headers and titles in context."""
+
+    include_captions: bool = field(
+        default=get_env_value("INCLUDE_CAPTIONS", True, bool)
+    )
+    """Whether to include image/table captions in context."""
+
+    context_filter_content_types: List[str] = field(
+        default_factory=lambda: get_env_value(
+            "CONTEXT_FILTER_CONTENT_TYPES", "text", str
+        ).split(",")
+    )
+    """Content types to include in context extraction (e.g., 'text', 'image', 'table')."""
+
+    content_format: str = field(default=get_env_value("CONTENT_FORMAT", "minerU", str))
+    """Default content format for context extraction when processing documents."""

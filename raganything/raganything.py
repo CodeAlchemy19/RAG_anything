@@ -38,6 +38,8 @@ from raganything.modalprocessors import (
     TableModalProcessor,
     EquationModalProcessor,
     GenericModalProcessor,
+    ContextExtractor,
+    ContextConfig,
 )
 
 
@@ -66,6 +68,9 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
     # ---
     modal_processors: Dict[str, Any] = field(default_factory=dict, init=False)
     """Dictionary of multimodal processors."""
+
+    context_extractor: Optional[ContextExtractor] = field(default=None, init=False)
+    """Context extractor for providing surrounding content to modal processors."""
 
     def __post_init__(self):
         """Post-initialization setup following LightRAG pattern"""
@@ -99,12 +104,38 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         )
         self.logger.info(f"  Max concurrent files: {self.config.max_concurrent_files}")
 
+    def _create_context_config(self) -> ContextConfig:
+        """Create context configuration from RAGAnything config"""
+        return ContextConfig(
+            context_window=self.config.context_window,
+            context_mode=self.config.context_mode,
+            max_context_tokens=self.config.max_context_tokens,
+            include_headers=self.config.include_headers,
+            include_captions=self.config.include_captions,
+            filter_content_types=self.config.context_filter_content_types,
+        )
+
+    def _create_context_extractor(self) -> ContextExtractor:
+        """Create context extractor with tokenizer from LightRAG"""
+        if self.lightrag is None:
+            raise ValueError(
+                "LightRAG must be initialized before creating context extractor"
+            )
+
+        context_config = self._create_context_config()
+        return ContextExtractor(
+            config=context_config, tokenizer=self.lightrag.tokenizer
+        )
+
     def _initialize_processors(self):
         """Initialize multimodal processors with appropriate model functions"""
         if self.lightrag is None:
             raise ValueError(
                 "LightRAG instance must be initialized before creating processors"
             )
+
+        # Create context extractor
+        self.context_extractor = self._create_context_extractor()
 
         # Create different multimodal processors based on configuration
         self.modal_processors = {}
@@ -113,25 +144,33 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
             self.modal_processors["image"] = ImageModalProcessor(
                 lightrag=self.lightrag,
                 modal_caption_func=self.vision_model_func or self.llm_model_func,
+                context_extractor=self.context_extractor,
             )
 
         if self.config.enable_table_processing:
             self.modal_processors["table"] = TableModalProcessor(
-                lightrag=self.lightrag, modal_caption_func=self.llm_model_func
+                lightrag=self.lightrag,
+                modal_caption_func=self.llm_model_func,
+                context_extractor=self.context_extractor,
             )
 
         if self.config.enable_equation_processing:
             self.modal_processors["equation"] = EquationModalProcessor(
-                lightrag=self.lightrag, modal_caption_func=self.llm_model_func
+                lightrag=self.lightrag,
+                modal_caption_func=self.llm_model_func,
+                context_extractor=self.context_extractor,
             )
 
         # Always include generic processor as fallback
         self.modal_processors["generic"] = GenericModalProcessor(
-            lightrag=self.lightrag, modal_caption_func=self.llm_model_func
+            lightrag=self.lightrag,
+            modal_caption_func=self.llm_model_func,
+            context_extractor=self.context_extractor,
         )
 
-        self.logger.info("Multimodal processors initialized")
+        self.logger.info("Multimodal processors initialized with context support")
         self.logger.info(f"Available processors: {list(self.modal_processors.keys())}")
+        self.logger.info(f"Context configuration: {self._create_context_config()}")
 
     def update_config(self, **kwargs):
         """Update configuration with new values"""
@@ -207,6 +246,14 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                 "enable_table_processing": self.config.enable_table_processing,
                 "enable_equation_processing": self.config.enable_equation_processing,
             },
+            "context_extraction": {
+                "context_window": self.config.context_window,
+                "context_mode": self.config.context_mode,
+                "max_context_tokens": self.config.max_context_tokens,
+                "include_headers": self.config.include_headers,
+                "include_captions": self.config.include_captions,
+                "filter_content_types": self.config.context_filter_content_types,
+            },
             "batch_processing": {
                 "max_concurrent_files": self.config.max_concurrent_files,
                 "supported_file_extensions": self.config.supported_file_extensions,
@@ -216,6 +263,66 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                 "note": "Logging fields have been removed - configure logging externally",
             },
         }
+
+    def set_content_source_for_context(
+        self, content_source, content_format: str = "auto"
+    ):
+        """Set content source for context extraction in all modal processors
+
+        Args:
+            content_source: Source content for context extraction (e.g., MinerU content list)
+            content_format: Format of content source ("minerU", "text_chunks", "auto")
+        """
+        if not self.modal_processors:
+            self.logger.warning(
+                "Modal processors not initialized. Content source will be set when processors are created."
+            )
+            return
+
+        for processor_name, processor in self.modal_processors.items():
+            try:
+                processor.set_content_source(content_source, content_format)
+                self.logger.debug(f"Set content source for {processor_name} processor")
+            except Exception as e:
+                self.logger.error(
+                    f"Failed to set content source for {processor_name}: {e}"
+                )
+
+        self.logger.info(
+            f"Content source set for context extraction (format: {content_format})"
+        )
+
+    def update_context_config(self, **context_kwargs):
+        """Update context extraction configuration
+
+        Args:
+            **context_kwargs: Context configuration parameters to update
+                (context_window, context_mode, max_context_tokens, etc.)
+        """
+        # Update the main config
+        for key, value in context_kwargs.items():
+            if hasattr(self.config, key):
+                setattr(self.config, key, value)
+                self.logger.debug(f"Updated context config: {key} = {value}")
+            else:
+                self.logger.warning(f"Unknown context config parameter: {key}")
+
+        # Recreate context extractor with new config if processors are initialized
+        if self.lightrag and self.modal_processors:
+            try:
+                self.context_extractor = self._create_context_extractor()
+                # Update all processors with new context extractor
+                for processor_name, processor in self.modal_processors.items():
+                    processor.context_extractor = self.context_extractor
+
+                self.logger.info(
+                    "Context configuration updated and applied to all processors"
+                )
+                self.logger.info(
+                    f"New context configuration: {self._create_context_config()}"
+                )
+            except Exception as e:
+                self.logger.error(f"Failed to update context configuration: {e}")
 
     def get_processor_info(self) -> Dict[str, Any]:
         """Get processor information"""
