@@ -503,6 +503,7 @@ import asyncio
 from raganything import RAGAnything
 from lightrag import LightRAG
 from lightrag.llm.openai import openai_complete_if_cache, openai_embed
+from lightrag.kg.shared_storage import initialize_pipeline_status
 from lightrag.utils import EmbeddingFunc
 import os
 
@@ -541,6 +542,7 @@ async def load_existing_lightrag():
 
     # Initialize storage (this will load existing data if available)
     await lightrag_instance.initialize_storages()
+    await initialize_pipeline_status()
 
     # Now initialize RAGAnything with the existing LightRAG instance
     rag = RAGAnything(
