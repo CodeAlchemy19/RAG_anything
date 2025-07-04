@@ -670,10 +670,8 @@ mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU加速
 # 配置解析行为
 await rag.process_document_complete(
     file_path="document.pdf",
-    parse_method="auto",     # 或 "ocr", "txt"
-    device="cuda",           # GPU加速
-    backend="pipeline",      # 解析后端
-    lang="ch"               # 语言优化
+    outpu_dir="./output/",
+    parse_method="auto",     # or "ocr", "txt"
 )
 ```
 

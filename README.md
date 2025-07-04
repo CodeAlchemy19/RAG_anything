@@ -674,10 +674,8 @@ You can also configure MinerU through RAGAnything parameters:
 # Configure parsing behavior
 await rag.process_document_complete(
     file_path="document.pdf",
+    outpu_dir="./output/",
     parse_method="auto",     # or "ocr", "txt"
-    device="cuda",           # GPU acceleration
-    backend="pipeline",      # parsing backend
-    lang="en"               # language optimization
 )
 ```
 
