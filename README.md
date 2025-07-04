@@ -47,6 +47,12 @@
 
 ---
 
+## 🎉 News
+- [X] [2025.07.04]🎯📢 RAGAnything now supports query with multimodal content, enabling enhanced retrieval-augmented generation with integrated text, images, tables, and equations processing.
+- [X] [2025.07.03]🎯📢 RAGAnything has reached 1K🌟 stars on GitHub! Thank you for your support and contributions.
+
+---
+
 ## 🌟 System Overview
 
 *Next-Generation Multimodal Intelligence*
@@ -176,7 +182,7 @@ The system deploys modality-aware processing units for heterogeneous data modali
 
 </div>
 
-### 4. Multi-Modal Knowledge Graph Index
+### 4. Multimodal Knowledge Graph Index
 
 <div style="background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; padding: 20px; margin: 15px 0; border-left: 4px solid #4ecdc4;">
 
@@ -336,11 +342,24 @@ async def main():
     )
 
     # Query the processed content
-    result = await rag.query_with_multimodal(
+    # Pure text query - for basic knowledge base search
+    text_result = await rag.aquery(
         "What are the main findings shown in the figures and tables?",
         mode="hybrid"
     )
-    print(result)
+    print("Text query result:", text_result)
+
+    # Multimodal query with specific multimodal content
+    multimodal_result = await rag.aquery_with_multimodal(
+    "Explain this formula and its relevance to the document content",
+    multimodal_content=[{
+        "type": "equation",
+        "latex": "P(d|q) = \\frac{P(q|d) \\cdot P(d)}{P(q)}",
+        "equation_caption": "Document relevance probability"
+    }],
+    mode="hybrid"
+)
+    print("Multimodal query result:", multimodal_result)
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -436,11 +455,45 @@ class CustomModalProcessor(GenericModalProcessor):
 
 #### 5. Query Options
 
+RAG-Anything provides two types of query methods:
+
+**Pure Text Queries** - Direct knowledge base search using LightRAG:
 ```python
-# Different query modes
-result_hybrid = await rag.query_with_multimodal("Your question", mode="hybrid")
-result_local = await rag.query_with_multimodal("Your question", mode="local")
-result_global = await rag.query_with_multimodal("Your question", mode="global")
+# Different query modes for text queries
+text_result_hybrid = await rag.aquery("Your question", mode="hybrid")
+text_result_local = await rag.aquery("Your question", mode="local")
+text_result_global = await rag.aquery("Your question", mode="global")
+text_result_naive = await rag.aquery("Your question", mode="naive")
+
+# Synchronous version
+sync_text_result = rag.query("Your question", mode="hybrid")
+```
+
+**Multimodal Queries** - Enhanced queries with multimodal content analysis:
+```python
+# Query with table data
+table_result = await rag.aquery_with_multimodal(
+    "Compare these performance metrics with the document content",
+    multimodal_content=[{
+        "type": "table",
+        "table_data": """Method,Accuracy,Speed
+                        RAGAnything,95.2%,120ms
+                        Traditional,87.3%,180ms""",
+        "table_caption": "Performance comparison"
+    }],
+    mode="hybrid"
+)
+
+# Query with equation content
+equation_result = await rag.aquery_with_multimodal(
+    "Explain this formula and its relevance to the document content",
+    multimodal_content=[{
+        "type": "equation",
+        "latex": "P(d|q) = \\frac{P(q|d) \\cdot P(d)}{P(q)}",
+        "equation_caption": "Document relevance probability"
+    }],
+    mode="hybrid"
+)
 ```
 
 #### 6. Loading Existing LightRAG Instance

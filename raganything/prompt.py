@@ -173,3 +173,56 @@ PROMPTS["generic_chunk"] = """{content_type} Content Analysis:
 Content: {content}
 
 Analysis: {enhanced_caption}"""
+
+# Query-related prompts
+PROMPTS["QUERY_IMAGE_DESCRIPTION"] = (
+    "Please briefly describe the main content, key elements, and important information in this image."
+)
+
+PROMPTS["QUERY_IMAGE_ANALYST_SYSTEM"] = (
+    "You are a professional image analyst who can accurately describe image content."
+)
+
+PROMPTS[
+    "QUERY_TABLE_ANALYSIS"
+] = """Please analyze the main content, structure, and key information of the following table data:
+
+Table data:
+{table_data}
+
+Table caption: {table_caption}
+
+Please briefly summarize the main content, data characteristics, and important findings of the table."""
+
+PROMPTS["QUERY_TABLE_ANALYST_SYSTEM"] = (
+    "You are a professional data analyst who can accurately analyze table data."
+)
+
+PROMPTS[
+    "QUERY_EQUATION_ANALYSIS"
+] = """Please explain the meaning and purpose of the following mathematical formula:
+
+LaTeX formula: {latex}
+Formula caption: {equation_caption}
+
+Please briefly explain the mathematical meaning, application scenarios, and importance of this formula."""
+
+PROMPTS["QUERY_EQUATION_ANALYST_SYSTEM"] = (
+    "You are a mathematics expert who can clearly explain mathematical formulas."
+)
+
+PROMPTS[
+    "QUERY_GENERIC_ANALYSIS"
+] = """Please analyze the following {content_type} type content and extract its main information and key features:
+
+Content: {content_str}
+
+Please briefly summarize the main characteristics and important information of this content."""
+
+PROMPTS["QUERY_GENERIC_ANALYST_SYSTEM"] = (
+    "You are a professional content analyst who can accurately analyze {content_type} type content."
+)
+
+PROMPTS["QUERY_ENHANCEMENT_SUFFIX"] = (
+    "\n\nPlease provide a comprehensive answer based on the user query and the provided multimodal content information."
+)
