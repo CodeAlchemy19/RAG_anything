@@ -47,6 +47,12 @@
 
 ---
 
+## 🎉 新闻
+- [X] [2025.07.04]🎯📢 RAGAnything 现在支持多模态内容查询，实现了集成文本、图像、表格和公式处理的增强检索生成功能。
+- [X] [2025.07.03]🎯📢 RAGAnything 在GitHub上达到了1K星标🌟！感谢您的支持和贡献。
+
+---
+
 ## 🌟 系统概述
 
 *下一代多模态智能*
@@ -332,11 +338,26 @@ async def main():
     )
 
     # 查询处理后的内容
-    result = await rag.query_with_multimodal(
-        "图表中显示的主要发现是什么？",
+    # 纯文本查询 - 基本知识库搜索
+    text_result = await rag.aquery(
+        "文档的主要内容是什么？",
         mode="hybrid"
     )
-    print(result)
+    print("文本查询结果:", text_result)
+
+    # 多模态查询 - 包含具体多模态内容的查询
+    multimodal_result = await rag.aquery_with_multimodal(
+        "分析这个性能数据并解释与现有文档内容的关系",
+        multimodal_content=[{
+            "type": "table",
+            "table_data": """系统,准确率,F1分数
+                            RAGAnything,95.2%,0.94
+                            基准方法,87.3%,0.85""",
+            "table_caption": "性能对比结果"
+        }],
+        mode="hybrid"
+    )
+    print("多模态查询结果:", multimodal_result)
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -432,11 +453,45 @@ class CustomModalProcessor(GenericModalProcessor):
 
 #### 5. 查询选项
 
+RAG-Anything 提供两种类型的查询方法：
+
+**纯文本查询** - 使用LightRAG直接进行知识库搜索：
 ```python
-# 不同的查询模式
-result_hybrid = await rag.query_with_multimodal("你的问题", mode="hybrid")
-result_local = await rag.query_with_multimodal("你的问题", mode="local")
-result_global = await rag.query_with_multimodal("你的问题", mode="global")
+# 文本查询的不同模式
+text_result_hybrid = await rag.aquery("你的问题", mode="hybrid")
+text_result_local = await rag.aquery("你的问题", mode="local")
+text_result_global = await rag.aquery("你的问题", mode="global")
+text_result_naive = await rag.aquery("你的问题", mode="naive")
+
+# 同步版本
+sync_text_result = rag.query("你的问题", mode="hybrid")
+```
+
+**多模态查询** - 包含多模态内容分析的增强查询：
+```python
+# 包含表格数据的查询
+table_result = await rag.aquery_with_multimodal(
+    "比较这些性能指标与文档内容",
+    multimodal_content=[{
+        "type": "table",
+        "table_data": """方法,准确率,速度
+                        LightRAG,95.2%,120ms
+                        传统方法,87.3%,180ms""",
+        "table_caption": "性能对比"
+    }],
+    mode="hybrid"
+)
+
+# 包含公式内容的查询
+equation_result = await rag.aquery_with_multimodal(
+    "解释这个公式及其与文档内容的相关性",
+    multimodal_content=[{
+        "type": "equation",
+        "latex": "P(d|q) = \\frac{P(q|d) \\cdot P(d)}{P(q)}",
+        "equation_caption": "文档相关性概率"
+    }],
+    mode="hybrid"
+)
 ```
 
 #### 6. 加载已存在的LightRAG实例
