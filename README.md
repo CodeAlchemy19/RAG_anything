@@ -48,6 +48,7 @@
 ---
 
 ## 🎉 News
+- [X] [2025.07.05]🎯📢 RAGAnything now includes context configuration module, enabling the addition of relevant contextual information for multimodal content processing.
 - [X] [2025.07.04]🎯📢 RAGAnything now supports query with multimodal content, enabling enhanced retrieval-augmented generation with integrated text, images, tables, and equations processing.
 - [X] [2025.07.03]🎯📢 RAGAnything has reached 1K🌟 stars on GitHub! Thank you for your support and contributions.
 
