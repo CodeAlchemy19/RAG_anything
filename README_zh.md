@@ -280,54 +280,90 @@ python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ 
 
 ```python
 import asyncio
-from raganything import RAGAnything
+from raganything import RAGAnything, RAGAnythingConfig
 from lightrag.llm.openai import openai_complete_if_cache, openai_embed
 from lightrag.utils import EmbeddingFunc
 
 async def main():
-    # 初始化RAGAnything
-    rag = RAGAnything(
+    # 设置 API 配置
+    api_key = "your-api-key"
+    base_url = "your-base-url"  # 可选
+
+    # 创建 RAGAnything 配置
+    config = RAGAnythingConfig(
         working_dir="./rag_storage",
-        llm_model_func=lambda prompt, system_prompt=None, history_messages=[], **kwargs: openai_complete_if_cache(
+        mineru_parse_method="auto",
+        enable_image_processing=True,
+        enable_table_processing=True,
+        enable_equation_processing=True,
+    )
+
+    # 定义 LLM 模型函数
+    def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs):
+        return openai_complete_if_cache(
             "gpt-4o-mini",
             prompt,
             system_prompt=system_prompt,
             history_messages=history_messages,
-            api_key="your-api-key",
+            api_key=api_key,
+            base_url=base_url,
             **kwargs,
-        ),
-        vision_model_func=lambda prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs: openai_complete_if_cache(
-            "gpt-4o",
-            "",
-            system_prompt=None,
-            history_messages=[],
-            messages=[
-                {"role": "system", "content": system_prompt} if system_prompt else None,
-                {"role": "user", "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
-                ]} if image_data else {"role": "user", "content": prompt}
-            ],
-            api_key="your-api-key",
-            **kwargs,
-        ) if image_data else openai_complete_if_cache(
-            "gpt-4o-mini",
-            prompt,
-            system_prompt=system_prompt,
-            history_messages=history_messages,
-            api_key="your-api-key",
-            **kwargs,
-        ),
-        embedding_func=EmbeddingFunc(
-            embedding_dim=3072,
-            max_token_size=8192,
-            func=lambda texts: openai_embed(
-                texts,
-                model="text-embedding-3-large",
+        )
+
+    # 定义视觉模型函数用于图像处理
+    def vision_model_func(
+        prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs
+    ):
+        if image_data:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=[
+                    {"role": "system", "content": system_prompt}
+                    if system_prompt
+                    else None,
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image_data}"
+                                },
+                            },
+                        ],
+                    }
+                    if image_data
+                    else {"role": "user", "content": prompt},
+                ],
                 api_key=api_key,
                 base_url=base_url,
-            ),
+                **kwargs,
+            )
+        else:
+            return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
+
+    # 定义嵌入函数
+    embedding_func = EmbeddingFunc(
+        embedding_dim=3072,
+        max_token_size=8192,
+        func=lambda texts: openai_embed(
+            texts,
+            model="text-embedding-3-large",
+            api_key=api_key,
+            base_url=base_url,
         ),
+    )
+
+    # 初始化 RAGAnything
+    rag = RAGAnything(
+        config=config,
+        llm_model_func=llm_model_func,
+        vision_model_func=vision_model_func,
+        embedding_func=embedding_func,
     )
 
     # 处理文档
@@ -368,20 +404,67 @@ if __name__ == "__main__":
 ```python
 import asyncio
 from lightrag import LightRAG
+from lightrag.llm.openai import openai_complete_if_cache, openai_embed
+from lightrag.utils import EmbeddingFunc
 from raganything.modalprocessors import ImageModalProcessor, TableModalProcessor
 
 async def process_multimodal_content():
-    # 初始化LightRAG
+    # 设置 API 配置
+    api_key = "your-api-key"
+    base_url = "your-base-url"  # 可选
+
+    # 初始化 LightRAG
     rag = LightRAG(
         working_dir="./rag_storage",
-        # ... 你的LLM和嵌入配置
+        llm_model_func=lambda prompt, system_prompt=None, history_messages=[], **kwargs: openai_complete_if_cache(
+            "gpt-4o-mini",
+            prompt,
+            system_prompt=system_prompt,
+            history_messages=history_messages,
+            api_key=api_key,
+            base_url=base_url,
+            **kwargs,
+        ),
+        embedding_func=EmbeddingFunc(
+            embedding_dim=3072,
+            max_token_size=8192,
+            func=lambda texts: openai_embed(
+                texts,
+                model="text-embedding-3-large",
+                api_key=api_key,
+                base_url=base_url,
+            ),
+        )
     )
     await rag.initialize_storages()
 
     # 处理图像
     image_processor = ImageModalProcessor(
         lightrag=rag,
-        modal_caption_func=your_vision_model_func
+        modal_caption_func=lambda prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs: openai_complete_if_cache(
+            "gpt-4o",
+            "",
+            system_prompt=None,
+            history_messages=[],
+            messages=[
+                {"role": "system", "content": system_prompt} if system_prompt else None,
+                {"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
+                ]} if image_data else {"role": "user", "content": prompt}
+            ],
+            api_key=api_key,
+            base_url=base_url,
+            **kwargs,
+        ) if image_data else openai_complete_if_cache(
+            "gpt-4o-mini",
+            prompt,
+            system_prompt=system_prompt,
+            history_messages=history_messages,
+            api_key=api_key,
+            base_url=base_url,
+            **kwargs,
+        )
     )
 
     image_content = {
@@ -400,7 +483,15 @@ async def process_multimodal_content():
     # 处理表格
     table_processor = TableModalProcessor(
         lightrag=rag,
-        modal_caption_func=your_llm_model_func
+        modal_caption_func=lambda prompt, system_prompt=None, history_messages=[], **kwargs: openai_complete_if_cache(
+            "gpt-4o-mini",
+            prompt,
+            system_prompt=system_prompt,
+            history_messages=history_messages,
+            api_key=api_key,
+            base_url=base_url,
+            **kwargs,
+        )
     )
 
     table_content = {
@@ -505,16 +596,20 @@ from lightrag.utils import EmbeddingFunc
 import os
 
 async def load_existing_lightrag():
-    # 首先，创建或加载已存在的LightRAG实例
+    # 设置 API 配置
+    api_key = "your-api-key"
+    base_url = "your-base-url"  # 可选
+
+    # 首先，创建或加载已存在的 LightRAG 实例
     lightrag_working_dir = "./existing_lightrag_storage"
 
-    # 检查是否存在之前的LightRAG实例
+    # 检查是否存在之前的 LightRAG 实例
     if os.path.exists(lightrag_working_dir) and os.listdir(lightrag_working_dir):
-        print("✅ 发现已存在的LightRAG实例，正在加载...")
+        print("✅ 发现已存在的 LightRAG 实例，正在加载...")
     else:
-        print("❌ 未找到已存在的LightRAG实例，将创建新实例")
+        print("❌ 未找到已存在的 LightRAG 实例，将创建新实例")
 
-    # 使用您的配置创建/加载LightRAG实例
+    # 使用您的配置创建/加载 LightRAG 实例
     lightrag_instance = LightRAG(
         working_dir=lightrag_working_dir,
         llm_model_func=lambda prompt, system_prompt=None, history_messages=[], **kwargs: openai_complete_if_cache(
@@ -522,7 +617,8 @@ async def load_existing_lightrag():
             prompt,
             system_prompt=system_prompt,
             history_messages=history_messages,
-            api_key="your-api-key",
+            api_key=api_key,
+            base_url=base_url,
             **kwargs,
         ),
         embedding_func=EmbeddingFunc(
@@ -539,44 +635,59 @@ async def load_existing_lightrag():
 
     # 初始化存储（如果有现有数据，这将加载它们）
     await lightrag_instance.initialize_storages()
+    await initialize_pipeline_status()
 
-    # 现在使用已存在的LightRAG实例初始化RAGAnything
+    # 定义视觉模型函数用于图像处理
+    def vision_model_func(
+        prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs
+    ):
+        if image_data:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=[
+                    {"role": "system", "content": system_prompt}
+                    if system_prompt
+                    else None,
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image_data}"
+                                },
+                            },
+                        ],
+                    }
+                    if image_data
+                    else {"role": "user", "content": prompt},
+                ],
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        else:
+            return lightrag_instance.llm_model_func(prompt, system_prompt, history_messages, **kwargs)
+
+    # 现在使用已存在的 LightRAG 实例初始化 RAGAnything
     rag = RAGAnything(
-        lightrag=lightrag_instance,  # 传入已存在的LightRAG实例
-        # 只需要为多模态处理配置vision model
-        vision_model_func=lambda prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs: openai_complete_if_cache(
-            "gpt-4o",
-            "",
-            system_prompt=None,
-            history_messages=[],
-            messages=[
-                {"role": "system", "content": system_prompt} if system_prompt else None,
-                {"role": "user", "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
-                ]} if image_data else {"role": "user", "content": prompt}
-            ],
-            api_key="your-api-key",
-            **kwargs,
-        ) if image_data else openai_complete_if_cache(
-            "gpt-4o-mini",
-            prompt,
-            system_prompt=system_prompt,
-            history_messages=history_messages,
-            api_key="your-api-key",
-            **kwargs,
-        )
-        # 注意：working_dir、llm_model_func、embedding_func等都从lightrag_instance继承
+        lightrag=lightrag_instance,  # 传入已存在的 LightRAG 实例
+        vision_model_func=vision_model_func,
+        # 注意：working_dir、llm_model_func、embedding_func 等都从 lightrag_instance 继承
     )
 
     # 查询已存在的知识库
-    result = await rag.query_with_multimodal(
-        "这个LightRAG实例中处理了哪些数据？",
+    result = await rag.aquery(
+        "这个 LightRAG 实例中处理了哪些数据？",
         mode="hybrid"
     )
     print("查询结果:", result)
 
-    # 向已存在的LightRAG实例添加新的多模态文档
+    # 向已存在的 LightRAG 实例添加新的多模态文档
     await rag.process_document_complete(
         file_path="path/to/new/multimodal_document.pdf",
         output_dir="./output"

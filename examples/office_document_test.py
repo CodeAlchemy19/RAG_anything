@@ -66,7 +66,7 @@ def test_office_document_parsing(file_path: str):
     print(f"📏 File size: {file_path.stat().st_size / 1024:.1f} KB")
 
     # Initialize RAGAnything (only for parsing functionality)
-    rag = RAGAnything(working_dir="./temp_parsing_test")
+    rag = RAGAnything()
 
     try:
         # Test document parsing with MinerU

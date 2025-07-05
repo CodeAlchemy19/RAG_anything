@@ -101,7 +101,7 @@ def test_image_format_parsing(file_path: str):
         print(f"✅ Format {file_path.suffix.upper()} is natively supported by MinerU")
 
     # Initialize RAGAnything (only for parsing functionality)
-    rag = RAGAnything(working_dir="./temp_parsing_test")
+    rag = RAGAnything()
 
     try:
         # Test image parsing with MinerU

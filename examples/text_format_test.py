@@ -66,7 +66,7 @@ def test_text_format_parsing(file_path: str):
         )
 
     # Initialize RAGAnything (only for parsing functionality)
-    rag = RAGAnything(working_dir="./temp_parsing_test")
+    rag = RAGAnything()
 
     try:
         # Test text parsing with MinerU
