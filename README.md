@@ -782,11 +782,33 @@ mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU acceleration
 You can also configure MinerU through RAGAnything parameters:
 
 ```python
-# Configure parsing behavior
+# Basic parsing configuration
 await rag.process_document_complete(
     file_path="document.pdf",
-    outpu_dir="./output/",
-    parse_method="auto",     # or "ocr", "txt"
+    output_dir="./output/",
+    parse_method="auto",          # or "ocr", "txt"
+)
+
+# Advanced MinerU parsing configuration with special parameters
+await rag.process_document_complete(
+    file_path="document.pdf",
+    output_dir="./output/",
+    parse_method="auto",          # Parsing method: "auto", "ocr", "txt"
+
+    # MinerU special parameters - all supported kwargs:
+    lang="ch",                   # Document language for OCR optimization (e.g., "ch", "en", "ja")
+    device="cuda:0",             # Inference device: "cpu", "cuda", "cuda:0", "npu", "mps"
+    start_page=0,                # Starting page number (0-based, for PDF)
+    end_page=10,                 # Ending page number (0-based, for PDF)
+    formula=True,                # Enable formula parsing
+    table=True,                  # Enable table parsing
+    backend="pipeline",          # Parsing backend: "pipeline", "vlm-transformers", etc.
+    source="huggingface",        # Model source: "huggingface", "modelscope", "local"
+
+    # Standard RAGAnything parameters
+    display_stats=True,          # Display content statistics
+    split_by_character=None,     # Optional character to split text by
+    doc_id=None                  # Optional document ID
 )
 ```
 

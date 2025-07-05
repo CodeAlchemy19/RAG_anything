@@ -402,7 +402,10 @@ class MineruParser:
 
     @staticmethod
     def parse_office_doc(
-        doc_path: Union[str, Path], output_dir: Optional[str] = None, **kwargs
+        doc_path: Union[str, Path],
+        output_dir: Optional[str] = None,
+        lang: Optional[str] = None,
+        **kwargs,
     ) -> Tuple[List[Dict[str, Any]], str]:
         """
         Parse office document by first converting to PDF, then parsing with MinerU 2.0
@@ -415,6 +418,7 @@ class MineruParser:
         Args:
             doc_path: Path to the document file (.doc, .docx, .ppt, .pptx, .xls, .xlsx)
             output_dir: Output directory path
+            lang: Document language for OCR optimization
             **kwargs: Additional parameters for mineru command
 
         Returns:
@@ -573,7 +577,7 @@ class MineruParser:
 
                 # Parse the converted PDF
                 return MineruParser.parse_pdf(
-                    pdf_path=pdf_path, output_dir=output_dir, **kwargs
+                    pdf_path=pdf_path, output_dir=output_dir, lang=lang, **kwargs
                 )
 
         except Exception as e:
@@ -582,7 +586,10 @@ class MineruParser:
 
     @staticmethod
     def parse_text_file(
-        text_path: Union[str, Path], output_dir: Optional[str] = None, **kwargs
+        text_path: Union[str, Path],
+        output_dir: Optional[str] = None,
+        lang: Optional[str] = None,
+        **kwargs,
     ) -> Tuple[List[Dict[str, Any]], str]:
         """
         Parse text file by first converting to PDF, then parsing with MinerU 2.0
@@ -592,6 +599,7 @@ class MineruParser:
         Args:
             text_path: Path to the text file (.txt, .md)
             output_dir: Output directory path
+            lang: Document language for OCR optimization
             **kwargs: Additional parameters for mineru command
 
         Returns:
@@ -1103,7 +1111,7 @@ class MineruParser:
 
                 # Parse the converted PDF
                 return MineruParser.parse_pdf(
-                    pdf_path=pdf_path, output_dir=output_dir, **kwargs
+                    pdf_path=pdf_path, output_dir=output_dir, lang=lang, **kwargs
                 )
 
         except Exception as e:
@@ -1149,9 +1157,9 @@ class MineruParser:
                 f"Warning: Office document detected ({ext}). "
                 f"MinerU 2.0 requires conversion to PDF first."
             )
-            return MineruParser.parse_office_doc(file_path, output_dir, **kwargs)
+            return MineruParser.parse_office_doc(file_path, output_dir, lang, **kwargs)
         elif ext in [".txt", ".md"]:
-            return MineruParser.parse_text_file(file_path, output_dir, **kwargs)
+            return MineruParser.parse_text_file(file_path, output_dir, lang, **kwargs)
         else:
             # For unsupported file types, try as PDF
             print(

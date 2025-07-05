@@ -779,11 +779,33 @@ mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU加速
 你也可以通过RAGAnything参数配置MinerU：
 
 ```python
-# 配置解析行为
+# 基础解析配置
 await rag.process_document_complete(
     file_path="document.pdf",
-    outpu_dir="./output/",
-    parse_method="auto",     # or "ocr", "txt"
+    output_dir="./output/",
+    parse_method="auto",          # 或 "ocr", "txt"
+)
+
+# MinerU高级解析配置（包含特殊参数）
+await rag.process_document_complete(
+    file_path="document.pdf",
+    output_dir="./output/",
+    parse_method="auto",          # 解析方法："auto", "ocr", "txt"
+
+    # MinerU特殊参数 - 支持的所有kwargs：
+    lang="ch",                   # 文档语言优化（如："ch", "en", "ja"）
+    device="cuda:0",             # 推理设备："cpu", "cuda", "cuda:0", "npu", "mps"
+    start_page=0,                # 起始页码（0为基准，适用于PDF）
+    end_page=10,                 # 结束页码（0为基准，适用于PDF）
+    formula=True,                # 启用公式解析
+    table=True,                  # 启用表格解析
+    backend="pipeline",          # 解析后端："pipeline", "vlm-transformers"等
+    source="huggingface",        # 模型源："huggingface", "modelscope", "local"
+
+    # RAGAnything标准参数
+    display_stats=True,          # 显示内容统计信息
+    split_by_character=None,     # 可选的文本分割字符
+    doc_id=None                  # 可选的文档ID
 )
 ```
 

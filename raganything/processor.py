@@ -24,6 +24,7 @@ class ProcessorMixin:
         output_dir: str = None,
         parse_method: str = None,
         display_stats: bool = None,
+        **kwargs,
     ) -> Tuple[List[Dict[str, Any]], str]:
         """
         Parse document using MinerU
@@ -33,6 +34,7 @@ class ProcessorMixin:
             output_dir: Output directory (defaults to config.mineru_output_dir)
             parse_method: Parse method (defaults to config.mineru_parse_method)
             display_stats: Whether to display content statistics (defaults to config.display_content_stats)
+            **kwargs: Additional parameters for MinerU parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
 
         Returns:
             (content_list, md_content): Content list and markdown text
@@ -60,7 +62,10 @@ class ProcessorMixin:
                     f"Detected PDF file, using PDF parser (method={parse_method})..."
                 )
                 content_list, md_content = MineruParser.parse_pdf(
-                    pdf_path=file_path, output_dir=output_dir, method=parse_method
+                    pdf_path=file_path,
+                    output_dir=output_dir,
+                    method=parse_method,
+                    **kwargs,
                 )
             elif ext in [
                 ".jpg",
@@ -74,12 +79,12 @@ class ProcessorMixin:
             ]:
                 self.logger.info("Detected image file, using image parser...")
                 content_list, md_content = MineruParser.parse_image(
-                    image_path=file_path, output_dir=output_dir
+                    image_path=file_path, output_dir=output_dir, **kwargs
                 )
             elif ext in [".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx"]:
                 self.logger.info("Detected Office document, using Office parser...")
                 content_list, md_content = MineruParser.parse_office_doc(
-                    doc_path=file_path, output_dir=output_dir
+                    doc_path=file_path, output_dir=output_dir, **kwargs
                 )
             else:
                 # For other or unknown formats, use generic parser
@@ -87,7 +92,10 @@ class ProcessorMixin:
                     f"Using generic parser for {ext} file (method={parse_method})..."
                 )
                 content_list, md_content = MineruParser.parse_document(
-                    file_path=file_path, method=parse_method, output_dir=output_dir
+                    file_path=file_path,
+                    method=parse_method,
+                    output_dir=output_dir,
+                    **kwargs,
                 )
 
         except Exception as e:
@@ -95,7 +103,10 @@ class ProcessorMixin:
             self.logger.warning("Falling back to generic parser...")
             # If specific parser fails, fall back to generic parser
             content_list, md_content = MineruParser.parse_document(
-                file_path=file_path, method=parse_method, output_dir=output_dir
+                file_path=file_path,
+                method=parse_method,
+                output_dir=output_dir,
+                **kwargs,
             )
 
         self.logger.info(
@@ -230,6 +241,7 @@ class ProcessorMixin:
         split_by_character: str | None = None,
         split_by_character_only: bool = False,
         doc_id: str | None = None,
+        **kwargs,
     ):
         """
         Complete document processing workflow
@@ -242,6 +254,7 @@ class ProcessorMixin:
             split_by_character: Optional character to split the text by
             split_by_character_only: If True, split only by the specified character
             doc_id: Optional document ID, if not provided MD5 hash will be generated
+            **kwargs: Additional parameters for MinerU parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
         """
         # Ensure LightRAG is initialized
         await self._ensure_lightrag_initialized()
@@ -258,7 +271,7 @@ class ProcessorMixin:
 
         # Step 1: Parse document using MinerU
         content_list, md_content = self.parse_document(
-            file_path, output_dir, parse_method, display_stats
+            file_path, output_dir, parse_method, display_stats, **kwargs
         )
 
         # Step 2: Separate text and multimodal content
