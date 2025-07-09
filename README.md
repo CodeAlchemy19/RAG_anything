@@ -48,9 +48,9 @@
 ---
 
 ## 🎉 News
-- [X] [2025.07.05]🎯📢 RAGAnything now includes [context configuration module](docs/context_aware_processing.md), enabling the addition of relevant contextual information for multimodal content processing.
-- [X] [2025.07.04]🎯📢 RAGAnything now supports query with multimodal content, enabling enhanced retrieval-augmented generation with integrated text, images, tables, and equations processing.
-- [X] [2025.07.03]🎯📢 RAGAnything has reached 1K🌟 stars on GitHub! Thank you for your support and contributions.
+- [X] [2025.07.05]🎯📢 RAG-Anything now features a [context configuration module](docs/context_aware_processing.md), enabling intelligent integration of relevant contextual information to enhance multimodal content processing.
+- [X] [2025.07.04]🎯📢 🚀 RAG-Anything now supports multimodal query capabilities, enabling enhanced RAG with seamless processing of text, images, tables, and equations.
+- [X] [2025.07.03]🎯📢 🎉 RAG-Anything has reached 1k🌟 stars on GitHub! Thank you for your incredible support and valuable contributions to the project.
 
 ---
 
