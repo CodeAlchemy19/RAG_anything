@@ -60,7 +60,7 @@ class MineruParser:
         table: bool = True,
         device: Optional[str] = None,
         source: str = "huggingface",
-        vlm_url: Optional[str] = None
+        vlm_url: Optional[str] = None,
     ) -> None:
         """
         Run mineru command line tool
@@ -243,10 +243,10 @@ class MineruParser:
             )
 
             # Read the generated output files
-            backend = kwargs.get('backend', '')
+            backend = kwargs.get("backend", "")
             if backend.startswith("vlm-"):
                 method = "vlm"
-                
+
             content_list, md_content = MineruParser._read_output_files(
                 base_output_dir, name_without_suff, method=method
             )
