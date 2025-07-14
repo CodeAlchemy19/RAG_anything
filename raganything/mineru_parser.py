@@ -60,6 +60,7 @@ class MineruParser:
         table: bool = True,
         device: Optional[str] = None,
         source: str = "huggingface",
+        vlm_url: Optional[str] = None
     ) -> None:
         """
         Run mineru command line tool
@@ -103,6 +104,8 @@ class MineruParser:
             cmd.extend(["-t", "false"])
         if device:
             cmd.extend(["-d", device])
+        if vlm_url:
+            cmd.extend(["-u", vlm_url])
 
         try:
             result = subprocess.run(
@@ -240,6 +243,10 @@ class MineruParser:
             )
 
             # Read the generated output files
+            backend = kwargs.get('backend', '')
+            if backend.startswith("vlm-"):
+                method = "vlm"
+                
             content_list, md_content = MineruParser._read_output_files(
                 base_output_dir, name_without_suff, method=method
             )
@@ -1269,6 +1276,18 @@ def main():
         help="Parsing backend",
     )
     parser.add_argument(
+        "--start_page",
+        type=int,
+        default=0,
+        help="The starting page for PDF parsing, beginning from 0.",
+    )
+    parser.add_argument(
+        "--end_page",
+        type=int,
+        default=None,
+        help="The ending page for PDF parsing, beginning from 0.",
+    )
+    parser.add_argument(
         "--device",
         "-d",
         help="Inference device (e.g., cpu, cuda, cuda:0, npu, mps)",
@@ -1288,6 +1307,10 @@ def main():
         "--no-table",
         action="store_true",
         help="Disable table parsing",
+    )
+    parser.add_argument(
+        "--vlm_url",
+        help="When the backend is `vlm-sglang-client`, you need to specify the server_url, for example:`http://127.0.0.1:30000`",
     )
     parser.add_argument(
         "--stats", action="store_true", help="Display content statistics"
@@ -1317,10 +1340,13 @@ def main():
             output_dir=args.output,
             lang=args.lang,
             backend=args.backend,
+            start_page=args.start_page,
+            end_page=args.end_page,
             device=args.device,
             source=args.source,
             formula=not args.no_formula,
             table=not args.no_table,
+            vlm_url=args.vlm_url,
         )
 
         print(f"✅ Successfully parsed: {args.file_path}")
