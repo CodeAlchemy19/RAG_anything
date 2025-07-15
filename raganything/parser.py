@@ -47,6 +47,30 @@ class Parser:
         """Initialize the base parser."""
         pass
 
+    def parse_pdf(
+        self,
+        pdf_path: Union[str, Path],
+        output_dir: Optional[str] = None,
+        method: str = "auto",
+        lang: Optional[str] = None,
+        **kwargs,
+    ) -> List[Dict[str, Any]]:
+        """
+        Abstract method to parse PDF document.
+        Must be implemented by subclasses.
+
+        Args:
+            pdf_path: Path to the PDF file
+            output_dir: Output directory path
+            method: Parsing method (auto, txt, ocr)
+            lang: Document language for OCR optimization
+            **kwargs: Additional parameters for parser-specific command
+
+        Returns:
+            List[Dict[str, Any]]: List of content blocks
+        """
+        raise NotImplementedError("parse_pdf must be implemented by subclasses")
+
     @staticmethod
     def convert_office_to_pdf(
         doc_path: Union[str, Path], output_dir: Optional[str] = None
@@ -231,6 +255,31 @@ class Parser:
         text = re.sub(r"~~(.*?)~~", r"<strike>\1</strike>", text)
 
         return text
+
+    def parse_image(
+        self,
+        image_path: Union[str, Path],
+        output_dir: Optional[str] = None,
+        lang: Optional[str] = None,
+        **kwargs,
+    ) -> List[Dict[str, Any]]:
+        """
+        Abstract method to parse image document.
+        Must be implemented by subclasses.
+
+        Note: Different parsers may support different image formats.
+        Check the specific parser's documentation for supported formats.
+
+        Args:
+            image_path: Path to the image file
+            output_dir: Output directory path
+            lang: Document language for OCR optimization
+            **kwargs: Additional parameters for parser-specific command
+
+        Returns:
+            List[Dict[str, Any]]: List of content blocks
+        """
+        raise NotImplementedError("parse_image must be implemented by subclasses")
 
     def parse_document(
         self,
@@ -771,7 +820,102 @@ class DoclingParser(Parser):
     def __init__(self) -> None:
         """Initialize DoclingParser"""
         super().__init__()
-        
+
+    def parse_pdf(
+        self,
+        pdf_path: Union[str, Path],
+        output_dir: Optional[str] = None,
+        method: str = "auto",
+        lang: Optional[str] = None,
+        **kwargs,
+    ) -> List[Dict[str, Any]]:
+        """
+        Parse PDF document using Docling
+
+        Args:
+            pdf_path: Path to the PDF file
+            output_dir: Output directory path
+            method: Parsing method (auto, txt, ocr)
+            lang: Document language for OCR optimization
+            **kwargs: Additional parameters for docling command
+
+        Returns:
+            List[Dict[str, Any]]: List of content blocks
+        """
+        try:
+            # Convert to Path object for easier handling
+            pdf_path = Path(pdf_path)
+            if not pdf_path.exists():
+                raise FileNotFoundError(f"PDF file does not exist: {pdf_path}")
+
+            name_without_suff = pdf_path.stem
+
+            # Prepare output directory
+            if output_dir:
+                base_output_dir = Path(output_dir)
+            else:
+                base_output_dir = pdf_path.parent / "docling_output"
+
+            base_output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Run docling command
+            self._run_docling_command(
+                input_path=pdf_path,
+                output_dir=base_output_dir,
+                **kwargs,
+            )
+
+            # Read the generated output files
+            content_list, _ = self._read_output_files(base_output_dir, name_without_suff)
+            return content_list
+
+        except Exception as e:
+            print(f"Error in parse_pdf: {str(e)}")
+            raise
+
+    def parse_document(
+        self,
+        file_path: Union[str, Path],
+        method: str = "auto",
+        output_dir: Optional[str] = None,
+        lang: Optional[str] = None,
+        **kwargs,
+    ) -> List[Dict[str, Any]]:
+        """
+        Parse document using Docling based on file extension
+
+        Args:
+            file_path: Path to the file to be parsed
+            method: Parsing method
+            output_dir: Output directory path
+            lang: Document language for optimization
+            **kwargs: Additional parameters for docling command
+
+        Returns:
+            List[Dict[str, Any]]: List of content blocks
+        """
+        # 转换为Path对象
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"File does not exist: {file_path}")
+
+        # 获取文件扩展名
+        ext = file_path.suffix.lower()
+
+        # 根据文件类型选择合适的解析器
+        if ext == ".pdf":
+            return self.parse_pdf(file_path, output_dir, method, lang, **kwargs)
+        elif ext in self.OFFICE_FORMATS:
+            return self.parse_office_doc(file_path, output_dir, lang, **kwargs)
+        elif ext in self.HTML_FORMATS:
+            return self.parse_html(file_path, output_dir, lang, **kwargs)
+        else:
+            raise ValueError(
+                f"Unsupported file format: {ext}. "
+                f"Docling only supports PDF files, Office formats ({', '.join(self.OFFICE_FORMATS)}) "
+                f"and HTML formats ({', '.join(self.HTML_FORMATS)})"
+            )
+
     def _run_docling_command(
         self,
         input_path: Union[str, Path],
@@ -1060,47 +1204,6 @@ class DoclingParser(Parser):
         except Exception as e:
             print(f"Error in parse_html: {str(e)}")
             raise
-            
-    def parse_document(
-        self,
-        file_path: Union[str, Path],
-        method: str = "auto",
-        output_dir: Optional[str] = None,
-        lang: Optional[str] = None,
-        **kwargs,
-    ) -> List[Dict[str, Any]]:
-        """
-        Parse document using Docling based on file extension
-
-        Args:
-            file_path: Path to the file to be parsed
-            method: Parsing method
-            output_dir: Output directory path
-            lang: Document language for optimization
-            **kwargs: Additional parameters for docling command
-
-        Returns:
-            List[Dict[str, Any]]: List of content blocks
-        """
-        # 转换为Path对象
-        file_path = Path(file_path)
-        if not file_path.exists():
-            raise FileNotFoundError(f"File does not exist: {file_path}")
-
-        # 获取文件扩展名
-        ext = file_path.suffix.lower()
-
-        # 根据文件类型选择合适的解析器
-        if ext in self.OFFICE_FORMATS:
-            return self.parse_office_doc(file_path, output_dir, lang, **kwargs)
-        elif ext in self.HTML_FORMATS:
-            return self.parse_html(file_path, output_dir, lang, **kwargs)
-        else:
-            raise ValueError(
-                f"Unsupported file format: {ext}. "
-                f"Docling only supports Office formats ({', '.join(self.OFFICE_FORMATS)}) "
-                f"and HTML formats ({', '.join(self.HTML_FORMATS)})"
-            )
             
     def check_installation(self) -> bool:
         """
