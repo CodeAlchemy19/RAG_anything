@@ -695,31 +695,21 @@ class ImageModalProcessor(BaseModalProcessor):
                 )
 
             # If image path exists, try to encode image
-            image_base64 = ""
-            if image_path and Path(image_path).exists():
-                image_base64 = self._encode_image_to_base64(image_path)
+            logger.debug(f"Begin Analysis of Image: {image_path}")
 
-            # Call vision model
-            if image_base64:
-                # Use real image for analysis
-                response = await self.modal_caption_func(
-                    vision_prompt,
-                    image_data=image_base64,
-                    system_prompt=PROMPTS["IMAGE_ANALYSIS_SYSTEM"],
-                )
-            else:
-                # Analyze based on existing text information
-                text_prompt = PROMPTS["text_prompt"].format(
-                    image_path=image_path,
-                    captions=captions,
-                    footnotes=footnotes,
-                    vision_prompt=vision_prompt,
-                )
+            if not image_path or not Path(image_path).exists():
+                raise FileNotFoundError(f"Image file not found: {image_path}")
 
-                response = await self.modal_caption_func(
-                    text_prompt,
-                    system_prompt=PROMPTS["IMAGE_ANALYSIS_FALLBACK_SYSTEM"],
-                )
+            image_base64 = self._encode_image_to_base64(image_path)
+            if not image_base64:
+                raise RuntimeError(f"Failed to encode image to base64: {image_path}")
+
+            # Call vision model with encoded image
+            response = await self.modal_caption_func(
+                vision_prompt,
+                image_data=image_base64,
+                system_prompt=PROMPTS["IMAGE_ANALYSIS_SYSTEM"],
+            )
 
             # Parse response
             enhanced_caption, entity_info = self._parse_response(response, entity_name)
@@ -814,6 +804,8 @@ class TableModalProcessor(BaseModalProcessor):
         table_caption = content_data.get("table_caption", [])
         table_body = content_data.get("table_body", "")
         table_footnote = content_data.get("table_footnote", [])
+
+        logger.debug(f"Begin Analysis of Table: {table_img_path}")
 
         # Extract context for current item
         context = ""
@@ -935,6 +927,8 @@ class EquationModalProcessor(BaseModalProcessor):
         equation_text = content_data.get("text")
         equation_format = content_data.get("text_format", "")
 
+        logger.debug(f"Begin Analysis of Equation: {equation_text}")
+
         # Extract context for current item
         context = ""
         if item_info:
@@ -1035,6 +1029,8 @@ class GenericModalProcessor(BaseModalProcessor):
         batch_mode: bool = False,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process generic modal content with context support"""
+        logger.debug(f"Begin Analysis of {content_type}: {modal_content}")
+
         # Extract context for current item
         context = ""
         if item_info:

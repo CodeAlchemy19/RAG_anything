@@ -17,6 +17,7 @@ import json
 import argparse
 import subprocess
 import tempfile
+import logging
 from pathlib import Path
 from typing import (
     Dict,
@@ -42,6 +43,9 @@ class MineruParser:
     """
 
     __slots__ = ()
+
+    # Class-level logger
+    logger = logging.getLogger(__name__)
 
     def __init__(self) -> None:
         """Initialize MineruParser"""
@@ -116,13 +120,13 @@ class MineruParser:
                 encoding="utf-8",
                 errors="ignore",
             )
-            print("MinerU command executed successfully")
+            logging.info("MinerU command executed successfully")
             if result.stdout:
-                print(f"Output: {result.stdout}")
+                logging.debug(f"Output: {result.stdout}")
         except subprocess.CalledProcessError as e:
-            print(f"Error running mineru command: {e}")
+            logging.error(f"Error running mineru command: {e}")
             if e.stderr:
-                print(f"Error details: {e.stderr}")
+                logging.error(f"Error details: {e.stderr}")
             raise
         except FileNotFoundError:
             raise RuntimeError(
@@ -147,12 +151,13 @@ class MineruParser:
         # Look for the generated files
         md_file = output_dir / f"{file_stem}.md"
         json_file = output_dir / f"{file_stem}_content_list.json"
+        images_base_dir = output_dir  # Base directory for images
 
-        # Check for files in subdirectory (MinerU 2.0 may create subdirectories)
-        subdir = output_dir / file_stem
-        if subdir.exists():
-            md_file = subdir / method / f"{file_stem}.md"
-            json_file = subdir / method / f"{file_stem}_content_list.json"
+        file_stem_subdir = output_dir / file_stem
+        if file_stem_subdir.exists():
+            md_file = file_stem_subdir / method / f"{file_stem}.md"
+            json_file = file_stem_subdir / method / f"{file_stem}_content_list.json"
+            images_base_dir = file_stem_subdir / method
 
         # Read markdown content
         md_content = ""
@@ -161,7 +166,7 @@ class MineruParser:
                 with open(md_file, "r", encoding="utf-8") as f:
                     md_content = f.read()
             except Exception as e:
-                print(f"Warning: Could not read markdown file {md_file}: {e}")
+                logging.warning(f"Could not read markdown file {md_file}: {e}")
 
         # Read JSON content list
         content_list = []
@@ -169,8 +174,30 @@ class MineruParser:
             try:
                 with open(json_file, "r", encoding="utf-8") as f:
                     content_list = json.load(f)
+
+                # Always fix relative paths in content_list to absolute paths
+                logging.info(
+                    f"Fixing image paths in {json_file} with base directory: {images_base_dir}"
+                )
+                for item in content_list:
+                    if isinstance(item, dict):
+                        for field_name in [
+                            "img_path",
+                            "table_img_path",
+                            "equation_img_path",
+                        ]:
+                            if field_name in item and item[field_name]:
+                                img_path = item[field_name]
+                                absolute_img_path = (
+                                    images_base_dir / img_path
+                                ).resolve()
+                                item[field_name] = str(absolute_img_path)
+                                logging.debug(
+                                    f"Updated {field_name}: {img_path} -> {item[field_name]}"
+                                )
+
             except Exception as e:
-                print(f"Warning: Could not read JSON file {json_file}: {e}")
+                logging.warning(f"Could not read JSON file {json_file}: {e}")
 
         # # If standard files not found, look for any .md and .json files in the directory
         # if not md_content and not content_list:
@@ -254,7 +281,7 @@ class MineruParser:
             return content_list, md_content
 
         except Exception as e:
-            print(f"Error in parse_pdf: {str(e)}")
+            logging.error(f"Error in parse_pdf: {str(e)}")
             raise
 
     @staticmethod
@@ -312,7 +339,9 @@ class MineruParser:
 
             # If format is not natively supported by MinerU, convert it
             if ext not in mineru_supported_formats:
-                print(f"Converting {ext} image to PNG for MinerU compatibility...")
+                logging.info(
+                    f"Converting {ext} image to PNG for MinerU compatibility..."
+                )
 
                 try:
                     from PIL import Image
@@ -352,7 +381,7 @@ class MineruParser:
 
                         # Save as PNG
                         img.save(temp_converted_file, "PNG", optimize=True)
-                        print(
+                        logging.info(
                             f"Successfully converted {image_path.name} to PNG ({temp_converted_file.stat().st_size / 1024:.1f} KB)"
                         )
 
@@ -402,7 +431,7 @@ class MineruParser:
                         pass  # Ignore cleanup errors
 
         except Exception as e:
-            print(f"Error in parse_image: {str(e)}")
+            logging.error(f"Error in parse_image: {str(e)}")
             raise
 
     @staticmethod
@@ -460,7 +489,7 @@ class MineruParser:
                 )
                 libreoffice_available = True
                 working_libreoffice_cmd = "libreoffice"
-                print(f"LibreOffice detected: {result.stdout.strip()}")
+                logging.info(f"LibreOffice detected: {result.stdout.strip()}")
             except (
                 subprocess.CalledProcessError,
                 FileNotFoundError,
@@ -482,7 +511,7 @@ class MineruParser:
                         )
                         libreoffice_available = True
                         working_libreoffice_cmd = cmd
-                        print(
+                        logging.info(
                             f"LibreOffice detected with command '{cmd}': {result.stdout.strip()}"
                         )
                         break
@@ -510,7 +539,7 @@ class MineruParser:
                 temp_path = Path(temp_dir)
 
                 # Convert to PDF using LibreOffice
-                print(f"Converting {doc_path.name} to PDF using LibreOffice...")
+                logging.info(f"Converting {doc_path.name} to PDF using LibreOffice...")
 
                 # Use the working LibreOffice command first, then try alternatives if it fails
                 commands_to_try = [working_libreoffice_cmd]
@@ -543,16 +572,20 @@ class MineruParser:
 
                         if result.returncode == 0:
                             conversion_successful = True
-                            print(f"Successfully converted {doc_path.name} to PDF")
+                            logging.info(
+                                f"Successfully converted {doc_path.name} to PDF"
+                            )
                             break
                         else:
-                            print(
+                            logging.warning(
                                 f"LibreOffice command '{cmd}' failed: {result.stderr}"
                             )
                     except subprocess.TimeoutExpired:
-                        print(f"LibreOffice command '{cmd}' timed out")
+                        logging.warning(f"LibreOffice command '{cmd}' timed out")
                     except Exception as e:
-                        print(f"LibreOffice command '{cmd}' failed with exception: {e}")
+                        logging.error(
+                            f"LibreOffice command '{cmd}' failed with exception: {e}"
+                        )
 
                 if not conversion_successful:
                     raise RuntimeError(
@@ -569,7 +602,7 @@ class MineruParser:
                     )
 
                 pdf_path = pdf_files[0]
-                print(
+                logging.info(
                     f"Generated PDF: {pdf_path.name} ({pdf_path.stat().st_size} bytes)"
                 )
 
@@ -586,7 +619,7 @@ class MineruParser:
                 )
 
         except Exception as e:
-            print(f"Error in parse_office_doc: {str(e)}")
+            logging.error(f"Error in parse_office_doc: {str(e)}")
             raise
 
     @staticmethod
@@ -630,7 +663,7 @@ class MineruParser:
                     try:
                         with open(text_path, "r", encoding=encoding) as f:
                             text_content = f.read()
-                        print(f"Successfully read file with {encoding} encoding")
+                        logging.info(f"Successfully read file with {encoding} encoding")
                         break
                     except UnicodeDecodeError:
                         continue
@@ -645,7 +678,7 @@ class MineruParser:
                 pdf_path = temp_path / f"{text_path.stem}.pdf"
 
                 # Convert text to PDF
-                print(f"Converting {text_path.name} to PDF...")
+                logging.info(f"Converting {text_path.name} to PDF...")
 
                 try:
                     from reportlab.lib.pagesizes import A4
@@ -960,7 +993,9 @@ class MineruParser:
                                                     )
                                                 )
                                             story.append(Spacer(1, 12))
-                                            print(f"  📷 Added image: {img_path.name}")
+                                            logging.info(
+                                                f"  📷 Added image: {img_path.name}"
+                                            )
                                         except Exception as e:
                                             story.append(
                                                 Paragraph(
@@ -968,7 +1003,7 @@ class MineruParser:
                                                     normal_style,
                                                 )
                                             )
-                                            print(
+                                            logging.warning(
                                                 f"  ⚠️ Failed to load image {img_path}: {e}"
                                             )
                                     else:
@@ -978,7 +1013,9 @@ class MineruParser:
                                                 normal_style,
                                             )
                                         )
-                                        print(f"  ⚠️ Image not found: {img_src}")
+                                        logging.warning(
+                                            f"  ⚠️ Image not found: {img_src}"
+                                        )
 
                             # Block quotes
                             elif line.startswith(">"):
@@ -1057,7 +1094,7 @@ class MineruParser:
 
                     else:
                         # Handle plain text files (.txt)
-                        print(
+                        logging.info(
                             f"Processing plain text file with {len(text_content)} characters..."
                         )
 
@@ -1086,7 +1123,7 @@ class MineruParser:
                             story.append(Paragraph(safe_line, normal_style))
                             story.append(Spacer(1, 3))
 
-                        print(f"Added {line_count} lines to PDF")
+                        logging.info(f"Added {line_count} lines to PDF")
 
                         # If no content was added, add a placeholder
                         if not story:
@@ -1094,7 +1131,7 @@ class MineruParser:
 
                     # Build PDF
                     doc.build(story)
-                    print(
+                    logging.info(
                         f"Successfully converted {text_path.name} to PDF ({pdf_path.stat().st_size / 1024:.1f} KB)"
                     )
 
@@ -1120,7 +1157,7 @@ class MineruParser:
                 )
 
         except Exception as e:
-            print(f"Error in parse_text_file: {str(e)}")
+            logging.error(f"Error in parse_text_file: {str(e)}")
             raise
 
     @staticmethod
@@ -1158,7 +1195,7 @@ class MineruParser:
         elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".gif", ".webp"]:
             return MineruParser.parse_image(file_path, output_dir, lang, **kwargs)
         elif ext in [".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx"]:
-            print(
+            logging.warning(
                 f"Warning: Office document detected ({ext}). "
                 f"MinerU 2.0 requires conversion to PDF first."
             )
@@ -1167,7 +1204,7 @@ class MineruParser:
             return MineruParser.parse_text_file(file_path, output_dir, lang, **kwargs)
         else:
             # For unsupported file types, try as PDF
-            print(
+            logging.warning(
                 f"Warning: Unsupported file extension '{ext}', "
                 f"attempting to parse as PDF"
             )
@@ -1190,10 +1227,10 @@ class MineruParser:
                 encoding="utf-8",
                 errors="ignore",
             )
-            print(f"MinerU version: {result.stdout.strip()}")
+            logging.debug(f"MinerU version: {result.stdout.strip()}")
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print(
+            logging.debug(
                 "MinerU 2.0 is not properly installed. "
                 "Please install it using: pip install -U 'mineru[core]'"
             )
