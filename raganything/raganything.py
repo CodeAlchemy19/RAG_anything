@@ -30,7 +30,7 @@ from raganything.query import QueryMixin
 from raganything.processor import ProcessorMixin
 from raganything.batch import BatchMixin
 from raganything.utils import get_processor_supports
-from raganything.mineru_parser import MineruParser
+from raganything.parser import MineruParser
 
 # Import specialized processors
 from raganything.modalprocessors import (

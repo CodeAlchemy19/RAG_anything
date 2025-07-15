@@ -7,7 +7,7 @@ Contains methods for parsing documents and processing multimodal content
 import os
 from typing import Dict, List, Any, Tuple
 from pathlib import Path
-from raganything.mineru_parser import MineruParser
+from raganything.parser import MineruParser
 from raganything.utils import (
     separate_content,
     insert_text_content,
@@ -103,6 +103,7 @@ class ProcessorMixin:
             self.logger.warning("Falling back to generic parser...")
             # If specific parser fails, fall back to generic parser
             content_list, md_content = MineruParser.parse_document(
+                MineruParser(),
                 file_path=file_path,
                 method=parse_method,
                 output_dir=output_dir,
