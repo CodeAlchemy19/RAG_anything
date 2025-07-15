@@ -294,6 +294,7 @@ class MineruParser(Parser):
         table: bool = True,
         device: Optional[str] = None,
         source: str = "huggingface",
+        vlm_url: Optional[str] = None,
     ) -> None:
         """
         Run mineru command line tool
@@ -310,6 +311,7 @@ class MineruParser(Parser):
             table: Enable table parsing
             device: Inference device
             source: Model source
+            vlm_url: When the backend is `vlm-sglang-client`, you need to specify the server_url
         """
         cmd = [
             "mineru",
@@ -337,6 +339,8 @@ class MineruParser(Parser):
             cmd.extend(["-t", "false"])
         if device:
             cmd.extend(["-d", device])
+        if vlm_url:
+            cmd.extend(["-u", vlm_url])
 
         try:
             result = subprocess.run(
@@ -1190,6 +1194,10 @@ def main():
         default="mineru",
         help="Parser selection",
     )
+    parser.add_argument(
+        "--vlm_url",
+        help="When the backend is `vlm-sglang-client`, you need to specify the server_url, for example:`http://127.0.0.1:30000`",
+    )
 
     args = parser.parse_args()
 
@@ -1215,6 +1223,7 @@ def main():
             source=args.source,
             formula=not args.no_formula,
             table=not args.no_table,
+            vlm_url=args.vlm_url,
         )
 
         print(f"✅ Successfully parsed: {args.file_path}")

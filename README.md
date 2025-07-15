@@ -802,8 +802,9 @@ await rag.process_document_complete(
     end_page=10,                 # Ending page number (0-based, for PDF)
     formula=True,                # Enable formula parsing
     table=True,                  # Enable table parsing
-    backend="pipeline",          # Parsing backend: "pipeline", "vlm-transformers", etc.
+    backend="pipeline",          # Parsing backend: pipeline|vlm-transformers|vlm-sglang-engine|vlm-sglang-client.
     source="huggingface",        # Model source: "huggingface", "modelscope", "local"
+    # vlm_url="http://127.0.0.1:3000" # Service address when using backend=vlm-sglang-client
 
     # Standard RAGAnything parameters
     display_stats=True,          # Display content statistics
