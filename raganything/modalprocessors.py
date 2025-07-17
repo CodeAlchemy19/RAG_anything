@@ -75,7 +75,7 @@ class ContextExtractor:
         Returns:
             Extracted context text
         """
-        if not content_source:
+        if not content_source and not self.config.context_window:
             return ""
 
         try:
