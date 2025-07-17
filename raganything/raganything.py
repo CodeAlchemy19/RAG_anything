@@ -30,7 +30,7 @@ from raganything.query import QueryMixin
 from raganything.processor import ProcessorMixin
 from raganything.batch import BatchMixin
 from raganything.utils import get_processor_supports
-from raganything.parser import Parser, MineruParser, DoclingParser
+from raganything.parser import MineruParser, DoclingParser
 
 # Import specialized processors
 from raganything.modalprocessors import (
@@ -63,7 +63,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
 
     config: Optional[RAGAnythingConfig] = field(default=None)
     """Configuration object, if None will create with environment variables."""
-    
+
     # Internal State
     # ---
     modal_processors: Dict[str, Any] = field(default_factory=dict, init=False)
@@ -83,9 +83,11 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
 
         # Set up logger (use existing logger, don't configure it)
         self.logger = logger
-        
+
         # Set up document parser
-        self.doc_parser = DoclingParser() if self.config.parser == "docling" else MineruParser()
+        self.doc_parser = (
+            DoclingParser() if self.config.parser == "docling" else MineruParser()
+        )
 
         # Create working directory if needed
         if not os.path.exists(self.working_dir):

@@ -5,7 +5,7 @@ Contains methods for parsing documents and processing multimodal content
 """
 
 import os
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 from pathlib import Path
 from raganything.parser import MineruParser, DoclingParser
 from raganything.utils import (
@@ -57,7 +57,9 @@ class ProcessorMixin:
         ext = file_path.suffix.lower()
 
         try:
-            doc_parser = DoclingParser() if self.config.parser == "docling" else MineruParser()
+            doc_parser = (
+                DoclingParser() if self.config.parser == "docling" else MineruParser()
+            )
             if ext in [".pdf"]:
                 self.logger.info(
                     f"Detected PDF file, using PDF parser (method={parse_method})..."
@@ -82,8 +84,20 @@ class ProcessorMixin:
                 content_list = MineruParser.parse_image(
                     image_path=file_path, output_dir=output_dir, **kwargs
                 )
-            elif ext in [".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".html", ".htm", ".xhtml"]:
-                self.logger.info("Detected Office or HTML document, using Office parser...")
+            elif ext in [
+                ".doc",
+                ".docx",
+                ".ppt",
+                ".pptx",
+                ".xls",
+                ".xlsx",
+                ".html",
+                ".htm",
+                ".xhtml",
+            ]:
+                self.logger.info(
+                    "Detected Office or HTML document, using Office parser..."
+                )
                 content_list = doc_parser.parse_office_doc(
                     doc_path=file_path, output_dir=output_dir, **kwargs
                 )

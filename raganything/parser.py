@@ -17,6 +17,7 @@ import argparse
 import base64
 import subprocess
 import tempfile
+import logging
 from pathlib import Path
 from typing import (
     Dict,
@@ -43,33 +44,12 @@ class Parser:
     IMAGE_FORMATS = {".png", ".jpeg", ".jpg", ".bmp", ".tiff", ".tif", ".gif", ".webp"}
     TEXT_FORMATS = {".txt", ".md"}
 
+    # Class-level logger
+    logger = logging.getLogger(__name__)
+
     def __init__(self) -> None:
         """Initialize the base parser."""
         pass
-
-    def parse_pdf(
-        self,
-        pdf_path: Union[str, Path],
-        output_dir: Optional[str] = None,
-        method: str = "auto",
-        lang: Optional[str] = None,
-        **kwargs,
-    ) -> List[Dict[str, Any]]:
-        """
-        Abstract method to parse PDF document.
-        Must be implemented by subclasses.
-
-        Args:
-            pdf_path: Path to the PDF file
-            output_dir: Output directory path
-            method: Parsing method (auto, txt, ocr)
-            lang: Document language for OCR optimization
-            **kwargs: Additional parameters for parser-specific command
-
-        Returns:
-            List[Dict[str, Any]]: List of content blocks
-        """
-        raise NotImplementedError("parse_pdf must be implemented by subclasses")
 
     @staticmethod
     def convert_office_to_pdf(
@@ -102,45 +82,166 @@ class Parser:
 
             base_output_dir.mkdir(parents=True, exist_ok=True)
 
-            # LibreOffice command to convert Office to PDF
-            # This assumes libreoffice is in the system PATH or a specific path
-            # For Windows, you might need to specify the full path to soffice.exe
-            # For Linux/Mac, it's usually just 'soffice'
-            libreoffice_cmd = ["soffice", "--headless", "--convert-to", "pdf", "--outdir", str(base_output_dir)]
-            libreoffice_cmd.append(str(doc_path))
-
+            # Check if LibreOffice is available
+            libreoffice_available = False
+            working_libreoffice_cmd = None
             try:
+                # Prepare subprocess parameters to hide console window on Windows
+                import platform
+
+                subprocess_kwargs = {
+                    "capture_output": True,
+                    "check": True,
+                    "timeout": 10,
+                    "encoding": "utf-8",
+                    "errors": "ignore",
+                }
+
+                # Hide console window on Windows
+                if platform.system() == "Windows":
+                    subprocess_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
                 result = subprocess.run(
-                    libreoffice_cmd,
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                    encoding="utf-8",
-                    errors="ignore",
+                    ["libreoffice", "--version"], **subprocess_kwargs
                 )
-                print("LibreOffice command executed successfully")
-                if result.stdout:
-                    print(f"Output: {result.stdout}")
-            except subprocess.CalledProcessError as e:
-                print(f"Error running LibreOffice command: {e}")
-                if e.stderr:
-                    print(f"Error details: {e.stderr}")
-                raise
-            except FileNotFoundError:
+                libreoffice_available = True
+                working_libreoffice_cmd = "libreoffice"
+                logging.info(f"LibreOffice detected: {result.stdout.strip()}")
+            except (
+                subprocess.CalledProcessError,
+                FileNotFoundError,
+                subprocess.TimeoutExpired,
+            ):
+                pass
+
+            # Try alternative commands for LibreOffice
+            if not libreoffice_available:
+                for cmd in ["soffice", "libreoffice"]:
+                    try:
+                        result = subprocess.run([cmd, "--version"], **subprocess_kwargs)
+                        libreoffice_available = True
+                        working_libreoffice_cmd = cmd
+                        logging.info(
+                            f"LibreOffice detected with command '{cmd}': {result.stdout.strip()}"
+                        )
+                        break
+                    except (
+                        subprocess.CalledProcessError,
+                        FileNotFoundError,
+                        subprocess.TimeoutExpired,
+                    ):
+                        continue
+
+            if not libreoffice_available:
                 raise RuntimeError(
-                    "LibreOffice is not found. Please ensure it is installed and in your PATH. "
-                    "On Linux/Mac, you might need to install it via 'sudo apt-get install libreoffice' or similar."
+                    "LibreOffice is required for Office document conversion but was not found.\n"
+                    "Please install LibreOffice:\n"
+                    "- Windows: Download from https://www.libreoffice.org/download/download/\n"
+                    "- macOS: brew install --cask libreoffice\n"
+                    "- Ubuntu/Debian: sudo apt-get install libreoffice\n"
+                    "- CentOS/RHEL: sudo yum install libreoffice\n"
+                    "Alternatively, convert the document to PDF manually."
                 )
 
-            # Find the generated PDF file
-            pdf_file = base_output_dir / f"{name_without_suff}.pdf"
-            if not pdf_file.exists():
-                raise FileNotFoundError(f"PDF file not found after LibreOffice conversion: {pdf_file}")
+            # Create temporary directory for PDF conversion
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir)
 
-            return pdf_file
+                # Convert to PDF using LibreOffice
+                logging.info(f"Converting {doc_path.name} to PDF using LibreOffice...")
+
+                # Use the working LibreOffice command first, then try alternatives if it fails
+                commands_to_try = [working_libreoffice_cmd]
+                if working_libreoffice_cmd == "libreoffice":
+                    commands_to_try.append("soffice")
+                else:
+                    commands_to_try.append("libreoffice")
+
+                conversion_successful = False
+                for cmd in commands_to_try:
+                    try:
+                        convert_cmd = [
+                            cmd,
+                            "--headless",
+                            "--convert-to",
+                            "pdf",
+                            "--outdir",
+                            str(temp_path),
+                            str(doc_path),
+                        ]
+
+                        # Prepare conversion subprocess parameters
+                        convert_subprocess_kwargs = {
+                            "capture_output": True,
+                            "text": True,
+                            "timeout": 60,  # 60 second timeout
+                            "encoding": "utf-8",
+                            "errors": "ignore",
+                        }
+
+                        # Hide console window on Windows
+                        if platform.system() == "Windows":
+                            convert_subprocess_kwargs["creationflags"] = (
+                                subprocess.CREATE_NO_WINDOW
+                            )
+
+                        result = subprocess.run(
+                            convert_cmd, **convert_subprocess_kwargs
+                        )
+
+                        if result.returncode == 0:
+                            conversion_successful = True
+                            logging.info(
+                                f"Successfully converted {doc_path.name} to PDF"
+                            )
+                            break
+                        else:
+                            logging.warning(
+                                f"LibreOffice command '{cmd}' failed: {result.stderr}"
+                            )
+                    except subprocess.TimeoutExpired:
+                        logging.warning(f"LibreOffice command '{cmd}' timed out")
+                    except Exception as e:
+                        logging.error(
+                            f"LibreOffice command '{cmd}' failed with exception: {e}"
+                        )
+
+                if not conversion_successful:
+                    raise RuntimeError(
+                        f"LibreOffice conversion failed for {doc_path.name}. "
+                        f"Please check if the file is corrupted or try converting manually."
+                    )
+
+                # Find the generated PDF
+                pdf_files = list(temp_path.glob("*.pdf"))
+                if not pdf_files:
+                    raise RuntimeError(
+                        f"PDF conversion failed for {doc_path.name} - no PDF file generated. "
+                        f"Please check LibreOffice installation or try manual conversion."
+                    )
+
+                pdf_path = pdf_files[0]
+                logging.info(
+                    f"Generated PDF: {pdf_path.name} ({pdf_path.stat().st_size} bytes)"
+                )
+
+                # Validate the generated PDF
+                if pdf_path.stat().st_size < 100:  # Very small file, likely empty
+                    raise RuntimeError(
+                        "Generated PDF appears to be empty or corrupted. "
+                        "Original file may have issues or LibreOffice conversion failed."
+                    )
+
+                # Copy PDF to final output directory
+                final_pdf_path = base_output_dir / f"{name_without_suff}.pdf"
+                import shutil
+
+                shutil.copy2(pdf_path, final_pdf_path)
+
+                return final_pdf_path
 
         except Exception as e:
-            print(f"Error in convert_office_to_pdf: {str(e)}")
+            logging.error(f"Error in convert_office_to_pdf: {str(e)}")
             raise
 
     @staticmethod
@@ -148,8 +249,7 @@ class Parser:
         text_path: Union[str, Path], output_dir: Optional[str] = None
     ) -> Path:
         """
-        Convert text file (.txt, .md) to PDF.
-        Requires a text-to-PDF conversion tool like Pandoc or a similar library.
+        Convert text file (.txt, .md) to PDF using ReportLab with full markdown support.
 
         Args:
             text_path: Path to the text file
@@ -159,57 +259,197 @@ class Parser:
             Path to the generated PDF file
         """
         try:
-            # Convert to Path object for easier handling
             text_path = Path(text_path)
             if not text_path.exists():
                 raise FileNotFoundError(f"Text file does not exist: {text_path}")
 
-            name_without_suff = text_path.stem
+            # Supported text formats
+            supported_text_formats = {".txt", ".md"}
+            if text_path.suffix.lower() not in supported_text_formats:
+                raise ValueError(f"Unsupported text format: {text_path.suffix}")
+
+            # Read the text content
+            try:
+                with open(text_path, "r", encoding="utf-8") as f:
+                    text_content = f.read()
+            except UnicodeDecodeError:
+                # Try with different encodings
+                for encoding in ["gbk", "latin-1", "cp1252"]:
+                    try:
+                        with open(text_path, "r", encoding=encoding) as f:
+                            text_content = f.read()
+                        logging.info(f"Successfully read file with {encoding} encoding")
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                else:
+                    raise RuntimeError(
+                        f"Could not decode text file {text_path.name} with any supported encoding"
+                    )
 
             # Prepare output directory
             if output_dir:
                 base_output_dir = Path(output_dir)
             else:
-                base_output_dir = text_path.parent / "pandoc_output"
+                base_output_dir = text_path.parent / "reportlab_output"
 
             base_output_dir.mkdir(parents=True, exist_ok=True)
+            pdf_path = base_output_dir / f"{text_path.stem}.pdf"
 
-            # Pandoc command to convert text to PDF
-            pandoc_cmd = ["pandoc", "--from", "markdown", "--to", "pdf", "--output", str(base_output_dir / f"{name_without_suff}.pdf")]
-            pandoc_cmd.append(str(text_path))
+            # Convert text to PDF
+            logging.info(f"Converting {text_path.name} to PDF...")
 
             try:
-                result = subprocess.run(
-                    pandoc_cmd,
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                    encoding="utf-8",
-                    errors="ignore",
+                from reportlab.lib.pagesizes import A4
+                from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+                from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                from reportlab.lib.units import inch
+                from reportlab.pdfbase import pdfmetrics
+
+                # Create PDF document
+                doc = SimpleDocTemplate(
+                    str(pdf_path),
+                    pagesize=A4,
+                    leftMargin=inch,
+                    rightMargin=inch,
+                    topMargin=inch,
+                    bottomMargin=inch,
                 )
-                print("Pandoc command executed successfully")
-                if result.stdout:
-                    print(f"Output: {result.stdout}")
-            except subprocess.CalledProcessError as e:
-                print(f"Error running Pandoc command: {e}")
-                if e.stderr:
-                    print(f"Error details: {e.stderr}")
-                raise
-            except FileNotFoundError:
+
+                # Get styles
+                styles = getSampleStyleSheet()
+                normal_style = styles["Normal"]
+                heading_style = styles["Heading1"]
+
+                # Try to register a font that supports Chinese characters
+                try:
+                    # Try to use system fonts that support Chinese
+                    import platform
+
+                    system = platform.system()
+                    if system == "Windows":
+                        # Try common Windows fonts
+                        for font_name in ["SimSun", "SimHei", "Microsoft YaHei"]:
+                            try:
+                                from reportlab.pdfbase.cidfonts import (
+                                    UnicodeCIDFont,
+                                )
+
+                                pdfmetrics.registerFont(UnicodeCIDFont(font_name))
+                                normal_style.fontName = font_name
+                                heading_style.fontName = font_name
+                                break
+                            except Exception:
+                                continue
+                    elif system == "Darwin":  # macOS
+                        for font_name in ["STSong-Light", "STHeiti"]:
+                            try:
+                                from reportlab.pdfbase.cidfonts import (
+                                    UnicodeCIDFont,
+                                )
+
+                                pdfmetrics.registerFont(UnicodeCIDFont(font_name))
+                                normal_style.fontName = font_name
+                                heading_style.fontName = font_name
+                                break
+                            except Exception:
+                                continue
+                except Exception:
+                    pass  # Use default fonts if Chinese font setup fails
+
+                # Build content
+                story = []
+
+                # Handle markdown or plain text
+                if text_path.suffix.lower() == ".md":
+                    # Handle markdown content - simplified implementation
+                    lines = text_content.split("\n")
+                    for line in lines:
+                        line = line.strip()
+                        if not line:
+                            story.append(Spacer(1, 12))
+                            continue
+
+                        # Headers
+                        if line.startswith("#"):
+                            level = len(line) - len(line.lstrip("#"))
+                            header_text = line.lstrip("#").strip()
+                            if header_text:
+                                header_style = ParagraphStyle(
+                                    name=f"Heading{level}",
+                                    parent=heading_style,
+                                    fontSize=max(16 - level, 10),
+                                    spaceAfter=8,
+                                    spaceBefore=16 if level <= 2 else 12,
+                                )
+                                story.append(Paragraph(header_text, header_style))
+                        else:
+                            # Regular text
+                            story.append(Paragraph(line, normal_style))
+                            story.append(Spacer(1, 6))
+                else:
+                    # Handle plain text files (.txt)
+                    logging.info(
+                        f"Processing plain text file with {len(text_content)} characters..."
+                    )
+
+                    # Split text into lines and process each line
+                    lines = text_content.split("\n")
+                    line_count = 0
+
+                    for line in lines:
+                        line = line.rstrip()
+                        line_count += 1
+
+                        # Empty lines
+                        if not line.strip():
+                            story.append(Spacer(1, 6))
+                            continue
+
+                        # Regular text lines
+                        # Escape special characters for ReportLab
+                        safe_line = (
+                            line.replace("&", "&amp;")
+                            .replace("<", "&lt;")
+                            .replace(">", "&gt;")
+                        )
+
+                        # Create paragraph
+                        story.append(Paragraph(safe_line, normal_style))
+                        story.append(Spacer(1, 3))
+
+                    logging.info(f"Added {line_count} lines to PDF")
+
+                    # If no content was added, add a placeholder
+                    if not story:
+                        story.append(Paragraph("(Empty text file)", normal_style))
+
+                # Build PDF
+                doc.build(story)
+                logging.info(
+                    f"Successfully converted {text_path.name} to PDF ({pdf_path.stat().st_size / 1024:.1f} KB)"
+                )
+
+            except ImportError:
                 raise RuntimeError(
-                    "Pandoc is not found. Please ensure it is installed and in your PATH. "
-                    "You can install it via 'pip install pandoc' or 'brew install pandoc' on macOS."
+                    "reportlab is required for text-to-PDF conversion. "
+                    "Please install it using: pip install reportlab"
+                )
+            except Exception as e:
+                raise RuntimeError(
+                    f"Failed to convert text file {text_path.name} to PDF: {str(e)}"
                 )
 
-            # Find the generated PDF file
-            pdf_file = base_output_dir / f"{name_without_suff}.pdf"
-            if not pdf_file.exists():
-                raise FileNotFoundError(f"PDF file not found after Pandoc conversion: {pdf_file}")
+            # Validate the generated PDF
+            if not pdf_path.exists() or pdf_path.stat().st_size < 100:
+                raise RuntimeError(
+                    f"PDF conversion failed for {text_path.name} - generated PDF is empty or corrupted."
+                )
 
-            return pdf_file
+            return pdf_path
 
         except Exception as e:
-            print(f"Error in convert_text_to_pdf: {str(e)}")
+            logging.error(f"Error in convert_text_to_pdf: {str(e)}")
             raise
 
     @staticmethod
@@ -255,6 +495,30 @@ class Parser:
         text = re.sub(r"~~(.*?)~~", r"<strike>\1</strike>", text)
 
         return text
+
+    def parse_pdf(
+        self,
+        pdf_path: Union[str, Path],
+        output_dir: Optional[str] = None,
+        method: str = "auto",
+        lang: Optional[str] = None,
+        **kwargs,
+    ) -> List[Dict[str, Any]]:
+        """
+        Abstract method to parse PDF document.
+        Must be implemented by subclasses.
+
+        Args:
+            pdf_path: Path to the PDF file
+            output_dir: Output directory path
+            method: Parsing method (auto, txt, ocr)
+            lang: Document language for OCR optimization
+            **kwargs: Additional parameters for parser-specific command
+
+        Returns:
+            List[Dict[str, Any]]: List of content blocks
+        """
+        raise NotImplementedError("parse_pdf must be implemented by subclasses")
 
     def parse_image(
         self,
@@ -313,7 +577,9 @@ class Parser:
         Returns:
             bool: True if installation is valid, False otherwise
         """
-        raise NotImplementedError("check_installation must be implemented by subclasses")
+        raise NotImplementedError(
+            "check_installation must be implemented by subclasses"
+        )
 
 
 class MineruParser(Parser):
@@ -325,6 +591,11 @@ class MineruParser(Parser):
 
     Note: Office documents are no longer directly supported. Please convert them to PDF first.
     """
+
+    __slots__ = ()
+
+    # Class-level logger
+    logger = logging.getLogger(__name__)
 
     def __init__(self) -> None:
         """Initialize MineruParser"""
@@ -392,21 +663,29 @@ class MineruParser(Parser):
             cmd.extend(["-u", vlm_url])
 
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=True,
-                encoding="utf-8",
-                errors="ignore",
-            )
-            print("MinerU command executed successfully")
+            # Prepare subprocess parameters to hide console window on Windows
+            import platform
+
+            subprocess_kwargs = {
+                "capture_output": True,
+                "text": True,
+                "check": True,
+                "encoding": "utf-8",
+                "errors": "ignore",
+            }
+
+            # Hide console window on Windows
+            if platform.system() == "Windows":
+                subprocess_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+            result = subprocess.run(cmd, **subprocess_kwargs)
+            logging.info("MinerU command executed successfully")
             if result.stdout:
-                print(f"Output: {result.stdout}")
+                logging.debug(f"Output: {result.stdout}")
         except subprocess.CalledProcessError as e:
-            print(f"Error running mineru command: {e}")
+            logging.error(f"Error running mineru command: {e}")
             if e.stderr:
-                print(f"Error details: {e.stderr}")
+                logging.error(f"Error details: {e.stderr}")
             raise
         except FileNotFoundError:
             raise RuntimeError(
@@ -431,12 +710,13 @@ class MineruParser(Parser):
         # Look for the generated files
         md_file = output_dir / f"{file_stem}.md"
         json_file = output_dir / f"{file_stem}_content_list.json"
+        images_base_dir = output_dir  # Base directory for images
 
-        # Check for files in subdirectory (MinerU 2.0 may create subdirectories)
-        subdir = output_dir / file_stem
-        if subdir.exists():
-            md_file = subdir / method / f"{file_stem}.md"
-            json_file = subdir / method / f"{file_stem}_content_list.json"
+        file_stem_subdir = output_dir / file_stem
+        if file_stem_subdir.exists():
+            md_file = file_stem_subdir / method / f"{file_stem}.md"
+            json_file = file_stem_subdir / method / f"{file_stem}_content_list.json"
+            images_base_dir = file_stem_subdir / method
 
         # Read markdown content
         md_content = ""
@@ -445,7 +725,7 @@ class MineruParser(Parser):
                 with open(md_file, "r", encoding="utf-8") as f:
                     md_content = f.read()
             except Exception as e:
-                print(f"Warning: Could not read markdown file {md_file}: {e}")
+                logging.warning(f"Could not read markdown file {md_file}: {e}")
 
         # Read JSON content list
         content_list = []
@@ -453,8 +733,30 @@ class MineruParser(Parser):
             try:
                 with open(json_file, "r", encoding="utf-8") as f:
                     content_list = json.load(f)
+
+                # Always fix relative paths in content_list to absolute paths
+                logging.info(
+                    f"Fixing image paths in {json_file} with base directory: {images_base_dir}"
+                )
+                for item in content_list:
+                    if isinstance(item, dict):
+                        for field_name in [
+                            "img_path",
+                            "table_img_path",
+                            "equation_img_path",
+                        ]:
+                            if field_name in item and item[field_name]:
+                                img_path = item[field_name]
+                                absolute_img_path = (
+                                    images_base_dir / img_path
+                                ).resolve()
+                                item[field_name] = str(absolute_img_path)
+                                logging.debug(
+                                    f"Updated {field_name}: {img_path} -> {item[field_name]}"
+                                )
+
             except Exception as e:
-                print(f"Warning: Could not read JSON file {json_file}: {e}")
+                logging.warning(f"Could not read JSON file {json_file}: {e}")
 
         return content_list, md_content
 
@@ -505,13 +807,17 @@ class MineruParser(Parser):
             )
 
             # Read the generated output files
+            backend = kwargs.get("backend", "")
+            if backend.startswith("vlm-"):
+                method = "vlm"
+
             content_list, _ = self._read_output_files(
                 base_output_dir, name_without_suff, method=method
             )
             return content_list
 
         except Exception as e:
-            print(f"Error in parse_pdf: {str(e)}")
+            logging.error(f"Error in parse_pdf: {str(e)}")
             raise
 
     def parse_image(
@@ -558,9 +864,9 @@ class MineruParser(Parser):
             }
 
             ext = image_path.suffix.lower()
-            if ext not in self.IMAGE_FORMATS:
+            if ext not in all_supported_formats:
                 raise ValueError(
-                    f"Unsupported image format: {ext}. Supported formats: {', '.join(self.IMAGE_FORMATS)}"
+                    f"Unsupported image format: {ext}. Supported formats: {', '.join(all_supported_formats)}"
                 )
 
             # Determine the actual image file to process
@@ -569,7 +875,9 @@ class MineruParser(Parser):
 
             # If format is not natively supported by MinerU, convert it
             if ext not in mineru_supported_formats:
-                print(f"Converting {ext} image to PNG for MinerU compatibility...")
+                logging.info(
+                    f"Converting {ext} image to PNG for MinerU compatibility..."
+                )
 
                 try:
                     from PIL import Image
@@ -607,7 +915,7 @@ class MineruParser(Parser):
 
                         # Save as PNG
                         img.save(temp_converted_file, "PNG", optimize=True)
-                        print(
+                        logging.info(
                             f"Successfully converted {image_path.name} to PNG ({temp_converted_file.stat().st_size / 1024:.1f} KB)"
                         )
 
@@ -656,7 +964,7 @@ class MineruParser(Parser):
                         pass  # Ignore cleanup errors
 
         except Exception as e:
-            print(f"Error in parse_image: {str(e)}")
+            logging.error(f"Error in parse_image: {str(e)}")
             raise
 
     def parse_office_doc(
@@ -686,14 +994,14 @@ class MineruParser(Parser):
         try:
             # Convert Office document to PDF using base class method
             pdf_path = self.convert_office_to_pdf(doc_path, output_dir)
-            
+
             # Parse the converted PDF
             return self.parse_pdf(
                 pdf_path=pdf_path, output_dir=output_dir, lang=lang, **kwargs
             )
 
         except Exception as e:
-            print(f"Error in parse_office_doc: {str(e)}")
+            logging.error(f"Error in parse_office_doc: {str(e)}")
             raise
 
     def parse_text_file(
@@ -720,14 +1028,14 @@ class MineruParser(Parser):
         try:
             # Convert text file to PDF using base class method
             pdf_path = self.convert_text_to_pdf(text_path, output_dir)
-            
+
             # Parse the converted PDF
             return self.parse_pdf(
                 pdf_path=pdf_path, output_dir=output_dir, lang=lang, **kwargs
             )
 
         except Exception as e:
-            print(f"Error in parse_text_file: {str(e)}")
+            logging.error(f"Error in parse_text_file: {str(e)}")
             raise
 
     def parse_document(
@@ -765,7 +1073,7 @@ class MineruParser(Parser):
         elif ext in self.IMAGE_FORMATS:
             return self.parse_image(file_path, output_dir, lang, **kwargs)
         elif ext in self.OFFICE_FORMATS:
-            print(
+            logging.warning(
                 f"Warning: Office document detected ({ext}). "
                 f"MinerU 2.0 requires conversion to PDF first."
             )
@@ -774,7 +1082,7 @@ class MineruParser(Parser):
             return self.parse_text_file(file_path, output_dir, lang, **kwargs)
         else:
             # For unsupported file types, try as PDF
-            print(
+            logging.warning(
                 f"Warning: Unsupported file extension '{ext}', "
                 f"attempting to parse as PDF"
             )
@@ -788,18 +1096,26 @@ class MineruParser(Parser):
             bool: True if installation is valid, False otherwise
         """
         try:
-            result = subprocess.run(
-                ["mineru", "--version"],
-                capture_output=True,
-                text=True,
-                check=True,
-                encoding="utf-8",
-                errors="ignore",
-            )
-            print(f"MinerU version: {result.stdout.strip()}")
+            # Prepare subprocess parameters to hide console window on Windows
+            import platform
+
+            subprocess_kwargs = {
+                "capture_output": True,
+                "text": True,
+                "check": True,
+                "encoding": "utf-8",
+                "errors": "ignore",
+            }
+
+            # Hide console window on Windows
+            if platform.system() == "Windows":
+                subprocess_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+            result = subprocess.run(["mineru", "--version"], **subprocess_kwargs)
+            logging.debug(f"MinerU version: {result.stdout.strip()}")
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print(
+            logging.debug(
                 "MinerU 2.0 is not properly installed. "
                 "Please install it using: pip install -U 'mineru[core]'"
             )
@@ -809,14 +1125,14 @@ class MineruParser(Parser):
 class DoclingParser(Parser):
     """
     Docling document parsing utility class.
-    
-    Specialized in parsing Office documents and HTML files, converting the content 
+
+    Specialized in parsing Office documents and HTML files, converting the content
     into structured data and generating markdown and JSON output.
     """
-    
+
     # Define Docling-specific formats
     HTML_FORMATS = {".html", ".htm", ".xhtml"}
-    
+
     def __init__(self) -> None:
         """Initialize DoclingParser"""
         super().__init__()
@@ -866,11 +1182,13 @@ class DoclingParser(Parser):
             )
 
             # Read the generated output files
-            content_list, _ = self._read_output_files(base_output_dir, name_without_suff)
+            content_list, _ = self._read_output_files(
+                base_output_dir, name_without_suff
+            )
             return content_list
 
         except Exception as e:
-            print(f"Error in parse_pdf: {str(e)}")
+            logging.error(f"Error in parse_pdf: {str(e)}")
             raise
 
     def parse_document(
@@ -894,15 +1212,15 @@ class DoclingParser(Parser):
         Returns:
             List[Dict[str, Any]]: List of content blocks
         """
-        # 转换为Path对象
+        # Convert to Path object
         file_path = Path(file_path)
         if not file_path.exists():
             raise FileNotFoundError(f"File does not exist: {file_path}")
 
-        # 获取文件扩展名
+        # Get file extension
         ext = file_path.suffix.lower()
 
-        # 根据文件类型选择合适的解析器
+        # Choose appropriate parser based on file type
         if ext == ".pdf":
             return self.parse_pdf(file_path, output_dir, method, lang, **kwargs)
         elif ext in self.OFFICE_FORMATS:
@@ -933,54 +1251,48 @@ class DoclingParser(Parser):
             **kwargs: Additional parameters for docling command
         """
         cmd_json = [
-            "docling",  
+            "docling",
             "--output",
             str(output_dir),
             "--to",
             "json",
-            str(input_path)
+            str(input_path),
         ]
-        cmd_md = [
-            "docling",  
-            "--output",
-            str(output_dir),
-            "--to",
-            "md",
-            str(input_path)
-        ]
+        cmd_md = ["docling", "--output", str(output_dir), "--to", "md", str(input_path)]
 
         try:
-            result_json = subprocess.run(
-                cmd_json,
-                capture_output=True,
-                text=True,
-                check=True,
-                encoding="utf-8",
-                errors="ignore",
-            )
-            result_md = subprocess.run(
-                cmd_md,
-                capture_output=True,
-                text=True,
-                check=True,
-                encoding="utf-8",
-                errors="ignore",
-            )
-            print("Docling command executed successfully")
+            # Prepare subprocess parameters to hide console window on Windows
+            import platform
+
+            docling_subprocess_kwargs = {
+                "capture_output": True,
+                "text": True,
+                "check": True,
+                "encoding": "utf-8",
+                "errors": "ignore",
+            }
+
+            # Hide console window on Windows
+            if platform.system() == "Windows":
+                docling_subprocess_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+            result_json = subprocess.run(cmd_json, **docling_subprocess_kwargs)
+            result_md = subprocess.run(cmd_md, **docling_subprocess_kwargs)
+            logging.info("Docling command executed successfully")
             if result_json.stdout:
-                print(f"JSON cmd output: {result_json.stdout}")
+                logging.debug(f"JSON cmd output: {result_json.stdout}")
             if result_md.stdout:
-                print(f"Markdown cmd output: {result_md.stdout}")
+                logging.debug(f"Markdown cmd output: {result_md.stdout}")
         except subprocess.CalledProcessError as e:
-            print(f"Error running docling command: {e}")
+            logging.error(f"Error running docling command: {e}")
             if e.stderr:
-                print(f"Error details: {e.stderr}")
+                logging.error(f"Error details: {e.stderr}")
             raise
         except FileNotFoundError:
             raise RuntimeError(
                 "docling command not found. Please ensure Docling is properly installed."
             )
-            
+
     def _read_output_files(
         self,
         output_dir: Path,
@@ -999,22 +1311,22 @@ class DoclingParser(Parser):
         md_file = output_dir / f"{file_stem}.md"
         json_file = output_dir / f"{file_stem}.json"
 
-        # 读取markdown内容
+        # Read markdown content
         md_content = ""
         if md_file.exists():
             try:
                 with open(md_file, "r", encoding="utf-8") as f:
                     md_content = f.read()
             except Exception as e:
-                print(f"Warning: Could not read markdown file {md_file}: {e}")
+                logging.warning(f"Could not read markdown file {md_file}: {e}")
 
-        # 读取JSON内容并转换格式
+        # Read JSON content and convert format
         content_list = []
         if json_file.exists():
             try:
                 with open(json_file, "r", encoding="utf-8") as f:
                     docling_content = json.load(f)
-                    # 将docling格式转换为minerU格式
+                    # Convert docling format to minerU format
                     children = docling_content["body"]["children"]
                     cnt = 0
                     for child in children:
@@ -1024,20 +1336,34 @@ class DoclingParser(Parser):
                         num = tag.split("/")[2]
                         block = docling_content[type][int(num)]
                         if type != "groups":
-                            content_list.append(self.read_from_block(block, type, num, output_dir, cnt))
+                            content_list.append(
+                                self.read_from_block(block, type, num, output_dir, cnt)
+                            )
                         else:
                             members = block["children"]
                             for member in members:
                                 member_tag = member["$ref"]
                                 member_type = member_tag.split("/")[1]
                                 member_num = member_tag.split("/")[2]
-                                member_block = docling_content[member_type][int(member_num)]
-                                content_list.append(self.read_from_block(member_block, member_type, member_num, output_dir, cnt))
+                                member_block = docling_content[member_type][
+                                    int(member_num)
+                                ]
+                                content_list.append(
+                                    self.read_from_block(
+                                        member_block,
+                                        member_type,
+                                        member_num,
+                                        output_dir,
+                                        cnt,
+                                    )
+                                )
             except Exception as e:
-                print(f"Warning: Could not read or convert JSON file {json_file}: {e}")
+                logging.warning(f"Could not read or convert JSON file {json_file}: {e}")
         return content_list, md_content
-    
-    def read_from_block(self, block, type: str, num: str, output_dir: Path, cnt: int) -> Dict[str, Any]:
+
+    def read_from_block(
+        self, block, type: str, num: str, output_dir: Path, cnt: int
+    ) -> Dict[str, Any]:
         if type == "texts":
             if block["label"] == "formula":
                 return {
@@ -1045,20 +1371,20 @@ class DoclingParser(Parser):
                     "img_path": "",
                     "text": block["orig"],
                     "text_format": "unkown",
-                    "page_idx": int(cnt)/10,
+                    "page_idx": int(cnt) / 10,
                 }
             else:
                 return {
                     "type": "text",
                     "text": block["orig"],
-                    "page_idx": int(cnt)/10,
+                    "page_idx": int(cnt) / 10,
                 }
         elif type == "pictures":
             try:
                 base64_uri = block["image"]["uri"]
                 base64_str = base64_uri.split(",")[1]
                 image_dir = output_dir / "images"
-                image_dir.mkdir(parents=True, exist_ok=True)  # 确保目录存在
+                image_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
                 image_path = image_dir / f"image_{num}.png"
                 with open(image_path, "wb") as f:
                     f.write(base64.b64decode(base64_str))
@@ -1067,14 +1393,14 @@ class DoclingParser(Parser):
                     "img_path": f"images/image_{num}.png",
                     "image_caption": block.get("caption", ""),
                     "image_footnote": block.get("footnote", ""),
-                    "page_idx": int(cnt)/10,
+                    "page_idx": int(cnt) / 10,
                 }
             except Exception as e:
-                print(f"Warning: Failed to process image {num}: {e}")
+                logging.warning(f"Failed to process image {num}: {e}")
                 return {
                     "type": "text",
                     "text": f"[Image processing failed: {block.get('caption', '')}]",
-                    "page_idx": int(cnt)/10,
+                    "page_idx": int(cnt) / 10,
                 }
         else:
             try:
@@ -1084,17 +1410,16 @@ class DoclingParser(Parser):
                     "table_caption": block.get("caption", ""),
                     "table_footnote": block.get("footnote", ""),
                     "table_body": block.get("data", []),
-                    "page_idx": int(cnt)/10,
+                    "page_idx": int(cnt) / 10,
                 }
             except Exception as e:
-                print(f"Warning: Failed to process table {num}: {e}")
+                logging.warning(f"Failed to process table {num}: {e}")
                 return {
                     "type": "text",
                     "text": f"[Table processing failed: {block.get('caption', '')}]",
-                    "page_idx": int(cnt)/10,
+                    "page_idx": int(cnt) / 10,
                 }
 
-    
     def parse_office_doc(
         self,
         doc_path: Union[str, Path],
@@ -1104,7 +1429,7 @@ class DoclingParser(Parser):
     ) -> List[Dict[str, Any]]:
         """
         Parse office document directly using Docling
-        
+
         Supported formats: .doc, .docx, .ppt, .pptx, .xls, .xlsx
 
         Args:
@@ -1117,7 +1442,7 @@ class DoclingParser(Parser):
             List[Dict[str, Any]]: List of content blocks
         """
         try:
-            # 转换为Path对象
+            # Convert to Path object
             doc_path = Path(doc_path)
             if not doc_path.exists():
                 raise FileNotFoundError(f"Document file does not exist: {doc_path}")
@@ -1127,7 +1452,7 @@ class DoclingParser(Parser):
 
             name_without_suff = doc_path.stem
 
-            # 准备输出目录
+            # Prepare output directory
             if output_dir:
                 base_output_dir = Path(output_dir)
             else:
@@ -1135,21 +1460,23 @@ class DoclingParser(Parser):
 
             base_output_dir.mkdir(parents=True, exist_ok=True)
 
-            # 运行docling命令
+            # Run docling command
             self._run_docling_command(
                 input_path=doc_path,
                 output_dir=base_output_dir,
                 **kwargs,
             )
 
-            # 读取生成的输出文件
-            content_list, _ = self._read_output_files(base_output_dir, name_without_suff)
+            # Read the generated output files
+            content_list, _ = self._read_output_files(
+                base_output_dir, name_without_suff
+            )
             return content_list
 
         except Exception as e:
-            print(f"Error in parse_office_doc: {str(e)}")
+            logging.error(f"Error in parse_office_doc: {str(e)}")
             raise
-            
+
     def parse_html(
         self,
         html_path: Union[str, Path],
@@ -1159,7 +1486,7 @@ class DoclingParser(Parser):
     ) -> List[Dict[str, Any]]:
         """
         Parse HTML document using Docling
-        
+
         Supported formats: .html, .htm, .xhtml
 
         Args:
@@ -1172,7 +1499,7 @@ class DoclingParser(Parser):
             List[Dict[str, Any]]: List of content blocks
         """
         try:
-            # 转换为Path对象
+            # Convert to Path object
             html_path = Path(html_path)
             if not html_path.exists():
                 raise FileNotFoundError(f"HTML file does not exist: {html_path}")
@@ -1182,7 +1509,7 @@ class DoclingParser(Parser):
 
             name_without_suff = html_path.stem
 
-            # 准备输出目录
+            # Prepare output directory
             if output_dir:
                 base_output_dir = Path(output_dir)
             else:
@@ -1190,21 +1517,23 @@ class DoclingParser(Parser):
 
             base_output_dir.mkdir(parents=True, exist_ok=True)
 
-            # 运行docling命令
+            # Run docling command
             self._run_docling_command(
                 input_path=html_path,
                 output_dir=base_output_dir,
                 **kwargs,
             )
 
-            # 读取生成的输出文件
-            content_list, _ = self._read_output_files(base_output_dir, name_without_suff)
+            # Read the generated output files
+            content_list, _ = self._read_output_files(
+                base_output_dir, name_without_suff
+            )
             return content_list
 
         except Exception as e:
-            print(f"Error in parse_html: {str(e)}")
+            logging.error(f"Error in parse_html: {str(e)}")
             raise
-            
+
     def check_installation(self) -> bool:
         """
         Check if Docling is properly installed
@@ -1213,18 +1542,26 @@ class DoclingParser(Parser):
             bool: True if installation is valid, False otherwise
         """
         try:
-            result = subprocess.run(
-                ["docling", "--version"],
-                capture_output=True,
-                text=True,
-                check=True,
-                encoding="utf-8",
-                errors="ignore",
-            )
-            print(f"Docling version: {result.stdout.strip()}")
+            # Prepare subprocess parameters to hide console window on Windows
+            import platform
+
+            subprocess_kwargs = {
+                "capture_output": True,
+                "text": True,
+                "check": True,
+                "encoding": "utf-8",
+                "errors": "ignore",
+            }
+
+            # Hide console window on Windows
+            if platform.system() == "Windows":
+                subprocess_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+            result = subprocess.run(["docling", "--version"], **subprocess_kwargs)
+            logging.debug(f"Docling version: {result.stdout.strip()}")
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print(
+            logging.debug(
                 "Docling is not properly installed. "
                 "Please ensure it is installed correctly."
             )
@@ -1233,9 +1570,11 @@ class DoclingParser(Parser):
 
 def main():
     """
-    Main function to run the MinerU 2.0 parser from command line
+    Main function to run the document parser from command line
     """
-    parser = argparse.ArgumentParser(description="Parse documents using MinerU 2.0")
+    parser = argparse.ArgumentParser(
+        description="Parse documents using MinerU 2.0 or Docling"
+    )
     parser.add_argument("file_path", help="Path to the document to parse")
     parser.add_argument("--output", "-o", help="Output directory path")
     parser.add_argument(
@@ -1289,7 +1628,7 @@ def main():
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Check MinerU installation",
+        help="Check parser installation",
     )
     parser.add_argument(
         "--parser",
@@ -1306,11 +1645,12 @@ def main():
 
     # Check installation if requested
     if args.check:
-        if MineruParser.check_installation():
-            print("✅ MinerU 2.0 is properly installed")
+        doc_parser = DoclingParser() if args.parser == "docling" else MineruParser()
+        if doc_parser.check_installation():
+            print(f"✅ {args.parser.title()} is properly installed")
             return 0
         else:
-            print("❌ MinerU 2.0 installation check failed")
+            print(f"❌ {args.parser.title()} installation check failed")
             return 1
 
     try:

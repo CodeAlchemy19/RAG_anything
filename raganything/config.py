@@ -25,14 +25,10 @@ class RAGAnythingConfig:
     )
     """Default parsing method for MinerU: 'auto', 'ocr', or 'txt'."""
 
-    parser_output_dir: str = field(
-        default=get_env_value("OUTPUT_DIR", "./output", str)
-    )
+    parser_output_dir: str = field(default=get_env_value("OUTPUT_DIR", "./output", str))
     """Default output directory for MinerU parsed content."""
 
-    parser: str = field(
-        default=get_env_value("PARSER", "mineru", str)
-    )
+    parser: str = field(default=get_env_value("PARSER", "mineru", str))
     """Parser selection: 'mineru' or 'docling'."""
 
     display_content_stats: bool = field(

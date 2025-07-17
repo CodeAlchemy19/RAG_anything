@@ -75,7 +75,7 @@ class ContextExtractor:
         Returns:
             Extracted context text
         """
-        if not content_source:
+        if not content_source and not self.config.context_window:
             return ""
 
         try:
@@ -517,6 +517,144 @@ class BaseModalProcessor:
             chunk_results,
         )
 
+    def _robust_json_parse(self, response: str) -> dict:
+        """Robust JSON parsing with multiple fallback strategies"""
+
+        # Strategy 1: Try direct parsing first
+        for json_candidate in self._extract_all_json_candidates(response):
+            result = self._try_parse_json(json_candidate)
+            if result:
+                return result
+
+        # Strategy 2: Try with basic cleanup
+        for json_candidate in self._extract_all_json_candidates(response):
+            cleaned = self._basic_json_cleanup(json_candidate)
+            result = self._try_parse_json(cleaned)
+            if result:
+                return result
+
+        # Strategy 3: Try progressive quote fixing
+        for json_candidate in self._extract_all_json_candidates(response):
+            fixed = self._progressive_quote_fix(json_candidate)
+            result = self._try_parse_json(fixed)
+            if result:
+                return result
+
+        # Strategy 4: Fallback to regex field extraction
+        return self._extract_fields_with_regex(response)
+
+    def _extract_all_json_candidates(self, response: str) -> list:
+        """Extract all possible JSON candidates from response"""
+        candidates = []
+
+        # Method 1: JSON in code blocks
+        import re
+
+        json_blocks = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", response, re.DOTALL)
+        candidates.extend(json_blocks)
+
+        # Method 2: Balanced braces
+        brace_count = 0
+        start_pos = -1
+
+        for i, char in enumerate(response):
+            if char == "{":
+                if brace_count == 0:
+                    start_pos = i
+                brace_count += 1
+            elif char == "}":
+                brace_count -= 1
+                if brace_count == 0 and start_pos != -1:
+                    candidates.append(response[start_pos : i + 1])
+
+        # Method 3: Simple regex fallback
+        simple_match = re.search(r"\{.*\}", response, re.DOTALL)
+        if simple_match:
+            candidates.append(simple_match.group(0))
+
+        return candidates
+
+    def _try_parse_json(self, json_str: str) -> dict:
+        """Try to parse JSON string, return None if failed"""
+        if not json_str or not json_str.strip():
+            return None
+
+        try:
+            return json.loads(json_str)
+        except (json.JSONDecodeError, ValueError):
+            return None
+
+    def _basic_json_cleanup(self, json_str: str) -> str:
+        """Basic cleanup for common JSON issues"""
+        # Remove extra whitespace
+        json_str = json_str.strip()
+
+        # Fix common quote issues
+        json_str = json_str.replace('"', '"').replace('"', '"')  # Smart quotes
+        json_str = json_str.replace(""", "'").replace(""", "'")  # Smart apostrophes
+
+        # Fix trailing commas (simple case)
+        json_str = re.sub(r",(\s*[}\]])", r"\1", json_str)
+
+        return json_str
+
+    def _progressive_quote_fix(self, json_str: str) -> str:
+        """Progressive fixing of quote and escape issues"""
+        # Only escape unescaped backslashes before quotes
+        json_str = re.sub(r'(?<!\\)\\(?=")', r"\\\\", json_str)
+
+        # Fix unescaped backslashes in string values (more conservative)
+        def fix_string_content(match):
+            content = match.group(1)
+            # Only escape obvious problematic patterns
+            content = re.sub(r"\\(?=[a-zA-Z])", r"\\\\", content)  # \alpha -> \\alpha
+            return f'"{content}"'
+
+        json_str = re.sub(r'"([^"]*(?:\\.[^"]*)*)"', fix_string_content, json_str)
+        return json_str
+
+    def _extract_fields_with_regex(self, response: str) -> dict:
+        """Extract required fields using regex as last resort"""
+        logger.warning("Using regex fallback for JSON parsing")
+
+        # Extract detailed_description
+        desc_match = re.search(
+            r'"detailed_description":\s*"([^"]*(?:\\.[^"]*)*)"', response, re.DOTALL
+        )
+        description = desc_match.group(1) if desc_match else ""
+
+        # Extract entity_name
+        name_match = re.search(r'"entity_name":\s*"([^"]*(?:\\.[^"]*)*)"', response)
+        entity_name = name_match.group(1) if name_match else "unknown_entity"
+
+        # Extract entity_type
+        type_match = re.search(r'"entity_type":\s*"([^"]*(?:\\.[^"]*)*)"', response)
+        entity_type = type_match.group(1) if type_match else "unknown"
+
+        # Extract summary
+        summary_match = re.search(
+            r'"summary":\s*"([^"]*(?:\\.[^"]*)*)"', response, re.DOTALL
+        )
+        summary = summary_match.group(1) if summary_match else description[:100]
+
+        return {
+            "detailed_description": description,
+            "entity_info": {
+                "entity_name": entity_name,
+                "entity_type": entity_type,
+                "summary": summary,
+            },
+        }
+
+    def _extract_json_from_response(self, response: str) -> str:
+        """Legacy method - now handled by _extract_all_json_candidates"""
+        candidates = self._extract_all_json_candidates(response)
+        return candidates[0] if candidates else None
+
+    def _fix_json_escapes(self, json_str: str) -> str:
+        """Legacy method - now handled by progressive strategies"""
+        return self._progressive_quote_fix(json_str)
+
     async def _process_chunk_for_extraction(
         self, chunk_id: str, modal_entity_name: str, batch_mode: bool = False
     ):
@@ -695,31 +833,21 @@ class ImageModalProcessor(BaseModalProcessor):
                 )
 
             # If image path exists, try to encode image
-            image_base64 = ""
-            if image_path and Path(image_path).exists():
-                image_base64 = self._encode_image_to_base64(image_path)
+            logger.debug(f"Begin Analysis of Image: {image_path}")
 
-            # Call vision model
-            if image_base64:
-                # Use real image for analysis
-                response = await self.modal_caption_func(
-                    vision_prompt,
-                    image_data=image_base64,
-                    system_prompt=PROMPTS["IMAGE_ANALYSIS_SYSTEM"],
-                )
-            else:
-                # Analyze based on existing text information
-                text_prompt = PROMPTS["text_prompt"].format(
-                    image_path=image_path,
-                    captions=captions,
-                    footnotes=footnotes,
-                    vision_prompt=vision_prompt,
-                )
+            if not image_path or not Path(image_path).exists():
+                raise FileNotFoundError(f"Image file not found: {image_path}")
 
-                response = await self.modal_caption_func(
-                    text_prompt,
-                    system_prompt=PROMPTS["IMAGE_ANALYSIS_FALLBACK_SYSTEM"],
-                )
+            image_base64 = self._encode_image_to_base64(image_path)
+            if not image_base64:
+                raise RuntimeError(f"Failed to encode image to base64: {image_path}")
+
+            # Call vision model with encoded image
+            response = await self.modal_caption_func(
+                vision_prompt,
+                image_data=image_base64,
+                system_prompt=PROMPTS["IMAGE_ANALYSIS_SYSTEM"],
+            )
 
             # Parse response
             enhanced_caption, entity_info = self._parse_response(response, entity_name)
@@ -753,9 +881,7 @@ class ImageModalProcessor(BaseModalProcessor):
     ) -> Tuple[str, Dict[str, Any]]:
         """Parse model response"""
         try:
-            response_data = json.loads(
-                re.search(r"\{.*\}", response, re.DOTALL).group(0)
-            )
+            response_data = self._robust_json_parse(response)
 
             description = response_data.get("detailed_description", "")
             entity_data = response_data.get("entity_info", {})
@@ -778,6 +904,7 @@ class ImageModalProcessor(BaseModalProcessor):
 
         except (json.JSONDecodeError, AttributeError, ValueError) as e:
             logger.error(f"Error parsing image analysis response: {e}")
+            logger.debug(f"Raw response: {response}")
             fallback_entity = {
                 "entity_name": entity_name
                 if entity_name
@@ -814,6 +941,8 @@ class TableModalProcessor(BaseModalProcessor):
         table_caption = content_data.get("table_caption", [])
         table_body = content_data.get("table_body", "")
         table_footnote = content_data.get("table_footnote", [])
+
+        logger.debug(f"Begin Analysis of Table: {table_img_path}")
 
         # Extract context for current item
         context = ""
@@ -875,9 +1004,7 @@ class TableModalProcessor(BaseModalProcessor):
     ) -> Tuple[str, Dict[str, Any]]:
         """Parse table analysis response"""
         try:
-            response_data = json.loads(
-                re.search(r"\{.*\}", response, re.DOTALL).group(0)
-            )
+            response_data = self._robust_json_parse(response)
 
             description = response_data.get("detailed_description", "")
             entity_data = response_data.get("entity_info", {})
@@ -900,6 +1027,7 @@ class TableModalProcessor(BaseModalProcessor):
 
         except (json.JSONDecodeError, AttributeError, ValueError) as e:
             logger.error(f"Error parsing table analysis response: {e}")
+            logger.debug(f"Raw response: {response}")
             fallback_entity = {
                 "entity_name": entity_name
                 if entity_name
@@ -934,6 +1062,8 @@ class EquationModalProcessor(BaseModalProcessor):
 
         equation_text = content_data.get("text")
         equation_format = content_data.get("text_format", "")
+
+        logger.debug(f"Begin Analysis of Equation: {equation_text}")
 
         # Extract context for current item
         context = ""
@@ -985,11 +1115,9 @@ class EquationModalProcessor(BaseModalProcessor):
     def _parse_equation_response(
         self, response: str, entity_name: str = None
     ) -> Tuple[str, Dict[str, Any]]:
-        """Parse equation analysis response"""
+        """Parse equation analysis response with robust JSON handling"""
         try:
-            response_data = json.loads(
-                re.search(r"\{.*\}", response, re.DOTALL).group(0)
-            )
+            response_data = self._robust_json_parse(response)
 
             description = response_data.get("detailed_description", "")
             entity_data = response_data.get("entity_info", {})
@@ -1012,6 +1140,7 @@ class EquationModalProcessor(BaseModalProcessor):
 
         except (json.JSONDecodeError, AttributeError, ValueError) as e:
             logger.error(f"Error parsing equation analysis response: {e}")
+            logger.debug(f"Raw response: {response}")
             fallback_entity = {
                 "entity_name": entity_name
                 if entity_name
@@ -1035,6 +1164,8 @@ class GenericModalProcessor(BaseModalProcessor):
         batch_mode: bool = False,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process generic modal content with context support"""
+        logger.debug(f"Begin Analysis of {content_type}: {modal_content}")
+
         # Extract context for current item
         context = ""
         if item_info:
@@ -1089,9 +1220,7 @@ class GenericModalProcessor(BaseModalProcessor):
     ) -> Tuple[str, Dict[str, Any]]:
         """Parse generic analysis response"""
         try:
-            response_data = json.loads(
-                re.search(r"\{.*\}", response, re.DOTALL).group(0)
-            )
+            response_data = self._robust_json_parse(response)
 
             description = response_data.get("detailed_description", "")
             entity_data = response_data.get("entity_info", {})
@@ -1113,7 +1242,8 @@ class GenericModalProcessor(BaseModalProcessor):
             return description, entity_data
 
         except (json.JSONDecodeError, AttributeError, ValueError) as e:
-            logger.error(f"Error parsing generic analysis response: {e}")
+            logger.error(f"Error parsing {content_type} analysis response: {e}")
+            logger.debug(f"Raw response: {response}")
             fallback_entity = {
                 "entity_name": entity_name
                 if entity_name

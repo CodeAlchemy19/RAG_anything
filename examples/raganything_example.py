@@ -108,6 +108,7 @@ async def process_with_rag(
             enable_table_processing=True,
             enable_equation_processing=True,
         )
+
         # Define LLM model function
         def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs):
             return openai_complete_if_cache(
@@ -252,7 +253,11 @@ def main():
         default=os.getenv("LLM_BINDING_API_KEY"),
         help="OpenAI API key (defaults to LLM_BINDING_API_KEY env var)",
     )
-    parser.add_argument("--base-url", default=os.getenv("LLM_BINDING_HOST"), help="Optional base URL for API")
+    parser.add_argument(
+        "--base-url",
+        default=os.getenv("LLM_BINDING_HOST"),
+        help="Optional base URL for API",
+    )
 
     args = parser.parse_args()
 
