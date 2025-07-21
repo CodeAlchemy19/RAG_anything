@@ -18,17 +18,18 @@ class RAGAnythingConfig:
     working_dir: str = field(default=get_env_value("WORKING_DIR", "./rag_storage", str))
     """Directory where RAG storage and cache files are stored."""
 
-    # MinerU Parser Configuration
+    # Parser Configuration
     # ---
     mineru_parse_method: str = field(
         default=get_env_value("MINERU_PARSE_METHOD", "auto", str)
     )
     """Default parsing method for MinerU: 'auto', 'ocr', or 'txt'."""
 
-    mineru_output_dir: str = field(
-        default=get_env_value("MINERU_OUTPUT_DIR", "./output", str)
-    )
+    parser_output_dir: str = field(default=get_env_value("OUTPUT_DIR", "./output", str))
     """Default output directory for MinerU parsed content."""
+
+    parser: str = field(default=get_env_value("PARSER", "mineru", str))
+    """Parser selection: 'mineru' or 'docling'."""
 
     display_content_stats: bool = field(
         default=get_env_value("DISPLAY_CONTENT_STATS", True, bool)

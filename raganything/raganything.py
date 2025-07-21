@@ -30,7 +30,7 @@ from raganything.query import QueryMixin
 from raganything.processor import ProcessorMixin
 from raganything.batch import BatchMixin
 from raganything.utils import get_processor_supports
-from raganything.mineru_parser import MineruParser
+from raganything.parser import MineruParser, DoclingParser
 
 # Import specialized processors
 from raganything.modalprocessors import (
@@ -84,6 +84,11 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         # Set up logger (use existing logger, don't configure it)
         self.logger = logger
 
+        # Set up document parser
+        self.doc_parser = (
+            DoclingParser() if self.config.parser == "docling" else MineruParser()
+        )
+
         # Create working directory if needed
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir)
@@ -96,7 +101,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         # Log configuration info
         self.logger.info("RAGAnything initialized with config:")
         self.logger.info(f"  Working directory: {self.config.working_dir}")
-        self.logger.info(f"  MinerU parse method: {self.config.mineru_parse_method}")
+        self.logger.info(f"  Parser: {self.config.parser}")
         self.logger.info(
             f"  Multimodal processing - Image: {self.config.enable_image_processing}, "
             f"Table: {self.config.enable_table_processing}, "
@@ -186,12 +191,11 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         if self.lightrag is not None:
             return
 
-        # Check MinerU 2.0 installation
-        if not MineruParser.check_installation():
+        # Check parser installation
+        if not self.doc_parser.check_installation():
             raise RuntimeError(
-                "MinerU 2.0 is not properly installed. "
-                "Please install it using: pip install -U 'mineru[core]' "
-                "or uv pip install -U 'mineru[core]'"
+                "Parser is not properly installed. "
+                "Please install it using pip install or uv pip install."
             )
 
         # Validate required functions
@@ -228,14 +232,14 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         Returns:
             bool: True if MinerU 2.0 is properly installed
         """
-        return MineruParser.check_installation()
+        return MineruParser.check_installation(MineruParser())
 
     def get_config_info(self) -> Dict[str, Any]:
         """Get current configuration information"""
         return {
             "directory": {
                 "working_dir": self.config.working_dir,
-                "mineru_output_dir": self.config.mineru_output_dir,
+                "mineru_output_dir": self.config.output_dir,
             },
             "parsing": {
                 "mineru_parse_method": self.config.mineru_parse_method,
@@ -327,7 +331,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
     def get_processor_info(self) -> Dict[str, Any]:
         """Get processor information"""
         base_info = {
-            "mineru_installed": MineruParser.check_installation(),
+            "mineru_installed": MineruParser.check_installation(MineruParser()),
             "config": self.get_config_info(),
             "models": {
                 "llm_model": "External function"

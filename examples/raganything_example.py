@@ -88,6 +88,7 @@ async def process_with_rag(
     api_key: str,
     base_url: str = None,
     working_dir: str = None,
+    parser: str = None,
 ):
     """
     Process document with RAGAnything
@@ -107,6 +108,7 @@ async def process_with_rag(
             enable_image_processing=True,
             enable_table_processing=True,
             enable_equation_processing=True,
+            parser=parser,
         )
 
         # Define LLM model function
@@ -250,17 +252,26 @@ def main():
     )
     parser.add_argument(
         "--api-key",
-        default=os.getenv("OPENAI_API_KEY"),
-        help="OpenAI API key (defaults to OPENAI_API_KEY env var)",
+        default=os.getenv("LLM_BINDING_API_KEY"),
+        help="OpenAI API key (defaults to LLM_BINDING_API_KEY env var)",
     )
-    parser.add_argument("--base-url", help="Optional base URL for API")
+    parser.add_argument(
+        "--base-url",
+        default=os.getenv("LLM_BINDING_HOST"),
+        help="Optional base URL for API",
+    )
+    parser.add_argument(
+        "--parser",
+        default=os.getenv("PARSER", "mineru"),
+        help="Optional base URL for API",
+    )
 
     args = parser.parse_args()
 
     # Check if API key is provided
     if not args.api_key:
         logger.error("Error: OpenAI API key is required")
-        logger.error("Set OPENAI_API_KEY environment variable or use --api-key option")
+        logger.error("Set api key environment variable or use --api-key option")
         return
 
     # Create output directory if specified
@@ -270,7 +281,12 @@ def main():
     # Process with RAG
     asyncio.run(
         process_with_rag(
-            args.file_path, args.output, args.api_key, args.base_url, args.working_dir
+            args.file_path,
+            args.output,
+            args.api_key,
+            args.base_url,
+            args.working_dir,
+            args.parser,
         )
     )
 

@@ -5,9 +5,9 @@ Contains methods for parsing documents and processing multimodal content
 """
 
 import os
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 from pathlib import Path
-from raganything.mineru_parser import MineruParser
+from raganything.parser import MineruParser, DoclingParser
 from raganything.utils import (
     separate_content,
     insert_text_content,
@@ -25,23 +25,23 @@ class ProcessorMixin:
         parse_method: str = None,
         display_stats: bool = None,
         **kwargs,
-    ) -> Tuple[List[Dict[str, Any]], str]:
+    ) -> List[Dict[str, Any]]:
         """
-        Parse document using MinerU
+        Parse document
 
         Args:
             file_path: Path to the file to parse
-            output_dir: Output directory (defaults to config.mineru_output_dir)
+            output_dir: Output directory (defaults to config.output_dir)
             parse_method: Parse method (defaults to config.mineru_parse_method)
             display_stats: Whether to display content statistics (defaults to config.display_content_stats)
-            **kwargs: Additional parameters for MinerU parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
+            **kwargs: Additional parameters for parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
 
         Returns:
-            (content_list, md_content): Content list and markdown text
+            List[Dict[str, Any]]: Content list
         """
         # Use config defaults if not provided
         if output_dir is None:
-            output_dir = self.config.mineru_output_dir
+            output_dir = self.config.parser_output_dir
         if parse_method is None:
             parse_method = self.config.mineru_parse_method
         if display_stats is None:
@@ -57,11 +57,14 @@ class ProcessorMixin:
         ext = file_path.suffix.lower()
 
         try:
+            doc_parser = (
+                DoclingParser() if self.config.parser == "docling" else MineruParser()
+            )
             if ext in [".pdf"]:
                 self.logger.info(
                     f"Detected PDF file, using PDF parser (method={parse_method})..."
                 )
-                content_list, md_content = MineruParser.parse_pdf(
+                content_list = doc_parser.parse_pdf(
                     pdf_path=file_path,
                     output_dir=output_dir,
                     method=parse_method,
@@ -78,12 +81,24 @@ class ProcessorMixin:
                 ".webp",
             ]:
                 self.logger.info("Detected image file, using image parser...")
-                content_list, md_content = MineruParser.parse_image(
+                content_list = MineruParser.parse_image(
                     image_path=file_path, output_dir=output_dir, **kwargs
                 )
-            elif ext in [".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx"]:
-                self.logger.info("Detected Office document, using Office parser...")
-                content_list, md_content = MineruParser.parse_office_doc(
+            elif ext in [
+                ".doc",
+                ".docx",
+                ".ppt",
+                ".pptx",
+                ".xls",
+                ".xlsx",
+                ".html",
+                ".htm",
+                ".xhtml",
+            ]:
+                self.logger.info(
+                    "Detected Office or HTML document, using Office parser..."
+                )
+                content_list = doc_parser.parse_office_doc(
                     doc_path=file_path, output_dir=output_dir, **kwargs
                 )
             else:
@@ -91,7 +106,7 @@ class ProcessorMixin:
                 self.logger.info(
                     f"Using generic parser for {ext} file (method={parse_method})..."
                 )
-                content_list, md_content = MineruParser.parse_document(
+                content_list = doc_parser.parse_document(
                     file_path=file_path,
                     method=parse_method,
                     output_dir=output_dir,
@@ -102,7 +117,8 @@ class ProcessorMixin:
             self.logger.error(f"Error during parsing with specific parser: {str(e)}")
             self.logger.warning("Falling back to generic parser...")
             # If specific parser fails, fall back to generic parser
-            content_list, md_content = MineruParser.parse_document(
+            content_list = MineruParser.parse_document(
+                MineruParser(),
                 file_path=file_path,
                 method=parse_method,
                 output_dir=output_dir,
@@ -112,13 +128,11 @@ class ProcessorMixin:
         self.logger.info(
             f"Parsing complete! Extracted {len(content_list)} content blocks"
         )
-        self.logger.info(f"Markdown text length: {len(md_content)} characters")
 
         # Display content statistics if requested
         if display_stats:
             self.logger.info("\nContent Information:")
             self.logger.info(f"* Total blocks in content_list: {len(content_list)}")
-            self.logger.info(f"* Markdown content length: {len(md_content)} characters")
 
             # Count elements by type
             block_types: Dict[str, int] = {}
@@ -132,7 +146,7 @@ class ProcessorMixin:
             for block_type, count in block_types.items():
                 self.logger.info(f"  - {block_type}: {count}")
 
-        return content_list, md_content
+        return content_list
 
     async def _process_multimodal_content(
         self, multimodal_items: List[Dict[str, Any]], file_path: str
@@ -248,7 +262,7 @@ class ProcessorMixin:
 
         Args:
             file_path: Path to the file to process
-            output_dir: MinerU output directory (defaults to config.mineru_output_dir)
+            output_dir: output directory (defaults to config.output_dir)
             parse_method: Parse method (defaults to config.mineru_parse_method)
             display_stats: Whether to display content statistics (defaults to config.display_content_stats)
             split_by_character: Optional character to split the text by
@@ -269,8 +283,8 @@ class ProcessorMixin:
 
         self.logger.info(f"Starting complete document processing: {file_path}")
 
-        # Step 1: Parse document using MinerU
-        content_list, md_content = self.parse_document(
+        # Step 1: Parse document
+        content_list = self.parse_document(
             file_path, output_dir, parse_method, display_stats, **kwargs
         )
 

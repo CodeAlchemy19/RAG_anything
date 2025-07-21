@@ -719,8 +719,8 @@ if __name__ == "__main__":
 **运行示例：**
 
 ```bash
-# 端到端处理
-python examples/raganything_example.py path/to/document.pdf --api-key YOUR_API_KEY
+# 端到端处理（包含解析器选择）
+python examples/raganything_example.py path/to/document.pdf --api-key YOUR_API_KEY --parser mineru
 
 # 直接模态处理
 python examples/modalprocessors_example.py --api-key YOUR_API_KEY
@@ -759,11 +759,13 @@ python examples/text_format_test.py --check-reportlab --file dummy
 ```bash
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_BASE_URL=your_base_url  # 可选
+OUTPUT_DIR=./output             # 解析文档的默认输出目录
+PARSER=mineru                   # 解析器选择：mineru 或 docling
 ```
 
 ### MinerU配置
 
-MinerU 2.0使用简化的配置方式：
+RAG-Anything现在支持多种解析器：
 
 ```bash
 # MinerU 2.0使用命令行参数而不是配置文件
@@ -776,21 +778,23 @@ mineru -p input.pdf -o output_dir -m ocr     # OCR重点解析
 mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU加速
 ```
 
-你也可以通过RAGAnything参数配置MinerU：
+你也可以通过RAGAnything参数配置解析：
 
 ```python
-# 基础解析配置
+# 基础解析配置和解析器选择
 await rag.process_document_complete(
     file_path="document.pdf",
     output_dir="./output/",
     parse_method="auto",          # 或 "ocr", "txt"
+    parser="mineru"               # 可选："mineru" 或 "docling"
 )
 
-# MinerU高级解析配置（包含特殊参数）
+# 高级解析配置（包含特殊参数）
 await rag.process_document_complete(
     file_path="document.pdf",
     output_dir="./output/",
     parse_method="auto",          # 解析方法："auto", "ocr", "txt"
+    parser="mineru",              # 解析器选择："mineru" 或 "docling"
 
     # MinerU特殊参数 - 支持的所有kwargs：
     lang="ch",                   # 文档语言优化（如："ch", "en", "ja"）
@@ -802,6 +806,7 @@ await rag.process_document_complete(
     backend="pipeline",          # 解析后端：pipeline|vlm-transformers|vlm-sglang-engine|vlm-sglang-client
     source="huggingface",        # 模型源："huggingface", "modelscope", "local"
     # vlm_url="http://127.0.0.1:3000" # 当backend=vlm-sglang-client时，需指定服务地址
+
     # RAGAnything标准参数
     display_stats=True,          # 显示内容统计信息
     split_by_character=None,     # 可选的文本分割字符
@@ -809,7 +814,7 @@ await rag.process_document_complete(
 )
 ```
 
-> **注意**：MinerU 2.0不再使用 `magic-pdf.json` 配置文件。所有设置现在通过命令行参数或函数参数传递。
+> **注意**：MinerU 2.0不再使用 `magic-pdf.json` 配置文件。所有设置现在通过命令行参数或函数参数传递。RAG-Anything现在支持多种文档解析器 - 你可以根据需要在MinerU和Docling之间选择。
 
 ### 处理要求
 

@@ -722,8 +722,8 @@ The `examples/` directory contains comprehensive usage examples:
 **Run examples:**
 
 ```bash
-# End-to-end processing
-python examples/raganything_example.py path/to/document.pdf --api-key YOUR_API_KEY
+# End-to-end processing with parser selection
+python examples/raganything_example.py path/to/document.pdf --api-key YOUR_API_KEY --parser mineru
 
 # Direct modal processing
 python examples/modalprocessors_example.py --api-key YOUR_API_KEY
@@ -760,13 +760,15 @@ Create a `.env` file (refer to `.env.example`):
 ```bash
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_BASE_URL=your_base_url  # Optional
+OUTPUT_DIR=./output             # Default output directory for parsed documents
+PARSER=mineru                   # Parser selection: mineru or docling
 ```
 
 > **Note**: API keys are only required for full RAG processing with LLM integration. The parsing test files (`office_document_test.py` and `image_format_test.py`) only test MinerU functionality and do not require API keys.
 
 ### MinerU Configuration
 
-MinerU 2.0 uses a simplified configuration approach:
+RAG-Anything now supports multiple parsers:
 
 ```bash
 # MinerU 2.0 uses command-line parameters instead of config files
@@ -779,21 +781,23 @@ mineru -p input.pdf -o output_dir -m ocr     # OCR-focused parsing
 mineru -p input.pdf -o output_dir -b pipeline --device cuda  # GPU acceleration
 ```
 
-You can also configure MinerU through RAGAnything parameters:
+You can also configure parsing through RAGAnything parameters:
 
 ```python
-# Basic parsing configuration
+# Basic parsing configuration with parser selection
 await rag.process_document_complete(
     file_path="document.pdf",
     output_dir="./output/",
     parse_method="auto",          # or "ocr", "txt"
+    parser="mineru"               # Optional: "mineru" or "docling"
 )
 
-# Advanced MinerU parsing configuration with special parameters
+# Advanced parsing configuration with special parameters
 await rag.process_document_complete(
     file_path="document.pdf",
     output_dir="./output/",
     parse_method="auto",          # Parsing method: "auto", "ocr", "txt"
+    parser="mineru",              # Parser selection: "mineru" or "docling"
 
     # MinerU special parameters - all supported kwargs:
     lang="ch",                   # Document language for OCR optimization (e.g., "ch", "en", "ja")
@@ -813,7 +817,7 @@ await rag.process_document_complete(
 )
 ```
 
-> **Note**: MinerU 2.0 no longer uses the `magic-pdf.json` configuration file. All settings are now passed as command-line parameters or function arguments.
+> **Note**: MinerU 2.0 no longer uses the `magic-pdf.json` configuration file. All settings are now passed as command-line parameters or function arguments. RAG-Anything now supports multiple document parsers - you can choose between MinerU and Docling based on your needs.
 
 ### Processing Requirements
 
