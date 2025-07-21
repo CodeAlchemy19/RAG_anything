@@ -4,6 +4,8 @@ Query functionality for RAGAnything
 Contains all query-related methods for both text and multimodal queries
 """
 
+import json
+import hashlib
 from typing import Dict, List, Any
 from pathlib import Path
 from lightrag import QueryParam
@@ -14,6 +16,81 @@ from raganything.utils import get_processor_for_type
 
 class QueryMixin:
     """QueryMixin class containing query functionality for RAGAnything"""
+
+    def _generate_multimodal_cache_key(
+        self, query: str, multimodal_content: List[Dict[str, Any]], mode: str, **kwargs
+    ) -> str:
+        """
+        Generate cache key for multimodal query
+
+        Args:
+            query: Base query text
+            multimodal_content: List of multimodal content
+            mode: Query mode
+            **kwargs: Additional parameters
+
+        Returns:
+            str: Cache key hash
+        """
+        # Create a normalized representation of the query parameters
+        cache_data = {
+            "query": query.strip(),
+            "mode": mode,
+        }
+
+        # Normalize multimodal content for stable caching
+        normalized_content = []
+        if multimodal_content:
+            for item in multimodal_content:
+                if isinstance(item, dict):
+                    normalized_item = {}
+                    for key, value in item.items():
+                        # For file paths, use basename to make cache more portable
+                        if key in [
+                            "img_path",
+                            "image_path",
+                            "file_path",
+                        ] and isinstance(value, str):
+                            normalized_item[key] = Path(value).name
+                        # For large content, create a hash instead of storing directly
+                        elif (
+                            key in ["table_data", "table_body"]
+                            and isinstance(value, str)
+                            and len(value) > 200
+                        ):
+                            normalized_item[f"{key}_hash"] = hashlib.md5(
+                                value.encode()
+                            ).hexdigest()
+                        else:
+                            normalized_item[key] = value
+                    normalized_content.append(normalized_item)
+                else:
+                    normalized_content.append(item)
+
+        cache_data["multimodal_content"] = normalized_content
+
+        # Add relevant kwargs to cache data
+        relevant_kwargs = {
+            k: v
+            for k, v in kwargs.items()
+            if k
+            in [
+                "stream",
+                "response_type",
+                "top_k",
+                "max_tokens",
+                "temperature",
+                "only_need_context",
+                "only_need_prompt",
+            ]
+        }
+        cache_data.update(relevant_kwargs)
+
+        # Generate hash from the cache data
+        cache_str = json.dumps(cache_data, sort_keys=True, ensure_ascii=False)
+        cache_hash = hashlib.md5(cache_str.encode()).hexdigest()
+
+        return f"multimodal_query:{cache_hash}"
 
     async def aquery(self, query: str, mode: str = "hybrid", **kwargs) -> str:
         """
@@ -98,6 +175,36 @@ class QueryMixin:
             self.logger.info("No multimodal content provided, executing text query")
             return await self.aquery(query, mode=mode, **kwargs)
 
+        # Generate cache key for multimodal query
+        cache_key = self._generate_multimodal_cache_key(
+            query, multimodal_content, mode, **kwargs
+        )
+
+        # Check cache if available and enabled
+        cached_result = None
+        if (
+            hasattr(self, "lightrag")
+            and self.lightrag
+            and hasattr(self.lightrag, "llm_response_cache")
+            and self.lightrag.llm_response_cache
+        ):
+            if self.lightrag.llm_response_cache.global_config.get(
+                "enable_llm_cache", True
+            ):
+                try:
+                    cached_result = await self.lightrag.llm_response_cache.get_by_id(
+                        cache_key
+                    )
+                    if cached_result and isinstance(cached_result, dict):
+                        result_content = cached_result.get("return")
+                        if result_content:
+                            self.logger.info(
+                                f"Multimodal query cache hit: {cache_key[:16]}..."
+                            )
+                            return result_content
+                except Exception as e:
+                    self.logger.debug(f"Error accessing multimodal query cache: {e}")
+
         # Process multimodal content to generate enhanced query text
         enhanced_query = await self._process_multimodal_query_content(
             query, multimodal_content
@@ -112,6 +219,47 @@ class QueryMixin:
 
         # Execute enhanced query
         result = await self.lightrag.aquery(enhanced_query, param=query_param)
+
+        # Save to cache if available and enabled
+        if (
+            hasattr(self, "lightrag")
+            and self.lightrag
+            and hasattr(self.lightrag, "llm_response_cache")
+            and self.lightrag.llm_response_cache
+        ):
+            if self.lightrag.llm_response_cache.global_config.get(
+                "enable_llm_cache", True
+            ):
+                try:
+                    # Create cache entry for multimodal query
+                    cache_entry = {
+                        "return": result,
+                        "cache_type": "multimodal_query",
+                        "original_query": query,
+                        "multimodal_content_count": len(multimodal_content),
+                        "mode": mode,
+                    }
+
+                    await self.lightrag.llm_response_cache.upsert(
+                        {cache_key: cache_entry}
+                    )
+                    self.logger.info(
+                        f"Saved multimodal query result to cache: {cache_key[:16]}..."
+                    )
+                except Exception as e:
+                    self.logger.debug(f"Error saving multimodal query to cache: {e}")
+
+        # Ensure cache is persisted to disk
+        if (
+            hasattr(self, "lightrag")
+            and self.lightrag
+            and hasattr(self.lightrag, "llm_response_cache")
+            and self.lightrag.llm_response_cache
+        ):
+            try:
+                await self.lightrag.llm_response_cache.index_done_callback()
+            except Exception as e:
+                self.logger.debug(f"Error persisting multimodal query cache: {e}")
 
         self.logger.info("Multimodal query completed")
         return result
