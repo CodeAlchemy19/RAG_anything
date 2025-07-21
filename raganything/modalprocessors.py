@@ -447,6 +447,8 @@ class BaseModalProcessor:
         entity_name: str = None,
         item_info: Dict[str, Any] = None,
         batch_mode: bool = False,
+        doc_id: str = None,
+        chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process multimodal content with context support"""
         # Subclasses need to implement specific processing logic
@@ -458,22 +460,39 @@ class BaseModalProcessor:
         entity_info: Dict[str, Any],
         file_path: str,
         batch_mode: bool = False,
+        doc_id: str = None,
+        chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Create entity and text chunk"""
         # Create chunk
         chunk_id = compute_mdhash_id(str(modal_chunk), prefix="chunk-")
         tokens = len(self.tokenizer.encode(modal_chunk))
 
+        # Use provided doc_id or generate one from chunk_id for backward compatibility
+        actual_doc_id = doc_id if doc_id else chunk_id
+
         chunk_data = {
             "tokens": tokens,
             "content": modal_chunk,
-            "chunk_order_index": 0,
-            "full_doc_id": chunk_id,
+            "chunk_order_index": chunk_order_index,
+            "full_doc_id": actual_doc_id,  # Use proper document ID
             "file_path": file_path,
         }
 
         # Store chunk
         await self.text_chunks_db.upsert({chunk_id: chunk_data})
+
+        # Store chunk in vector database for retrieval
+        chunk_vdb_data = {
+            chunk_id: {
+                "content": modal_chunk,
+                "full_doc_id": actual_doc_id,
+                "tokens": tokens,
+                "chunk_order_index": chunk_order_index,
+                "file_path": file_path,
+            }
+        }
+        await self.chunks_vdb.upsert(chunk_vdb_data)
 
         # Create entity node
         node_data = {
@@ -788,6 +807,8 @@ class ImageModalProcessor(BaseModalProcessor):
         entity_name: str = None,
         item_info: Dict[str, Any] = None,
         batch_mode: bool = False,
+        doc_id: str = None,
+        chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process image content with context support"""
         try:
@@ -861,7 +882,12 @@ class ImageModalProcessor(BaseModalProcessor):
             )
 
             return await self._create_entity_and_chunk(
-                modal_chunk, entity_info, file_path, batch_mode
+                modal_chunk,
+                entity_info,
+                file_path,
+                batch_mode,
+                doc_id,
+                chunk_order_index,
             )
 
         except Exception as e:
@@ -926,6 +952,8 @@ class TableModalProcessor(BaseModalProcessor):
         entity_name: str = None,
         item_info: Dict[str, Any] = None,
         batch_mode: bool = False,
+        doc_id: str = None,
+        chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process table content with context support"""
         # Parse table content
@@ -996,7 +1024,7 @@ class TableModalProcessor(BaseModalProcessor):
         )
 
         return await self._create_entity_and_chunk(
-            modal_chunk, entity_info, file_path, batch_mode
+            modal_chunk, entity_info, file_path, batch_mode, doc_id, chunk_order_index
         )
 
     def _parse_table_response(
@@ -1049,6 +1077,8 @@ class EquationModalProcessor(BaseModalProcessor):
         entity_name: str = None,
         item_info: Dict[str, Any] = None,
         batch_mode: bool = False,
+        doc_id: str = None,
+        chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process equation content with context support"""
         # Parse equation content
@@ -1109,7 +1139,7 @@ class EquationModalProcessor(BaseModalProcessor):
         )
 
         return await self._create_entity_and_chunk(
-            modal_chunk, entity_info, file_path, batch_mode
+            modal_chunk, entity_info, file_path, batch_mode, doc_id, chunk_order_index
         )
 
     def _parse_equation_response(
@@ -1162,6 +1192,8 @@ class GenericModalProcessor(BaseModalProcessor):
         entity_name: str = None,
         item_info: Dict[str, Any] = None,
         batch_mode: bool = False,
+        doc_id: str = None,
+        chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process generic modal content with context support"""
         logger.debug(f"Begin Analysis of {content_type}: {modal_content}")
@@ -1212,7 +1244,7 @@ class GenericModalProcessor(BaseModalProcessor):
         )
 
         return await self._create_entity_and_chunk(
-            modal_chunk, entity_info, file_path, batch_mode
+            modal_chunk, entity_info, file_path, batch_mode, doc_id, chunk_order_index
         )
 
     def _parse_generic_response(

@@ -5,9 +5,9 @@ Contains methods for parsing documents and processing multimodal content
 """
 
 import os
+import time
 import hashlib
 import json
-import time
 from typing import Dict, List, Any
 from pathlib import Path
 from raganything.parser import MineruParser, DoclingParser
@@ -25,7 +25,7 @@ class ProcessorMixin:
         self, file_path: Path, parse_method: str = None, **kwargs
     ) -> str:
         """
-        Generate cache key based on file path, modification time and parsing configuration
+        Generate cache key based on file path and parsing configuration
 
         Args:
             file_path: Path to the file
@@ -35,6 +35,7 @@ class ProcessorMixin:
         Returns:
             str: Cache key for the file and configuration
         """
+
         # Get file modification time
         mtime = file_path.stat().st_mtime
 
@@ -70,31 +71,132 @@ class ProcessorMixin:
 
         return cache_key
 
-    async def _get_cached_result(self, cache_key: str) -> List[Dict[str, Any]] | None:
+    def _generate_content_based_doc_id(self, content_list: List[Dict[str, Any]]) -> str:
         """
-        Get cached parsing result if available
+        Generate doc_id based on document content
+
+        Args:
+            content_list: Parsed content list
+
+        Returns:
+            str: Content-based document ID with doc- prefix
+        """
+        from lightrag.utils import compute_mdhash_id
+
+        # Extract key content for ID generation
+        content_hash_data = []
+
+        for item in content_list:
+            if isinstance(item, dict):
+                # For text content, use the text
+                if item.get("type") == "text" and item.get("text"):
+                    content_hash_data.append(item["text"].strip())
+                # For other content types, use key identifiers
+                elif item.get("type") == "image" and item.get("img_path"):
+                    content_hash_data.append(f"image:{item['img_path']}")
+                elif item.get("type") == "table" and item.get("table_body"):
+                    content_hash_data.append(f"table:{item['table_body']}")
+                elif item.get("type") == "equation" and item.get("text"):
+                    content_hash_data.append(f"equation:{item['text']}")
+                else:
+                    # For other types, use string representation
+                    content_hash_data.append(str(item))
+
+        # Create a content signature
+        content_signature = "\n".join(content_hash_data)
+
+        # Generate doc_id from content
+        doc_id = compute_mdhash_id(content_signature, prefix="doc-")
+
+        return doc_id
+
+    async def _get_cached_result(
+        self, cache_key: str, file_path: Path, parse_method: str = None, **kwargs
+    ) -> tuple[List[Dict[str, Any]], str] | None:
+        """
+        Get cached parsing result if available and valid
 
         Args:
             cache_key: Cache key to look up
+            file_path: Path to the file for mtime check
+            parse_method: Parse method used
+            **kwargs: Additional parser parameters
 
         Returns:
-            List[Dict[str, Any]] | None: Cached content list or None if not found
+            tuple[List[Dict[str, Any]], str] | None: (content_list, doc_id) or None if not found/invalid
         """
         if not hasattr(self, "parse_cache") or self.parse_cache is None:
             return None
 
         try:
             cached_data = await self.parse_cache.get_by_id(cache_key)
-            if cached_data:
-                self.logger.debug(f"Found cached parsing result for key: {cache_key}")
-                return cached_data.get("content_list", [])
+            if not cached_data:
+                return None
+
+            # Check file modification time
+            current_mtime = file_path.stat().st_mtime
+            cached_mtime = cached_data.get("mtime", 0)
+
+            if current_mtime != cached_mtime:
+                self.logger.debug(f"Cache invalid - file modified: {cache_key}")
+                return None
+
+            # Check parsing configuration
+            cached_config = cached_data.get("parse_config", {})
+            current_config = {
+                "parser": self.config.parser,
+                "parse_method": parse_method or self.config.parse_method,
+            }
+
+            # Add relevant kwargs to current config
+            relevant_kwargs = {
+                k: v
+                for k, v in kwargs.items()
+                if k
+                in [
+                    "lang",
+                    "device",
+                    "start_page",
+                    "end_page",
+                    "formula",
+                    "table",
+                    "backend",
+                    "source",
+                ]
+            }
+            current_config.update(relevant_kwargs)
+
+            if cached_config != current_config:
+                self.logger.debug(f"Cache invalid - config changed: {cache_key}")
+                return None
+
+            content_list = cached_data.get("content_list", [])
+            doc_id = cached_data.get("doc_id")
+
+            if content_list and doc_id:
+                self.logger.debug(
+                    f"Found valid cached parsing result for key: {cache_key}"
+                )
+                return content_list, doc_id
+            else:
+                self.logger.debug(
+                    f"Cache incomplete - missing content or doc_id: {cache_key}"
+                )
+                return None
+
         except Exception as e:
             self.logger.warning(f"Error accessing parse cache: {e}")
 
         return None
 
     async def _store_cached_result(
-        self, cache_key: str, content_list: List[Dict[str, Any]]
+        self,
+        cache_key: str,
+        content_list: List[Dict[str, Any]],
+        doc_id: str,
+        file_path: Path,
+        parse_method: str = None,
+        **kwargs,
     ) -> None:
         """
         Store parsing result in cache
@@ -102,15 +204,49 @@ class ProcessorMixin:
         Args:
             cache_key: Cache key to store under
             content_list: Content list to cache
+            doc_id: Content-based document ID
+            file_path: Path to the file for mtime storage
+            parse_method: Parse method used
+            **kwargs: Additional parser parameters
         """
         if not hasattr(self, "parse_cache") or self.parse_cache is None:
             return
 
         try:
+            # Get file modification time
+            file_mtime = file_path.stat().st_mtime
+
+            # Create parsing configuration
+            parse_config = {
+                "parser": self.config.parser,
+                "parse_method": parse_method or self.config.parse_method,
+            }
+
+            # Add relevant kwargs to config
+            relevant_kwargs = {
+                k: v
+                for k, v in kwargs.items()
+                if k
+                in [
+                    "lang",
+                    "device",
+                    "start_page",
+                    "end_page",
+                    "formula",
+                    "table",
+                    "backend",
+                    "source",
+                ]
+            }
+            parse_config.update(relevant_kwargs)
+
             cache_data = {
                 cache_key: {
                     "content_list": content_list,
-                    "cached_at": time.time(),  # Use current time
+                    "doc_id": doc_id,
+                    "mtime": file_mtime,
+                    "parse_config": parse_config,
+                    "cached_at": time.time(),
                     "cache_version": "1.0",
                 }
             }
@@ -128,7 +264,7 @@ class ProcessorMixin:
         parse_method: str = None,
         display_stats: bool = None,
         **kwargs,
-    ) -> List[Dict[str, Any]]:
+    ) -> tuple[List[Dict[str, Any]], str]:
         """
         Parse document with caching support
 
@@ -140,7 +276,7 @@ class ProcessorMixin:
             **kwargs: Additional parameters for parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
 
         Returns:
-            List[Dict[str, Any]]: Content list
+            tuple[List[Dict[str, Any]], str]: (content_list, doc_id)
         """
         # Use config defaults if not provided
         if output_dir is None:
@@ -160,14 +296,17 @@ class ProcessorMixin:
         cache_key = self._generate_cache_key(file_path, parse_method, **kwargs)
 
         # Check cache first
-        cached_content = await self._get_cached_result(cache_key)
-        if cached_content is not None:
+        cached_result = await self._get_cached_result(
+            cache_key, file_path, parse_method, **kwargs
+        )
+        if cached_result is not None:
+            content_list, doc_id = cached_result
             self.logger.info(f"Using cached parsing result for: {file_path}")
             if display_stats:
                 self.logger.info(
-                    f"* Total blocks in cached content_list: {len(cached_content)}"
+                    f"* Total blocks in cached content_list: {len(content_list)}"
                 )
-            return cached_content
+            return content_list, doc_id
 
         # Choose appropriate parsing method based on file extension
         ext = file_path.suffix.lower()
@@ -260,8 +399,13 @@ class ProcessorMixin:
             f"Parsing complete! Extracted {len(content_list)} content blocks"
         )
 
+        # Generate doc_id based on content
+        doc_id = self._generate_content_based_doc_id(content_list)
+
         # Store result in cache
-        await self._store_cached_result(cache_key, content_list)
+        await self._store_cached_result(
+            cache_key, content_list, doc_id, file_path, parse_method, **kwargs
+        )
 
         # Display content statistics if requested
         if display_stats:
@@ -280,10 +424,10 @@ class ProcessorMixin:
             for block_type, count in block_types.items():
                 self.logger.info(f"  - {block_type}: {count}")
 
-        return content_list
+        return content_list, doc_id
 
     async def _process_multimodal_content(
-        self, multimodal_items: List[Dict[str, Any]], file_path: str
+        self, multimodal_items: List[Dict[str, Any]], file_path: str, doc_id: str
     ):
         """
         Process multimodal content (using specialized processors)
@@ -291,10 +435,41 @@ class ProcessorMixin:
         Args:
             multimodal_items: List of multimodal items
             file_path: File path (for reference)
+            doc_id: Document ID for proper chunk association
         """
         if not multimodal_items:
             self.logger.debug("No multimodal content to process")
             return
+
+        # Check if multimodal content for this document is already processed
+        try:
+            existing_doc_status = await self.lightrag.doc_status.get_by_id(doc_id)
+            if existing_doc_status:
+                # Check if multimodal processing is already completed
+                multimodal_processed = existing_doc_status.get(
+                    "multimodal_processed", False
+                )
+                existing_multimodal_chunks = existing_doc_status.get(
+                    "multimodal_chunks_list", []
+                )
+
+                if multimodal_processed and len(existing_multimodal_chunks) >= len(
+                    multimodal_items
+                ):
+                    self.logger.info(
+                        f"Multimodal content already processed for document {doc_id} "
+                        f"({len(existing_multimodal_chunks)} chunks found, {len(multimodal_items)} items to process)"
+                    )
+                    return
+                elif len(existing_multimodal_chunks) > 0:
+                    self.logger.info(
+                        f"Partial multimodal content found for document {doc_id} "
+                        f"({len(existing_multimodal_chunks)} chunks exist, will reprocess all)"
+                    )
+
+        except Exception as e:
+            self.logger.debug(f"Error checking multimodal cache for {doc_id}: {e}")
+            # Continue with processing if cache check fails
 
         self.logger.info("Starting multimodal content processing...")
 
@@ -302,6 +477,14 @@ class ProcessorMixin:
 
         # Collect all chunk results for batch processing (similar to text content processing)
         all_chunk_results = []
+        multimodal_chunk_ids = []
+
+        # Get current text chunks count to set proper order indexes for multimodal chunks
+
+        existing_doc_status = await self.lightrag.doc_status.get_by_id(doc_id)
+        existing_chunks_count = (
+            existing_doc_status.get("chunks_count", 0) if existing_doc_status else 0
+        )
 
         for i, item in enumerate(multimodal_items):
             try:
@@ -332,10 +515,19 @@ class ProcessorMixin:
                         file_path=file_name,
                         item_info=item_info,  # Pass item info for context extraction
                         batch_mode=True,
+                        doc_id=doc_id,  # Pass doc_id for proper association
+                        chunk_order_index=existing_chunks_count
+                        + i
+                        + 1,  # Proper order index
                     )
 
                     # Collect chunk results for batch processing
                     all_chunk_results.extend(chunk_results)
+
+                    # Extract chunk ID from the entity_info (actual chunk_id created by processor)
+                    if entity_info and "chunk_id" in entity_info:
+                        chunk_id = entity_info["chunk_id"]
+                        multimodal_chunk_ids.append(chunk_id)
 
                     self.logger.info(
                         f"{content_type} processing complete: {entity_info.get('entity_name', 'Unknown')}"
@@ -349,6 +541,49 @@ class ProcessorMixin:
                 self.logger.error(f"Error processing multimodal content: {str(e)}")
                 self.logger.debug("Exception details:", exc_info=True)
                 continue
+
+        # Update doc_status to include multimodal chunks
+        if multimodal_chunk_ids:
+            try:
+                # Get current document status
+                current_doc_status = await self.lightrag.doc_status.get_by_id(doc_id)
+
+                if current_doc_status:
+                    existing_multimodal_chunks = current_doc_status.get(
+                        "multimodal_chunks_list", []
+                    )
+
+                    # Combine existing chunks with new multimodal chunks
+                    updated_multimodal_chunks_list = (
+                        existing_multimodal_chunks + multimodal_chunk_ids
+                    )
+
+                    # Update document status with separated chunk lists
+                    await self.lightrag.doc_status.upsert(
+                        {
+                            doc_id: {
+                                **current_doc_status,  # Keep existing fields
+                                "multimodal_chunks_list": updated_multimodal_chunks_list,  # Separated multimodal chunks
+                                "multimodal_chunks_count": len(
+                                    updated_multimodal_chunks_list
+                                ),
+                                "multimodal_processed": True,  # Mark multimodal processing as complete
+                                "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                            }
+                        }
+                    )
+
+                    # Ensure doc_status update is persisted to disk
+                    await self.lightrag.doc_status.index_done_callback()
+
+                    self.logger.info(
+                        f"Updated doc_status with {len(multimodal_chunk_ids)} multimodal chunks"
+                    )
+
+            except Exception as e:
+                self.logger.warning(
+                    f"Error updating doc_status with multimodal chunks: {e}"
+                )
 
         # Batch merge all multimodal content results (similar to text content processing)
         if all_chunk_results:
@@ -401,7 +636,7 @@ class ProcessorMixin:
             display_stats: Whether to display content statistics (defaults to config.display_content_stats)
             split_by_character: Optional character to split the text by
             split_by_character_only: If True, split only by the specified character
-            doc_id: Optional document ID, if not provided MD5 hash will be generated
+            doc_id: Optional document ID, if not provided will be generated from content
             **kwargs: Additional parameters for parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
         """
         # Ensure LightRAG is initialized
@@ -418,9 +653,13 @@ class ProcessorMixin:
         self.logger.info(f"Starting complete document processing: {file_path}")
 
         # Step 1: Parse document
-        content_list = await self.parse_document(
+        content_list, content_based_doc_id = await self.parse_document(
             file_path, output_dir, parse_method, display_stats, **kwargs
         )
+
+        # Use provided doc_id or fall back to content-based doc_id
+        if doc_id is None:
+            doc_id = content_based_doc_id
 
         # Step 2: Separate text and multimodal content
         text_content, multimodal_items = separate_content(content_list)
@@ -448,6 +687,38 @@ class ProcessorMixin:
 
         # Step 4: Process multimodal content (using specialized processors)
         if multimodal_items:
-            await self._process_multimodal_content(multimodal_items, file_path)
+            await self._process_multimodal_content(multimodal_items, file_path, doc_id)
+        else:
+            # If no multimodal content, mark as processed to avoid future checks
+            try:
+                existing_doc_status = await self.lightrag.doc_status.get_by_id(doc_id)
+                if existing_doc_status and not existing_doc_status.get(
+                    "multimodal_processed", False
+                ):
+                    existing_multimodal_chunks = existing_doc_status.get(
+                        "multimodal_chunks_list", []
+                    )
+
+                    await self.lightrag.doc_status.upsert(
+                        {
+                            doc_id: {
+                                **existing_doc_status,
+                                "multimodal_chunks_list": existing_multimodal_chunks,
+                                "multimodal_chunks_count": len(
+                                    existing_multimodal_chunks
+                                ),
+                                "multimodal_processed": True,
+                                "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                            }
+                        }
+                    )
+                    await self.lightrag.doc_status.index_done_callback()
+                    self.logger.debug(
+                        f"Marked document {doc_id[:8]}... as having no multimodal content"
+                    )
+            except Exception as e:
+                self.logger.debug(
+                    f"Error updating doc_status for no multimodal content: {e}"
+                )
 
         self.logger.info(f"Document {file_path} processing complete!")
