@@ -5,6 +5,9 @@ Contains methods for parsing documents and processing multimodal content
 """
 
 import os
+import hashlib
+import json
+import time
 from typing import Dict, List, Any
 from pathlib import Path
 from raganything.parser import MineruParser, DoclingParser
@@ -18,7 +21,107 @@ from raganything.utils import (
 class ProcessorMixin:
     """ProcessorMixin class containing document processing functionality for RAGAnything"""
 
-    def parse_document(
+    def _generate_cache_key(
+        self, file_path: Path, parse_method: str = None, **kwargs
+    ) -> str:
+        """
+        Generate cache key based on file path, modification time and parsing configuration
+
+        Args:
+            file_path: Path to the file
+            parse_method: Parse method used
+            **kwargs: Additional parser parameters
+
+        Returns:
+            str: Cache key for the file and configuration
+        """
+        # Get file modification time
+        mtime = file_path.stat().st_mtime
+
+        # Create configuration dict for cache key
+        config_dict = {
+            "file_path": str(file_path.absolute()),
+            "mtime": mtime,
+            "parser": self.config.parser,
+            "parse_method": parse_method or self.config.parse_method,
+        }
+
+        # Add relevant kwargs to config
+        relevant_kwargs = {
+            k: v
+            for k, v in kwargs.items()
+            if k
+            in [
+                "lang",
+                "device",
+                "start_page",
+                "end_page",
+                "formula",
+                "table",
+                "backend",
+                "source",
+            ]
+        }
+        config_dict.update(relevant_kwargs)
+
+        # Generate hash from config
+        config_str = json.dumps(config_dict, sort_keys=True)
+        cache_key = hashlib.md5(config_str.encode()).hexdigest()
+
+        return cache_key
+
+    async def _get_cached_result(self, cache_key: str) -> List[Dict[str, Any]] | None:
+        """
+        Get cached parsing result if available
+
+        Args:
+            cache_key: Cache key to look up
+
+        Returns:
+            List[Dict[str, Any]] | None: Cached content list or None if not found
+        """
+        if not hasattr(self, "parse_cache") or self.parse_cache is None:
+            return None
+
+        try:
+            cached_data = await self.parse_cache.get_by_id(cache_key)
+            if cached_data:
+                self.logger.debug(f"Found cached parsing result for key: {cache_key}")
+                return cached_data.get("content_list", [])
+        except Exception as e:
+            self.logger.warning(f"Error accessing parse cache: {e}")
+
+        return None
+
+    async def _store_cached_result(
+        self, cache_key: str, content_list: List[Dict[str, Any]]
+    ) -> None:
+        """
+        Store parsing result in cache
+
+        Args:
+            cache_key: Cache key to store under
+            content_list: Content list to cache
+        """
+        if not hasattr(self, "parse_cache") or self.parse_cache is None:
+            return
+
+        try:
+            cache_data = {
+                cache_key: {
+                    "content_list": content_list,
+                    "cached_at": time.time(),  # Use current time
+                    "cache_version": "1.0",
+                }
+            }
+            await self.parse_cache.upsert(cache_data)
+            # Ensure data is persisted to disk
+            await self.parse_cache.index_done_callback()
+            self.logger.info(f"Stored parsing result in cache: {cache_key}")
+        except Exception as e:
+            self.logger.warning(f"Error storing to parse cache: {e}")
+
+    async def parse_document(
         self,
         file_path: str,
         output_dir: str = None,
@@ -27,7 +130,7 @@ class ProcessorMixin:
         **kwargs,
     ) -> List[Dict[str, Any]]:
         """
-        Parse document
+        Parse document with caching support
 
         Args:
             file_path: Path to the file to parse
@@ -52,6 +155,19 @@ class ProcessorMixin:
         file_path = Path(file_path)
         if not file_path.exists():
             raise FileNotFoundError(f"File not found: {file_path}")
+
+        # Generate cache key based on file and configuration
+        cache_key = self._generate_cache_key(file_path, parse_method, **kwargs)
+
+        # Check cache first
+        cached_content = await self._get_cached_result(cache_key)
+        if cached_content is not None:
+            self.logger.info(f"Using cached parsing result for: {file_path}")
+            if display_stats:
+                self.logger.info(
+                    f"* Total blocks in cached content_list: {len(cached_content)}"
+                )
+            return cached_content
 
         # Choose appropriate parsing method based on file extension
         ext = file_path.suffix.lower()
@@ -143,6 +259,9 @@ class ProcessorMixin:
         self.logger.info(
             f"Parsing complete! Extracted {len(content_list)} content blocks"
         )
+
+        # Store result in cache
+        await self._store_cached_result(cache_key, content_list)
 
         # Display content statistics if requested
         if display_stats:
@@ -299,7 +418,7 @@ class ProcessorMixin:
         self.logger.info(f"Starting complete document processing: {file_path}")
 
         # Step 1: Parse document
-        content_list = self.parse_document(
+        content_list = await self.parse_document(
             file_path, output_dir, parse_method, display_stats, **kwargs
         )
 

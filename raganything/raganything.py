@@ -72,6 +72,9 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
     context_extractor: Optional[ContextExtractor] = field(default=None, init=False)
     """Context extractor for providing surrounding content to modal processors."""
 
+    parse_cache: Optional[Any] = field(default=None, init=False)
+    """Parse result cache storage using LightRAG KV storage."""
+
     def __post_init__(self):
         """Post-initialization setup following LightRAG pattern"""
         # Initialize configuration if not provided
@@ -221,10 +224,19 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         await self.lightrag.initialize_storages()
         await initialize_pipeline_status()
 
+        # Initialize parse cache storage using LightRAG's KV storage
+        self.parse_cache = self.lightrag.key_string_value_json_storage_cls(
+            namespace="parse_cache",
+            workspace=self.lightrag.workspace,
+            global_config=self.lightrag.__dict__,
+            embedding_func=self.embedding_func,
+        )
+        await self.parse_cache.initialize()
+
         # Initialize processors after LightRAG is ready
         self._initialize_processors()
 
-        self.logger.info("LightRAG and multimodal processors initialized")
+        self.logger.info("LightRAG, parse cache, and multimodal processors initialized")
 
     def check_parser_installation(self) -> bool:
         """
