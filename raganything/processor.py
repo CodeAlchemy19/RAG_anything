@@ -31,8 +31,8 @@ class ProcessorMixin:
 
         Args:
             file_path: Path to the file to parse
-            output_dir: Output directory (defaults to config.output_dir)
-            parse_method: Parse method (defaults to config.mineru_parse_method)
+            output_dir: Output directory (defaults to config.parser_output_dir)
+            parse_method: Parse method (defaults to config.parse_method)
             display_stats: Whether to display content statistics (defaults to config.display_content_stats)
             **kwargs: Additional parameters for parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
 
@@ -43,7 +43,7 @@ class ProcessorMixin:
         if output_dir is None:
             output_dir = self.config.parser_output_dir
         if parse_method is None:
-            parse_method = self.config.mineru_parse_method
+            parse_method = self.config.parse_method
         if display_stats is None:
             display_stats = self.config.display_content_stats
 
@@ -60,10 +60,14 @@ class ProcessorMixin:
             doc_parser = (
                 DoclingParser() if self.config.parser == "docling" else MineruParser()
             )
+
+            # Log parser and method information
+            self.logger.info(
+                f"Using {self.config.parser} parser with method: {parse_method}"
+            )
+
             if ext in [".pdf"]:
-                self.logger.info(
-                    f"Detected PDF file, using PDF parser (method={parse_method})..."
-                )
+                self.logger.info("Detected PDF file, using parser for PDF...")
                 content_list = doc_parser.parse_pdf(
                     pdf_path=file_path,
                     output_dir=output_dir,
@@ -80,10 +84,20 @@ class ProcessorMixin:
                 ".gif",
                 ".webp",
             ]:
-                self.logger.info("Detected image file, using image parser...")
-                content_list = MineruParser.parse_image(
-                    image_path=file_path, output_dir=output_dir, **kwargs
-                )
+                self.logger.info("Detected image file, using parser for images...")
+                # Use the selected parser's image parsing capability
+                if hasattr(doc_parser, "parse_image"):
+                    content_list = doc_parser.parse_image(
+                        image_path=file_path, output_dir=output_dir, **kwargs
+                    )
+                else:
+                    # Fallback to MinerU for image parsing if current parser doesn't support it
+                    self.logger.warning(
+                        f"{self.config.parser} parser doesn't support image parsing, falling back to MinerU"
+                    )
+                    content_list = MineruParser().parse_image(
+                        image_path=file_path, output_dir=output_dir, **kwargs
+                    )
             elif ext in [
                 ".doc",
                 ".docx",
@@ -96,7 +110,7 @@ class ProcessorMixin:
                 ".xhtml",
             ]:
                 self.logger.info(
-                    "Detected Office or HTML document, using Office parser..."
+                    "Detected Office or HTML document, using parser for Office/HTML..."
                 )
                 content_list = doc_parser.parse_office_doc(
                     doc_path=file_path, output_dir=output_dir, **kwargs
@@ -114,11 +128,12 @@ class ProcessorMixin:
                 )
 
         except Exception as e:
-            self.logger.error(f"Error during parsing with specific parser: {str(e)}")
-            self.logger.warning("Falling back to generic parser...")
-            # If specific parser fails, fall back to generic parser
-            content_list = MineruParser.parse_document(
-                MineruParser(),
+            self.logger.error(
+                f"Error during parsing with {self.config.parser} parser: {str(e)}"
+            )
+            self.logger.warning("Falling back to MinerU parser...")
+            # If specific parser fails, fall back to MinerU parser
+            content_list = MineruParser().parse_document(
                 file_path=file_path,
                 method=parse_method,
                 output_dir=output_dir,
@@ -262,22 +277,22 @@ class ProcessorMixin:
 
         Args:
             file_path: Path to the file to process
-            output_dir: output directory (defaults to config.output_dir)
-            parse_method: Parse method (defaults to config.mineru_parse_method)
+            output_dir: output directory (defaults to config.parser_output_dir)
+            parse_method: Parse method (defaults to config.parse_method)
             display_stats: Whether to display content statistics (defaults to config.display_content_stats)
             split_by_character: Optional character to split the text by
             split_by_character_only: If True, split only by the specified character
             doc_id: Optional document ID, if not provided MD5 hash will be generated
-            **kwargs: Additional parameters for MinerU parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
+            **kwargs: Additional parameters for parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
         """
         # Ensure LightRAG is initialized
         await self._ensure_lightrag_initialized()
 
         # Use config defaults if not provided
         if output_dir is None:
-            output_dir = self.config.mineru_output_dir
+            output_dir = self.config.parser_output_dir
         if parse_method is None:
-            parse_method = self.config.mineru_parse_method
+            parse_method = self.config.parse_method
         if display_stats is None:
             display_stats = self.config.display_content_stats
 

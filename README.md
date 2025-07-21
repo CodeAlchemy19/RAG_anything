@@ -297,7 +297,8 @@ async def main():
     # Create RAGAnything configuration
     config = RAGAnythingConfig(
         working_dir="./rag_storage",
-        mineru_parse_method="auto",
+        parser="mineru",  # Parser selection: mineru or docling
+        parse_method="auto",  # Parse method: auto, ocr, or txt
         enable_image_processing=True,
         enable_table_processing=True,
         enable_equation_processing=True,
@@ -762,13 +763,29 @@ OPENAI_API_KEY=your_openai_api_key
 OPENAI_BASE_URL=your_base_url  # Optional
 OUTPUT_DIR=./output             # Default output directory for parsed documents
 PARSER=mineru                   # Parser selection: mineru or docling
+PARSE_METHOD=auto              # Parse method: auto, ocr, or txt
 ```
 
-> **Note**: API keys are only required for full RAG processing with LLM integration. The parsing test files (`office_document_test.py` and `image_format_test.py`) only test MinerU functionality and do not require API keys.
+**Note:** For backward compatibility, legacy environment variable names are still supported:
+- `MINERU_PARSE_METHOD` is deprecated, please use `PARSE_METHOD`
+
+> **Note**: API keys are only required for full RAG processing with LLM integration. The parsing test files (`office_document_test.py` and `image_format_test.py`) only test parser functionality and do not require API keys.
+
+### Parser Configuration
+
+RAGAnything now supports multiple parsers, each with specific advantages:
+
+#### MinerU Parser
+- Supports PDF, images, Office documents, and more formats
+- Powerful OCR and table extraction capabilities
+- GPU acceleration support
+
+#### Docling Parser
+- Optimized for Office documents and HTML files
+- Better document structure preservation
+- Native support for multiple Office formats
 
 ### MinerU Configuration
-
-RAG-Anything now supports multiple parsers:
 
 ```bash
 # MinerU 2.0 uses command-line parameters instead of config files

@@ -104,11 +104,11 @@ async def process_with_rag(
         # Create RAGAnything configuration
         config = RAGAnythingConfig(
             working_dir=working_dir or "./rag_storage",
-            mineru_parse_method="auto",
+            parser=parser,  # Parser selection: mineru or docling
+            parse_method="auto",  # Parse method: auto, ocr, or txt
             enable_image_processing=True,
             enable_table_processing=True,
             enable_equation_processing=True,
-            parser=parser,
         )
 
         # Define LLM model function

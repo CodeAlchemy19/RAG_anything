@@ -20,13 +20,11 @@ class RAGAnythingConfig:
 
     # Parser Configuration
     # ---
-    mineru_parse_method: str = field(
-        default=get_env_value("MINERU_PARSE_METHOD", "auto", str)
-    )
-    """Default parsing method for MinerU: 'auto', 'ocr', or 'txt'."""
+    parse_method: str = field(default=get_env_value("PARSE_METHOD", "auto", str))
+    """Default parsing method for document parsing: 'auto', 'ocr', or 'txt'."""
 
     parser_output_dir: str = field(default=get_env_value("OUTPUT_DIR", "./output", str))
-    """Default output directory for MinerU parsed content."""
+    """Default output directory for parsed content."""
 
     parser: str = field(default=get_env_value("PARSER", "mineru", str))
     """Parser selection: 'mineru' or 'docling'."""
@@ -104,3 +102,46 @@ class RAGAnythingConfig:
 
     content_format: str = field(default=get_env_value("CONTENT_FORMAT", "minerU", str))
     """Default content format for context extraction when processing documents."""
+
+    def __post_init__(self):
+        """Post-initialization setup for backward compatibility"""
+        # Support legacy environment variable names for backward compatibility
+        legacy_parse_method = get_env_value("MINERU_PARSE_METHOD", None, str)
+        if legacy_parse_method and not get_env_value("PARSE_METHOD", None, str):
+            self.parse_method = legacy_parse_method
+            import warnings
+
+            warnings.warn(
+                "MINERU_PARSE_METHOD is deprecated. Use PARSE_METHOD instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+    @property
+    def mineru_parse_method(self) -> str:
+        """
+        Backward compatibility property for old code.
+
+        .. deprecated::
+           Use `parse_method` instead. This property will be removed in a future version.
+        """
+        import warnings
+
+        warnings.warn(
+            "mineru_parse_method is deprecated. Use parse_method instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.parse_method
+
+    @mineru_parse_method.setter
+    def mineru_parse_method(self, value: str):
+        """Setter for backward compatibility"""
+        import warnings
+
+        warnings.warn(
+            "mineru_parse_method is deprecated. Use parse_method instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.parse_method = value
