@@ -88,6 +88,7 @@ async def process_with_rag(
     api_key: str,
     base_url: str = None,
     working_dir: str = None,
+    parser: str = None,
 ):
     """
     Process document with RAGAnything
@@ -107,6 +108,7 @@ async def process_with_rag(
             enable_image_processing=True,
             enable_table_processing=True,
             enable_equation_processing=True,
+            parser=parser,
         )
 
         # Define LLM model function
@@ -258,6 +260,11 @@ def main():
         default=os.getenv("LLM_BINDING_HOST"),
         help="Optional base URL for API",
     )
+    parser.add_argument(
+        "--parser",
+        default=os.getenv("PARSER"),
+        help="Optional base URL for API",
+    )
 
     args = parser.parse_args()
 
@@ -274,7 +281,12 @@ def main():
     # Process with RAG
     asyncio.run(
         process_with_rag(
-            args.file_path, args.output, args.api_key, args.base_url, args.working_dir
+            args.file_path,
+            args.output,
+            args.api_key,
+            args.base_url,
+            args.working_dir,
+            args.parser,
         )
     )
 

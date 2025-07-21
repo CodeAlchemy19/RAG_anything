@@ -101,7 +101,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         # Log configuration info
         self.logger.info("RAGAnything initialized with config:")
         self.logger.info(f"  Working directory: {self.config.working_dir}")
-        self.logger.info(f"  MinerU parse method: {self.config.mineru_parse_method}")
+        self.logger.info(f"  Parser: {self.config.parser}")
         self.logger.info(
             f"  Multimodal processing - Image: {self.config.enable_image_processing}, "
             f"Table: {self.config.enable_table_processing}, "

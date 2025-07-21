@@ -1390,7 +1390,7 @@ class DoclingParser(Parser):
                     f.write(base64.b64decode(base64_str))
                 return {
                     "type": "image",
-                    "img_path": f"images/image_{num}.png",
+                    "img_path": image_path,
                     "image_caption": block.get("caption", ""),
                     "image_footnote": block.get("footnote", ""),
                     "page_idx": int(cnt) / 10,
