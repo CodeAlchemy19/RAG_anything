@@ -1,8 +1,8 @@
 """
-Complete MinerU parsing + multimodal content insertion Pipeline
+Complete document parsing + multimodal content insertion Pipeline
 
 This script integrates:
-1. MinerU document parsing
+1. Document parsing (using configurable parsers)
 2. Pure text content LightRAG insertion
 3. Specialized processing for multimodal content (using different processors)
 """
@@ -72,6 +72,9 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
     context_extractor: Optional[ContextExtractor] = field(default=None, init=False)
     """Context extractor for providing surrounding content to modal processors."""
 
+    parse_cache: Optional[Any] = field(default=None, init=False)
+    """Parse result cache storage using LightRAG KV storage."""
+
     def __post_init__(self):
         """Post-initialization setup following LightRAG pattern"""
         # Initialize configuration if not provided
@@ -102,6 +105,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         self.logger.info("RAGAnything initialized with config:")
         self.logger.info(f"  Working directory: {self.config.working_dir}")
         self.logger.info(f"  Parser: {self.config.parser}")
+        self.logger.info(f"  Parse method: {self.config.parse_method}")
         self.logger.info(
             f"  Multimodal processing - Image: {self.config.enable_image_processing}, "
             f"Table: {self.config.enable_table_processing}, "
@@ -194,7 +198,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         # Check parser installation
         if not self.doc_parser.check_installation():
             raise RuntimeError(
-                "Parser is not properly installed. "
+                f"Parser '{self.config.parser}' is not properly installed. "
                 "Please install it using pip install or uv pip install."
             )
 
@@ -220,29 +224,39 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         await self.lightrag.initialize_storages()
         await initialize_pipeline_status()
 
+        # Initialize parse cache storage using LightRAG's KV storage
+        self.parse_cache = self.lightrag.key_string_value_json_storage_cls(
+            namespace="parse_cache",
+            workspace=self.lightrag.workspace,
+            global_config=self.lightrag.__dict__,
+            embedding_func=self.embedding_func,
+        )
+        await self.parse_cache.initialize()
+
         # Initialize processors after LightRAG is ready
         self._initialize_processors()
 
-        self.logger.info("LightRAG and multimodal processors initialized")
+        self.logger.info("LightRAG, parse cache, and multimodal processors initialized")
 
-    def check_mineru_installation(self) -> bool:
+    def check_parser_installation(self) -> bool:
         """
-        Check if MinerU 2.0 is properly installed
+        Check if the configured parser is properly installed
 
         Returns:
-            bool: True if MinerU 2.0 is properly installed
+            bool: True if the configured parser is properly installed
         """
-        return MineruParser.check_installation(MineruParser())
+        return self.doc_parser.check_installation()
 
     def get_config_info(self) -> Dict[str, Any]:
         """Get current configuration information"""
         return {
             "directory": {
                 "working_dir": self.config.working_dir,
-                "mineru_output_dir": self.config.output_dir,
+                "parser_output_dir": self.config.parser_output_dir,
             },
             "parsing": {
-                "mineru_parse_method": self.config.mineru_parse_method,
+                "parser": self.config.parser,
+                "parse_method": self.config.parse_method,
                 "display_content_stats": self.config.display_content_stats,
             },
             "multimodal_processing": {

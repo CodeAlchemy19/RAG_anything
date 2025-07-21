@@ -293,7 +293,8 @@ async def main():
     # 创建 RAGAnything 配置
     config = RAGAnythingConfig(
         working_dir="./rag_storage",
-        mineru_parse_method="auto",
+        parser="mineru",  # 选择解析器：mineru 或 docling
+        parse_method="auto",  # 解析方法：auto, ocr 或 txt
         enable_image_processing=True,
         enable_table_processing=True,
         enable_equation_processing=True,
@@ -761,11 +762,27 @@ OPENAI_API_KEY=your_openai_api_key
 OPENAI_BASE_URL=your_base_url  # 可选
 OUTPUT_DIR=./output             # 解析文档的默认输出目录
 PARSER=mineru                   # 解析器选择：mineru 或 docling
+PARSE_METHOD=auto              # 解析方法：auto, ocr 或 txt
 ```
 
-### MinerU配置
+**注意：** 为了向后兼容，旧的环境变量名称仍然有效：
+- `MINERU_PARSE_METHOD` 已弃用，请使用 `PARSE_METHOD`
 
-RAG-Anything现在支持多种解析器：
+### 解析器配置
+
+RAGAnything 现在支持多种解析器，每种解析器都有其特定的优势：
+
+#### MinerU 解析器
+- 支持PDF、图像、Office文档等多种格式
+- 强大的OCR和表格提取能力
+- 支持GPU加速
+
+#### Docling 解析器
+- 专门优化Office文档和HTML文件的解析
+- 更好的文档结构保持
+- 原生支持多种Office格式
+
+### MinerU配置
 
 ```bash
 # MinerU 2.0使用命令行参数而不是配置文件

@@ -29,8 +29,8 @@ class BatchMixin:
 
         Args:
             folder_path: Path to the folder to process
-            output_dir: MinerU output directory (defaults to config.mineru_output_dir)
-            parse_method: Parse method (defaults to config.mineru_parse_method)
+            output_dir: Parser output directory (defaults to config.parser_output_dir)
+            parse_method: Parse method (defaults to config.parse_method)
             display_stats: Whether to display content statistics for each file (defaults to False for batch processing)
             split_by_character: Optional character to split text by
             split_by_character_only: If True, split only by the specified character
@@ -43,9 +43,9 @@ class BatchMixin:
 
         # Use config defaults if not provided
         if output_dir is None:
-            output_dir = self.config.mineru_output_dir
+            output_dir = self.config.parser_output_dir
         if parse_method is None:
-            parse_method = self.config.mineru_parse_method
+            parse_method = self.config.parse_method
         if display_stats is None:
             display_stats = False  # Default to False for batch processing
         if recursive is None:

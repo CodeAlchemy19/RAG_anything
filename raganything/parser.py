@@ -626,7 +626,7 @@ class MineruParser(Parser):
             result = subprocess.run(cmd, **subprocess_kwargs)
             logging.info("MinerU command executed successfully")
             if result.stdout:
-                logging.debug(f"Output: {result.stdout}")
+                logging.debug(f"MinerU output: {result.stdout}")
         except subprocess.CalledProcessError as e:
             logging.error(f"Error running mineru command: {e}")
             if e.stderr:
