@@ -82,67 +82,6 @@ class Parser:
 
             base_output_dir.mkdir(parents=True, exist_ok=True)
 
-            # Check if LibreOffice is available
-            libreoffice_available = False
-            working_libreoffice_cmd = None
-            try:
-                # Prepare subprocess parameters to hide console window on Windows
-                import platform
-
-                subprocess_kwargs = {
-                    "capture_output": True,
-                    "check": True,
-                    "timeout": 10,
-                    "encoding": "utf-8",
-                    "errors": "ignore",
-                }
-
-                # Hide console window on Windows
-                if platform.system() == "Windows":
-                    subprocess_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-
-                result = subprocess.run(
-                    ["libreoffice", "--version"], **subprocess_kwargs
-                )
-                libreoffice_available = True
-                working_libreoffice_cmd = "libreoffice"
-                logging.info(f"LibreOffice detected: {result.stdout.strip()}")
-            except (
-                subprocess.CalledProcessError,
-                FileNotFoundError,
-                subprocess.TimeoutExpired,
-            ):
-                pass
-
-            # Try alternative commands for LibreOffice
-            if not libreoffice_available:
-                for cmd in ["soffice", "libreoffice"]:
-                    try:
-                        result = subprocess.run([cmd, "--version"], **subprocess_kwargs)
-                        libreoffice_available = True
-                        working_libreoffice_cmd = cmd
-                        logging.info(
-                            f"LibreOffice detected with command '{cmd}': {result.stdout.strip()}"
-                        )
-                        break
-                    except (
-                        subprocess.CalledProcessError,
-                        FileNotFoundError,
-                        subprocess.TimeoutExpired,
-                    ):
-                        continue
-
-            if not libreoffice_available:
-                raise RuntimeError(
-                    "LibreOffice is required for Office document conversion but was not found.\n"
-                    "Please install LibreOffice:\n"
-                    "- Windows: Download from https://www.libreoffice.org/download/download/\n"
-                    "- macOS: brew install --cask libreoffice\n"
-                    "- Ubuntu/Debian: sudo apt-get install libreoffice\n"
-                    "- CentOS/RHEL: sudo yum install libreoffice\n"
-                    "Alternatively, convert the document to PDF manually."
-                )
-
             # Create temporary directory for PDF conversion
             with tempfile.TemporaryDirectory() as temp_dir:
                 temp_path = Path(temp_dir)
@@ -150,12 +89,11 @@ class Parser:
                 # Convert to PDF using LibreOffice
                 logging.info(f"Converting {doc_path.name} to PDF using LibreOffice...")
 
-                # Use the working LibreOffice command first, then try alternatives if it fails
-                commands_to_try = [working_libreoffice_cmd]
-                if working_libreoffice_cmd == "libreoffice":
-                    commands_to_try.append("soffice")
-                else:
-                    commands_to_try.append("libreoffice")
+                # Prepare subprocess parameters to hide console window on Windows
+                import platform
+
+                # Try LibreOffice commands in order of preference
+                commands_to_try = ["libreoffice", "soffice"]
 
                 conversion_successful = False
                 for cmd in commands_to_try:
@@ -192,13 +130,15 @@ class Parser:
                         if result.returncode == 0:
                             conversion_successful = True
                             logging.info(
-                                f"Successfully converted {doc_path.name} to PDF"
+                                f"Successfully converted {doc_path.name} to PDF using {cmd}"
                             )
                             break
                         else:
                             logging.warning(
                                 f"LibreOffice command '{cmd}' failed: {result.stderr}"
                             )
+                    except FileNotFoundError:
+                        logging.warning(f"LibreOffice command '{cmd}' not found")
                     except subprocess.TimeoutExpired:
                         logging.warning(f"LibreOffice command '{cmd}' timed out")
                     except Exception as e:
@@ -209,7 +149,12 @@ class Parser:
                 if not conversion_successful:
                     raise RuntimeError(
                         f"LibreOffice conversion failed for {doc_path.name}. "
-                        f"Please check if the file is corrupted or try converting manually."
+                        f"Please ensure LibreOffice is installed:\n"
+                        "- Windows: Download from https://www.libreoffice.org/download/download/\n"
+                        "- macOS: brew install --cask libreoffice\n"
+                        "- Ubuntu/Debian: sudo apt-get install libreoffice\n"
+                        "- CentOS/RHEL: sudo yum install libreoffice\n"
+                        "Alternatively, convert the document to PDF manually."
                     )
 
                 # Find the generated PDF
@@ -1178,6 +1123,7 @@ class DoclingParser(Parser):
             self._run_docling_command(
                 input_path=pdf_path,
                 output_dir=base_output_dir,
+                file_stem=name_without_suff,
                 **kwargs,
             )
 
@@ -1238,6 +1184,7 @@ class DoclingParser(Parser):
         self,
         input_path: Union[str, Path],
         output_dir: Union[str, Path],
+        file_stem: str,
         **kwargs,
     ) -> None:
         """
@@ -1246,19 +1193,29 @@ class DoclingParser(Parser):
         Args:
             input_path: Path to input file or directory
             output_dir: Output directory path
-            method: Parsing method
-            lang: Document language for optimization
+            file_stem: File stem for creating subdirectory
             **kwargs: Additional parameters for docling command
         """
+        # Create subdirectory structure similar to MinerU
+        file_output_dir = Path(output_dir) / file_stem / "docling"
+        file_output_dir.mkdir(parents=True, exist_ok=True)
+
         cmd_json = [
             "docling",
             "--output",
-            str(output_dir),
+            str(file_output_dir),
             "--to",
             "json",
             str(input_path),
         ]
-        cmd_md = ["docling", "--output", str(output_dir), "--to", "md", str(input_path)]
+        cmd_md = [
+            "docling",
+            "--output",
+            str(file_output_dir),
+            "--to",
+            "md",
+            str(input_path),
+        ]
 
         try:
             # Prepare subprocess parameters to hide console window on Windows
@@ -1308,8 +1265,10 @@ class DoclingParser(Parser):
         Returns:
             Tuple containing (content list JSON, Markdown text)
         """
-        md_file = output_dir / f"{file_stem}.md"
-        json_file = output_dir / f"{file_stem}.json"
+        # Use subdirectory structure similar to MinerU
+        file_subdir = output_dir / file_stem / "docling"
+        md_file = file_subdir / f"{file_stem}.md"
+        json_file = file_subdir / f"{file_stem}.json"
 
         # Read markdown content
         md_content = ""
@@ -1337,7 +1296,7 @@ class DoclingParser(Parser):
                         block = docling_content[type][int(num)]
                         if type != "groups":
                             content_list.append(
-                                self.read_from_block(block, type, num, output_dir, cnt)
+                                self.read_from_block(block, type, num, file_subdir, cnt)
                             )
                         else:
                             members = block["children"]
@@ -1353,7 +1312,7 @@ class DoclingParser(Parser):
                                         member_block,
                                         member_type,
                                         member_num,
-                                        output_dir,
+                                        file_subdir,
                                         cnt,
                                     )
                                 )
@@ -1383,6 +1342,7 @@ class DoclingParser(Parser):
             try:
                 base64_uri = block["image"]["uri"]
                 base64_str = base64_uri.split(",")[1]
+                # Create images directory within the docling subdirectory
                 image_dir = output_dir / "images"
                 image_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
                 image_path = image_dir / f"image_{num}.png"
@@ -1390,7 +1350,7 @@ class DoclingParser(Parser):
                     f.write(base64.b64decode(base64_str))
                 return {
                     "type": "image",
-                    "img_path": image_path,
+                    "img_path": str(image_path.resolve()),  # Convert to absolute path
                     "image_caption": block.get("caption", ""),
                     "image_footnote": block.get("footnote", ""),
                     "page_idx": int(cnt) / 10,
@@ -1464,6 +1424,7 @@ class DoclingParser(Parser):
             self._run_docling_command(
                 input_path=doc_path,
                 output_dir=base_output_dir,
+                file_stem=name_without_suff,
                 **kwargs,
             )
 
@@ -1521,6 +1482,7 @@ class DoclingParser(Parser):
             self._run_docling_command(
                 input_path=html_path,
                 output_dir=base_output_dir,
+                file_stem=name_without_suff,
                 **kwargs,
             )
 

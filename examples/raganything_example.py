@@ -262,7 +262,7 @@ def main():
     )
     parser.add_argument(
         "--parser",
-        default=os.getenv("PARSER"),
+        default=os.getenv("PARSER", "mineru"),
         help="Optional base URL for API",
     )
 
