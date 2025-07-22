@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 from raganything import RAGAnything
@@ -45,7 +46,7 @@ def check_libreoffice_installation():
     return False
 
 
-def test_office_document_parsing(file_path: str):
+async def test_office_document_parsing(file_path: str):
     """Test Office document parsing with MinerU"""
 
     print(f"🧪 Testing Office document parsing: {file_path}")
@@ -71,7 +72,7 @@ def test_office_document_parsing(file_path: str):
     try:
         # Test document parsing with MinerU
         print("\n🔄 Testing document parsing with MinerU...")
-        content_list, md_content = rag.parse_document(
+        content_list, md_content = await rag.parse_document(
             file_path=str(file_path),
             output_dir="./test_output",
             parse_method="auto",
@@ -157,9 +158,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Test Office document parsing with MinerU"
     )
-    parser.add_argument(
-        "--file", required=True, help="Path to the Office document to test"
-    )
+    parser.add_argument("--file", help="Path to the Office document to test")
     parser.add_argument(
         "--check-libreoffice",
         action="store_true",
@@ -177,9 +176,17 @@ def main():
         print("✅ LibreOffice installation check passed!")
         return 0
 
+    # If not just checking dependencies, file argument is required
+    if not args.file:
+        print(
+            "❌ Error: --file argument is required when not using --check-libreoffice"
+        )
+        parser.print_help()
+        return 1
+
     # Run the parsing test
     try:
-        success = test_office_document_parsing(args.file)
+        success = asyncio.run(test_office_document_parsing(args.file))
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⏹️ Test interrupted by user")

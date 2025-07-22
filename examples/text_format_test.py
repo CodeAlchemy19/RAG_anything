@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 from raganything import RAGAnything
@@ -34,7 +35,7 @@ def check_reportlab_installation():
         return False
 
 
-def test_text_format_parsing(file_path: str):
+async def test_text_format_parsing(file_path: str):
     """Test text format parsing with MinerU"""
 
     print(f"🧪 Testing text format parsing: {file_path}")
@@ -71,7 +72,7 @@ def test_text_format_parsing(file_path: str):
     try:
         # Test text parsing with MinerU
         print("\n🔄 Testing text parsing with MinerU...")
-        content_list, md_content = rag.parse_document(
+        content_list, md_content = await rag.parse_document(
             file_path=str(file_path),
             output_dir="./test_output",
             parse_method="auto",
@@ -157,7 +158,7 @@ def test_text_format_parsing(file_path: str):
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(description="Test text format parsing with MinerU")
-    parser.add_argument("--file", required=True, help="Path to the text file to test")
+    parser.add_argument("--file", help="Path to the text file to test")
     parser.add_argument(
         "--check-reportlab",
         action="store_true",
@@ -175,9 +176,15 @@ def main():
         print("✅ ReportLab installation check passed!")
         return 0
 
+    # If not just checking dependencies, file argument is required
+    if not args.file:
+        print("❌ Error: --file argument is required when not using --check-reportlab")
+        parser.print_help()
+        return 1
+
     # Run the parsing test
     try:
-        success = test_text_format_parsing(args.file)
+        success = asyncio.run(test_text_format_parsing(args.file))
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⏹️ Test interrupted by user")

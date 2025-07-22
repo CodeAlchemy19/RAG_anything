@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 from raganything import RAGAnything
@@ -51,7 +52,7 @@ def get_image_info(image_path: Path):
         return {"error": str(e)}
 
 
-def test_image_format_parsing(file_path: str):
+async def test_image_format_parsing(file_path: str):
     """Test image format parsing with MinerU"""
 
     print(f"🧪 Testing image format parsing: {file_path}")
@@ -106,7 +107,7 @@ def test_image_format_parsing(file_path: str):
     try:
         # Test image parsing with MinerU
         print("\n🔄 Testing image parsing with MinerU...")
-        content_list, md_content = rag.parse_document(
+        content_list, md_content = await rag.parse_document(
             file_path=str(file_path),
             output_dir="./test_output",
             parse_method="ocr",  # Images use OCR method
@@ -196,7 +197,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Test image format parsing with MinerU"
     )
-    parser.add_argument("--file", required=True, help="Path to the image file to test")
+    parser.add_argument("--file", help="Path to the image file to test")
     parser.add_argument(
         "--check-pillow", action="store_true", help="Only check PIL/Pillow installation"
     )
@@ -212,9 +213,15 @@ def main():
         print("✅ PIL/Pillow installation check passed!")
         return 0
 
+    # If not just checking dependencies, file argument is required
+    if not args.file:
+        print("❌ Error: --file argument is required when not using --check-pillow")
+        parser.print_help()
+        return 1
+
     # Run the parsing test
     try:
-        success = test_image_format_parsing(args.file)
+        success = asyncio.run(test_image_format_parsing(args.file))
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⏹️ Test interrupted by user")
