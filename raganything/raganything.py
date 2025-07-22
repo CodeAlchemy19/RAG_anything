@@ -64,6 +64,21 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
     config: Optional[RAGAnythingConfig] = field(default=None)
     """Configuration object, if None will create with environment variables."""
 
+    # LightRAG Configuration
+    # ---
+    lightrag_kwargs: Dict[str, Any] = field(default_factory=dict)
+    """Additional keyword arguments for LightRAG initialization when lightrag is not provided.
+    This allows passing all LightRAG configuration parameters like:
+    - kv_storage, vector_storage, graph_storage, doc_status_storage
+    - top_k, chunk_top_k, max_entity_tokens, max_relation_tokens, max_total_tokens
+    - cosine_threshold, related_chunk_number
+    - chunk_token_size, chunk_overlap_token_size, tokenizer, tiktoken_model_name
+    - embedding_batch_num, embedding_func_max_async, embedding_cache_config
+    - llm_model_name, llm_model_max_token_size, llm_model_max_async, llm_model_kwargs
+    - rerank_model_func, vector_db_storage_cls_kwargs, enable_llm_cache
+    - max_parallel_insert, max_graph_nodes, addon_params, etc.
+    """
+
     # Internal State
     # ---
     modal_processors: Dict[str, Any] = field(default_factory=dict, init=False)
@@ -214,12 +229,27 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
 
         from lightrag.kg.shared_storage import initialize_pipeline_status
 
-        # Create LightRAG instance with provided functions
-        self.lightrag = LightRAG(
-            working_dir=self.working_dir,
-            llm_model_func=self.llm_model_func,
-            embedding_func=self.embedding_func,
-        )
+        # Prepare LightRAG initialization parameters
+        lightrag_params = {
+            "working_dir": self.working_dir,
+            "llm_model_func": self.llm_model_func,
+            "embedding_func": self.embedding_func,
+        }
+
+        # Merge user-provided lightrag_kwargs, which can override defaults
+        lightrag_params.update(self.lightrag_kwargs)
+
+        # Log the parameters being used for initialization (excluding sensitive data)
+        log_params = {
+            k: v
+            for k, v in lightrag_params.items()
+            if not callable(v)
+            and k not in ["llm_model_kwargs", "vector_db_storage_cls_kwargs"]
+        }
+        self.logger.info(f"Initializing LightRAG with parameters: {log_params}")
+
+        # Create LightRAG instance with merged parameters
+        self.lightrag = LightRAG(**lightrag_params)
 
         await self.lightrag.initialize_storages()
         await initialize_pipeline_status()
@@ -249,7 +279,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
 
     def get_config_info(self) -> Dict[str, Any]:
         """Get current configuration information"""
-        return {
+        config_info = {
             "directory": {
                 "working_dir": self.config.working_dir,
                 "parser_output_dir": self.config.parser_output_dir,
@@ -281,6 +311,27 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                 "note": "Logging fields have been removed - configure logging externally",
             },
         }
+
+        # Add LightRAG configuration if available
+        if self.lightrag_kwargs:
+            # Filter out sensitive data and callable objects for display
+            safe_kwargs = {
+                k: v
+                for k, v in self.lightrag_kwargs.items()
+                if not callable(v)
+                and k not in ["llm_model_kwargs", "vector_db_storage_cls_kwargs"]
+            }
+            config_info["lightrag_config"] = {
+                "custom_parameters": safe_kwargs,
+                "note": "LightRAG will be initialized with these additional parameters",
+            }
+        else:
+            config_info["lightrag_config"] = {
+                "custom_parameters": {},
+                "note": "Using default LightRAG parameters",
+            }
+
+        return config_info
 
     def set_content_source_for_context(
         self, content_source, content_format: str = "auto"
