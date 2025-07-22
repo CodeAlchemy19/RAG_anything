@@ -80,8 +80,8 @@ class QueryMixin:
                 "top_k",
                 "max_tokens",
                 "temperature",
-                "only_need_context",
-                "only_need_prompt",
+                # "only_need_context",
+                # "only_need_prompt",
             ]
         }
         cache_data.update(relevant_kwargs)
