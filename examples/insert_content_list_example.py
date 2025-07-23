@@ -35,7 +35,9 @@ def configure_logging():
     """Configure logging for the application"""
     # Get log directory path from environment variable or use current directory
     log_dir = os.getenv("LOG_DIR", os.getcwd())
-    log_file_path = os.path.abspath(os.path.join(log_dir, "insert_content_list_example.log"))
+    log_file_path = os.path.abspath(
+        os.path.join(log_dir, "insert_content_list_example.log")
+    )
 
     print(f"\nInsert Content List example log file: {log_file_path}\n")
     os.makedirs(os.path.dirname(log_dir), exist_ok=True)
@@ -90,10 +92,10 @@ def configure_logging():
 def create_sample_content_list():
     """
     Create a simple content list for testing insert_content_list functionality
-    
+
     Returns:
         List[Dict]: Sample content list with various content types
-        
+
     Note:
         - img_path should be absolute path to the image file
         - page_idx represents the page number where the content appears (0-based)
@@ -103,18 +105,18 @@ def create_sample_content_list():
         {
             "type": "text",
             "text": "Welcome to the RAGAnything System Documentation. This guide covers the advanced multimodal document processing capabilities and features of our comprehensive RAG system.",
-            "page_idx": 0  # Page number where this content appears
+            "page_idx": 0,  # Page number where this content appears
         },
-        
         # System architecture image
         {
             "type": "image",
             "img_path": "/absolute/path/to/system_architecture.jpg",  # IMPORTANT: Use absolute path to image file
             "img_caption": ["Figure 1: RAGAnything System Architecture"],
-            "img_footnote": ["The architecture shows the complete pipeline from document parsing to multimodal query processing"],
-            "page_idx": 1  # Page number where this image appears
+            "img_footnote": [
+                "The architecture shows the complete pipeline from document parsing to multimodal query processing"
+            ],
+            "page_idx": 1,  # Page number where this image appears
         },
-        
         # Performance comparison table
         {
             "type": "table",
@@ -124,26 +126,27 @@ def create_sample_content_list():
                             | Traditional RAG | 87.3% | 180ms | 3.2GB |
                             | Baseline System | 82.1% | 220ms | 4.1GB |
                             | Simple Retrieval | 76.5% | 95ms | 1.8GB |""",
-            "table_caption": ["Table 1: Performance Comparison of Different RAG Systems"],
-            "table_footnote": ["All tests conducted on the same hardware with identical test datasets"],
-            "page_idx": 2  # Page number where this table appears
+            "table_caption": [
+                "Table 1: Performance Comparison of Different RAG Systems"
+            ],
+            "table_footnote": [
+                "All tests conducted on the same hardware with identical test datasets"
+            ],
+            "page_idx": 2,  # Page number where this table appears
         },
-        
         # Mathematical formula
         {
             "type": "equation",
             "latex": "Relevance(d, q) = \\sum_{i=1}^{n} w_i \\cdot sim(t_i^d, t_i^q) \\cdot \\alpha_i",
             "text": "Document relevance scoring formula where w_i are term weights, sim() is similarity function, and α_i are modality importance factors",
-            "page_idx": 3  # Page number where this equation appears
+            "page_idx": 3,  # Page number where this equation appears
         },
-        
         # Feature description
         {
             "type": "text",
             "text": "The system supports multiple content modalities including text, images, tables, and mathematical equations. Each modality is processed using specialized processors optimized for that content type.",
-            "page_idx": 4  # Page number where this content appears
+            "page_idx": 4,  # Page number where this content appears
         },
-        
         # Technical specifications table
         {
             "type": "table",
@@ -155,18 +158,19 @@ def create_sample_content_list():
                             | Query Response Time | <200ms average |
                             | Knowledge Graph Nodes | Up to 1M entities |""",
             "table_caption": ["Table 2: Technical Specifications"],
-            "table_footnote": ["Specifications may vary based on hardware configuration"],
-            "page_idx": 5  # Page number where this table appears
+            "table_footnote": [
+                "Specifications may vary based on hardware configuration"
+            ],
+            "page_idx": 5,  # Page number where this table appears
         },
-        
         # Conclusion
         {
             "type": "text",
             "text": "RAGAnything represents a significant advancement in multimodal document processing, providing comprehensive solutions for complex knowledge extraction and retrieval tasks.",
-            "page_idx": 6  # Page number where this content appears
-        }
+            "page_idx": 6,  # Page number where this content appears
+        },
     ]
-    
+
     return content_list
 
 
@@ -271,10 +275,10 @@ async def demo_insert_content_list(
         await rag.insert_content_list(
             content_list=content_list,
             file_path="raganything_documentation.pdf",  # Reference file name for citation
-            split_by_character=None,                    # Optional text splitting
-            split_by_character_only=False,              # Optional text splitting mode
-            doc_id="demo-doc-001",                      # Custom document ID
-            display_stats=True                          # Show content statistics
+            split_by_character=None,  # Optional text splitting
+            split_by_character_only=False,  # Optional text splitting mode
+            doc_id="demo-doc-001",  # Custom document ID
+            display_stats=True,  # Show content statistics
         )
         logger.info("Content list insertion completed!")
 
@@ -333,7 +337,7 @@ async def demo_insert_content_list(
             {
                 "type": "text",
                 "text": "This is additional documentation about advanced features and configuration options.",
-                "page_idx": 0  # Page number where this content appears
+                "page_idx": 0,  # Page number where this content appears
             },
             {
                 "type": "table",
@@ -343,24 +347,28 @@ async def demo_insert_content_list(
                                     | Context Window | 4096 tokens | 1024-8192 |
                                     | Batch Size | 32 | 1-128 |""",
                 "table_caption": ["Advanced Configuration Parameters"],
-                "page_idx": 1  # Page number where this table appears
-            }
+                "page_idx": 1,  # Page number where this table appears
+            },
         ]
 
         await rag.insert_content_list(
             content_list=additional_content,
             file_path="advanced_configuration.pdf",
-            doc_id="demo-doc-002"  # Different document ID
+            doc_id="demo-doc-002",  # Different document ID
         )
 
         # Query combined knowledge base
-        logger.info(f"\n[Combined Query]: What configuration options are available?")
-        combined_result = await rag.aquery("What configuration options are available and what are their default values?", mode="hybrid")
+        logger.info("\n[Combined Query]: What configuration options are available?")
+        combined_result = await rag.aquery(
+            "What configuration options are available and what are their default values?",
+            mode="hybrid",
+        )
         logger.info(f"Answer: {combined_result}")
 
     except Exception as e:
         logger.error(f"Error in content list insertion demo: {str(e)}")
         import traceback
+
         logger.error(traceback.format_exc())
 
 
@@ -408,4 +416,4 @@ if __name__ == "__main__":
     print("Demonstrating direct content list insertion without document parsing")
     print("=" * 45)
 
-    main() 
+    main()
