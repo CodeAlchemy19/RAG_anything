@@ -79,6 +79,7 @@ Users can query documents containing **interleaved text**, **visual diagrams**, 
 - **🧠 Specialized Content Analysis** - Dedicated processors for images, tables, mathematical equations, and heterogeneous content types
 - **🔗 Multimodal Knowledge Graph** - Automatic entity extraction and cross-modal relationship discovery for enhanced understanding
 - **⚡ Adaptive Processing Modes** - Flexible MinerU-based parsing or direct multimodal content injection workflows
+- **📋 Direct Content List Insertion** - Bypass document parsing by directly inserting pre-parsed content lists from external sources
 - **🎯 Hybrid Intelligent Retrieval** - Advanced search capabilities spanning textual and multimodal content with contextual understanding
 
 </div>
@@ -701,6 +702,181 @@ async def load_existing_lightrag():
 if __name__ == "__main__":
     asyncio.run(load_existing_lightrag())
 ```
+
+#### 7. Direct Content List Insertion
+
+For scenarios where you already have a pre-parsed content list (e.g., from external parsers or previous processing), you can directly insert it into RAGAnything without document parsing:
+
+```python
+import asyncio
+from raganything import RAGAnything, RAGAnythingConfig
+from lightrag.llm.openai import openai_complete_if_cache, openai_embed
+from lightrag.utils import EmbeddingFunc
+
+async def insert_content_list_example():
+    # Set up API configuration
+    api_key = "your-api-key"
+    base_url = "your-base-url"  # Optional
+
+    # Create RAGAnything configuration
+    config = RAGAnythingConfig(
+        working_dir="./rag_storage",
+        enable_image_processing=True,
+        enable_table_processing=True,
+        enable_equation_processing=True,
+    )
+
+    # Define model functions
+    def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs):
+        return openai_complete_if_cache(
+            "gpt-4o-mini",
+            prompt,
+            system_prompt=system_prompt,
+            history_messages=history_messages,
+            api_key=api_key,
+            base_url=base_url,
+            **kwargs,
+        )
+
+    def vision_model_func(prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs):
+        if image_data:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=[
+                    {"role": "system", "content": system_prompt} if system_prompt else None,
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
+                        ],
+                    } if image_data else {"role": "user", "content": prompt},
+                ],
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        else:
+            return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
+
+    embedding_func = EmbeddingFunc(
+        embedding_dim=3072,
+        max_token_size=8192,
+        func=lambda texts: openai_embed(
+            texts,
+            model="text-embedding-3-large",
+            api_key=api_key,
+            base_url=base_url,
+        ),
+    )
+
+    # Initialize RAGAnything
+    rag = RAGAnything(
+        config=config,
+        llm_model_func=llm_model_func,
+        vision_model_func=vision_model_func,
+        embedding_func=embedding_func,
+    )
+
+    # Example: Pre-parsed content list from external source
+    content_list = [
+        {
+            "type": "text",
+            "text": "This is the introduction section of our research paper.",
+            "page_idx": 0  # Page number where this content appears
+        },
+        {
+            "type": "image",
+            "img_path": "/absolute/path/to/figure1.jpg",  # IMPORTANT: Use absolute path
+            "img_caption": ["Figure 1: System Architecture"],
+            "img_footnote": ["Source: Authors' original design"],
+            "page_idx": 1  # Page number where this image appears
+        },
+        {
+            "type": "table",
+            "table_body": "| Method | Accuracy | F1-Score |\n|--------|----------|----------|\n| Ours | 95.2% | 0.94 |\n| Baseline | 87.3% | 0.85 |",
+            "table_caption": ["Table 1: Performance Comparison"],
+            "table_footnote": ["Results on test dataset"],
+            "page_idx": 2  # Page number where this table appears
+        },
+        {
+            "type": "equation",
+            "latex": "P(d|q) = \\frac{P(q|d) \\cdot P(d)}{P(q)}",
+            "text": "Document relevance probability formula",
+            "page_idx": 3  # Page number where this equation appears
+        },
+        {
+            "type": "text",
+            "text": "In conclusion, our method demonstrates superior performance across all metrics.",
+            "page_idx": 4  # Page number where this content appears
+        }
+    ]
+
+    # Insert the content list directly
+    await rag.insert_content_list(
+        content_list=content_list,
+        file_path="research_paper.pdf",  # Reference file name for citation
+        split_by_character=None,         # Optional text splitting
+        split_by_character_only=False,   # Optional text splitting mode
+        doc_id=None,                     # Optional custom document ID (will be auto-generated if not provided)
+        display_stats=True               # Show content statistics
+    )
+
+    # Query the inserted content
+    result = await rag.aquery(
+        "What are the key findings and performance metrics mentioned in the research?",
+        mode="hybrid"
+    )
+    print("Query result:", result)
+
+    # You can also insert multiple content lists with different document IDs
+    another_content_list = [
+        {
+            "type": "text",
+            "text": "This is content from another document.",
+            "page_idx": 0  # Page number where this content appears
+        },
+        {
+            "type": "table",
+            "table_body": "| Feature | Value |\n|---------|-------|\n| Speed | Fast |\n| Accuracy | High |",
+            "table_caption": ["Feature Comparison"],
+            "page_idx": 1  # Page number where this table appears
+        }
+    ]
+
+    await rag.insert_content_list(
+        content_list=another_content_list,
+        file_path="another_document.pdf",
+        doc_id="custom-doc-id-123"  # Custom document ID
+    )
+
+if __name__ == "__main__":
+    asyncio.run(insert_content_list_example())
+```
+
+**Content List Format:**
+
+The `content_list` should follow the standard format with each item being a dictionary containing:
+
+- **Text content**: `{"type": "text", "text": "content text", "page_idx": 0}`
+- **Image content**: `{"type": "image", "img_path": "/absolute/path/to/image.jpg", "img_caption": ["caption"], "img_footnote": ["note"], "page_idx": 1}`
+- **Table content**: `{"type": "table", "table_body": "markdown table", "table_caption": ["caption"], "table_footnote": ["note"], "page_idx": 2}`
+- **Equation content**: `{"type": "equation", "latex": "LaTeX formula", "text": "description", "page_idx": 3}`
+- **Generic content**: `{"type": "custom_type", "content": "any content", "page_idx": 4}`
+
+**Important Notes:**
+- **`img_path`**: Must be an absolute path to the image file (e.g., `/home/user/images/chart.jpg` or `C:\Users\user\images\chart.jpg`)
+- **`page_idx`**: Represents the page number where the content appears in the original document (0-based indexing)
+- **Content ordering**: Items are processed in the order they appear in the list
+
+This method is particularly useful when:
+- You have content from external parsers (non-MinerU/Docling)
+- You want to process programmatically generated content
+- You need to insert content from multiple sources into a single knowledge base
+- You have cached parsing results that you want to reuse
 
 ---
 

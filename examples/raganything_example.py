@@ -25,6 +25,10 @@ from lightrag.llm.openai import openai_complete_if_cache, openai_embed
 from lightrag.utils import EmbeddingFunc, logger, set_verbose_debug
 from raganything import RAGAnything, RAGAnythingConfig
 
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=".env", override=False)
+
 
 def configure_logging():
     """Configure logging for the application"""
