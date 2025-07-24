@@ -1347,7 +1347,7 @@ class ProcessorMixin:
             # This ensures the document status properly reflects completion of all processing
             await self._mark_multimodal_processing_complete(doc_id)
             self.logger.debug(
-                f"No multimodal content found in document {doc_id}..., marked multimodal processing as complete"
+                f"No multimodal content found in document {doc_id}, marked multimodal processing as complete"
             )
 
         self.logger.info(f"Document {file_path} processing complete!")
@@ -1450,7 +1450,7 @@ class ProcessorMixin:
             # This ensures the document status properly reflects completion of all processing
             await self._mark_multimodal_processing_complete(doc_id)
             self.logger.debug(
-                f"No multimodal content found in document {doc_id}..., marked multimodal processing as complete"
+                f"No multimodal content found in document {doc_id}, marked multimodal processing as complete"
             )
 
         self.logger.info(f"Content list insertion complete for: {file_path}")
