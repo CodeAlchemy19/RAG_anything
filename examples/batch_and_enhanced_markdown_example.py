@@ -26,10 +26,8 @@ from raganything.enhanced_markdown import EnhancedMarkdownConverter, MarkdownCon
 def create_sample_markdown_files():
     """Create sample markdown files for testing"""
     sample_files = []
-
     # Create temporary directory
     temp_dir = Path(tempfile.mkdtemp())
-
     # Sample 1: Basic markdown
     sample1_content = """# Sample Document 1
 
@@ -207,7 +205,6 @@ def demonstrate_enhanced_markdown():
 
         for i, markdown_file in enumerate(sample_files, 1):
             print(f"\nConverting sample {i}...")
-
             # Try different conversion methods
             for method in ["auto", "weasyprint", "pandoc"]:
                 try:
@@ -315,7 +312,6 @@ def main():
     print("\n" + "=" * 60)
     print("DEMONSTRATION SUMMARY")
     print("=" * 60)
-
     if batch_result:
         print(f"Batch Processing: {batch_result.success_rate:.1f}% success rate")
     else:
@@ -336,3 +332,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -722,3 +722,131 @@ class ProcessorMixin:
                 )
 
         self.logger.info(f"Document {file_path} processing complete!")
+
+    async def insert_content_list(
+        self,
+        content_list: List[Dict[str, Any]],
+        file_path: str = "unknown_document",
+        split_by_character: str | None = None,
+        split_by_character_only: bool = False,
+        doc_id: str | None = None,
+        display_stats: bool = None,
+    ):
+        """
+        Insert content list directly without document parsing
+
+        Args:
+            content_list: Pre-parsed content list containing text and multimodal items.
+                         Each item should be a dictionary with the following structure:
+                         - Text: {"type": "text", "text": "content", "page_idx": 0}
+                         - Image: {"type": "image", "img_path": "/absolute/path/to/image.jpg",
+                                  "img_caption": ["caption"], "img_footnote": ["note"], "page_idx": 1}
+                         - Table: {"type": "table", "table_body": "markdown table",
+                                  "table_caption": ["caption"], "table_footnote": ["note"], "page_idx": 2}
+                         - Equation: {"type": "equation", "latex": "LaTeX formula",
+                                     "text": "description", "page_idx": 3}
+                         - Generic: {"type": "custom_type", "content": "any content", "page_idx": 4}
+            file_path: Reference file path/name for citation (defaults to "unknown_document")
+            split_by_character: Optional character to split the text by
+            split_by_character_only: If True, split only by the specified character
+            doc_id: Optional document ID, if not provided will be generated from content
+            display_stats: Whether to display content statistics (defaults to config.display_content_stats)
+
+        Note:
+            - img_path must be an absolute path to the image file
+            - page_idx represents the page number where the content appears (0-based indexing)
+            - Items are processed in the order they appear in the list
+        """
+        # Ensure LightRAG is initialized
+        await self._ensure_lightrag_initialized()
+
+        # Use config defaults if not provided
+        if display_stats is None:
+            display_stats = self.config.display_content_stats
+
+        self.logger.info(
+            f"Starting direct content list insertion for: {file_path} ({len(content_list)} items)"
+        )
+
+        # Generate doc_id based on content if not provided
+        if doc_id is None:
+            doc_id = self._generate_content_based_doc_id(content_list)
+
+        # Display content statistics if requested
+        if display_stats:
+            self.logger.info("\nContent Information:")
+            self.logger.info(f"* Total blocks in content_list: {len(content_list)}")
+
+            # Count elements by type
+            block_types: Dict[str, int] = {}
+            for block in content_list:
+                if isinstance(block, dict):
+                    block_type = block.get("type", "unknown")
+                    if isinstance(block_type, str):
+                        block_types[block_type] = block_types.get(block_type, 0) + 1
+
+            self.logger.info("* Content block types:")
+            for block_type, count in block_types.items():
+                self.logger.info(f"  - {block_type}: {count}")
+
+        # Step 1: Separate text and multimodal content
+        text_content, multimodal_items = separate_content(content_list)
+
+        # Step 1.5: Set content source for context extraction in multimodal processing
+        if hasattr(self, "set_content_source_for_context") and multimodal_items:
+            self.logger.info(
+                "Setting content source for context-aware multimodal processing..."
+            )
+            self.set_content_source_for_context(
+                content_list, self.config.content_format
+            )
+
+        # Step 2: Insert pure text content with all parameters
+        if text_content.strip():
+            file_name = os.path.basename(file_path)
+            await insert_text_content(
+                self.lightrag,
+                text_content,
+                file_paths=file_name,
+                split_by_character=split_by_character,
+                split_by_character_only=split_by_character_only,
+                ids=doc_id,
+            )
+
+        # Step 3: Process multimodal content (using specialized processors)
+        if multimodal_items:
+            await self._process_multimodal_content(multimodal_items, file_path, doc_id)
+        else:
+            # If no multimodal content, mark as processed to avoid future checks
+            try:
+                existing_doc_status = await self.lightrag.doc_status.get_by_id(doc_id)
+                if existing_doc_status and not existing_doc_status.get(
+                    "multimodal_processed", False
+                ):
+                    existing_multimodal_chunks = existing_doc_status.get(
+                        "multimodal_chunks_list", []
+                    )
+
+                    await self.lightrag.doc_status.upsert(
+                        {
+                            doc_id: {
+                                **existing_doc_status,
+                                "multimodal_chunks_list": existing_multimodal_chunks,
+                                "multimodal_chunks_count": len(
+                                    existing_multimodal_chunks
+                                ),
+                                "multimodal_processed": True,
+                                "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                            }
+                        }
+                    )
+                    await self.lightrag.doc_status.index_done_callback()
+                    self.logger.debug(
+                        f"Marked document {doc_id[:8]}... as having no multimodal content"
+                    )
+            except Exception as e:
+                self.logger.debug(
+                    f"Error updating doc_status for no multimodal content: {e}"
+                )
+
+        self.logger.info(f"Content list insertion complete for: {file_path}")

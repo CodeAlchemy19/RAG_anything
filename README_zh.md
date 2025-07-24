@@ -75,6 +75,7 @@
 - **🧠 多模态内容分析引擎** - 针对图像、表格、公式和通用文本内容部署专门的处理器，确保各类内容的精准解析
 - **🔗 基于知识图谱索引** - 实现自动化实体提取和关系构建，建立跨模态的语义连接网络
 - **⚡ 灵活的处理架构** - 支持基于MinerU的智能解析模式和直接多模态内容插入模式，满足不同应用场景需求
+- **📋 直接内容列表插入** - 跳过文档解析，直接插入来自外部源的预解析内容列表，支持多种数据来源整合
 - **🎯 跨模态检索机制** - 实现跨文本和多模态内容的智能检索，提供精准的信息定位和匹配能力
 
 </div>
@@ -698,6 +699,181 @@ async def load_existing_lightrag():
 if __name__ == "__main__":
     asyncio.run(load_existing_lightrag())
 ```
+
+#### 7. 直接插入内容列表
+
+当您已经有预解析的内容列表（例如，来自外部解析器或之前的处理结果）时，可以直接插入到 RAGAnything 中而无需文档解析：
+
+```python
+import asyncio
+from raganything import RAGAnything, RAGAnythingConfig
+from lightrag.llm.openai import openai_complete_if_cache, openai_embed
+from lightrag.utils import EmbeddingFunc
+
+async def insert_content_list_example():
+    # 设置 API 配置
+    api_key = "your-api-key"
+    base_url = "your-base-url"  # 可选
+
+    # 创建 RAGAnything 配置
+    config = RAGAnythingConfig(
+        working_dir="./rag_storage",
+        enable_image_processing=True,
+        enable_table_processing=True,
+        enable_equation_processing=True,
+    )
+
+    # 定义模型函数
+    def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs):
+        return openai_complete_if_cache(
+            "gpt-4o-mini",
+            prompt,
+            system_prompt=system_prompt,
+            history_messages=history_messages,
+            api_key=api_key,
+            base_url=base_url,
+            **kwargs,
+        )
+
+    def vision_model_func(prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs):
+        if image_data:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=[
+                    {"role": "system", "content": system_prompt} if system_prompt else None,
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
+                        ],
+                    } if image_data else {"role": "user", "content": prompt},
+                ],
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        else:
+            return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
+
+    embedding_func = EmbeddingFunc(
+        embedding_dim=3072,
+        max_token_size=8192,
+        func=lambda texts: openai_embed(
+            texts,
+            model="text-embedding-3-large",
+            api_key=api_key,
+            base_url=base_url,
+        ),
+    )
+
+    # 初始化 RAGAnything
+    rag = RAGAnything(
+        config=config,
+        llm_model_func=llm_model_func,
+        vision_model_func=vision_model_func,
+        embedding_func=embedding_func,
+    )
+
+    # 示例：来自外部源的预解析内容列表
+    content_list = [
+        {
+            "type": "text",
+            "text": "这是我们研究论文的引言部分。",
+            "page_idx": 0  # 此内容出现的页码
+        },
+        {
+            "type": "image",
+            "img_path": "/absolute/path/to/figure1.jpg",  # 重要：使用绝对路径
+            "img_caption": ["图1：系统架构"],
+            "img_footnote": ["来源：作者原创设计"],
+            "page_idx": 1  # 此图像出现的页码
+        },
+        {
+            "type": "table",
+            "table_body": "| 方法 | 准确率 | F1分数 |\n|------|--------|--------|\n| 我们的方法 | 95.2% | 0.94 |\n| 基准方法 | 87.3% | 0.85 |",
+            "table_caption": ["表1：性能对比"],
+            "table_footnote": ["测试数据集结果"],
+            "page_idx": 2  # 此表格出现的页码
+        },
+        {
+            "type": "equation",
+            "latex": "P(d|q) = \\frac{P(q|d) \\cdot P(d)}{P(q)}",
+            "text": "文档相关性概率公式",
+            "page_idx": 3  # 此公式出现的页码
+        },
+        {
+            "type": "text",
+            "text": "总之，我们的方法在所有指标上都表现出优越的性能。",
+            "page_idx": 4  # 此内容出现的页码
+        }
+    ]
+
+    # 直接插入内容列表
+    await rag.insert_content_list(
+        content_list=content_list,
+        file_path="research_paper.pdf",  # 用于引用的参考文件名
+        split_by_character=None,         # 可选的文本分割
+        split_by_character_only=False,   # 可选的文本分割模式
+        doc_id=None,                     # 可选的自定义文档ID（如果未提供将自动生成）
+        display_stats=True               # 显示内容统计信息
+    )
+
+    # 查询插入的内容
+    result = await rag.aquery(
+        "研究中提到的主要发现和性能指标是什么？",
+        mode="hybrid"
+    )
+    print("查询结果:", result)
+
+    # 您也可以使用不同的文档ID插入多个内容列表
+    another_content_list = [
+        {
+            "type": "text",
+            "text": "这是来自另一个文档的内容。",
+            "page_idx": 0  # 此内容出现的页码
+        },
+        {
+            "type": "table",
+            "table_body": "| 特性 | 值 |\n|------|----|\n| 速度 | 快速 |\n| 准确性 | 高 |",
+            "table_caption": ["特性对比"],
+            "page_idx": 1  # 此表格出现的页码
+        }
+    ]
+
+    await rag.insert_content_list(
+        content_list=another_content_list,
+        file_path="another_document.pdf",
+        doc_id="custom-doc-id-123"  # 自定义文档ID
+    )
+
+if __name__ == "__main__":
+    asyncio.run(insert_content_list_example())
+```
+
+**内容列表格式：**
+
+`content_list` 应遵循标准格式，每个项目都是包含以下内容的字典：
+
+- **文本内容**: `{"type": "text", "text": "内容文本", "page_idx": 0}`
+- **图像内容**: `{"type": "image", "img_path": "/absolute/path/to/image.jpg", "img_caption": ["标题"], "img_footnote": ["注释"], "page_idx": 1}`
+- **表格内容**: `{"type": "table", "table_body": "markdown表格", "table_caption": ["标题"], "table_footnote": ["注释"], "page_idx": 2}`
+- **公式内容**: `{"type": "equation", "latex": "LaTeX公式", "text": "描述", "page_idx": 3}`
+- **通用内容**: `{"type": "custom_type", "content": "任何内容", "page_idx": 4}`
+
+**重要说明：**
+- **`img_path`**: 必须是图像文件的绝对路径（例如：`/home/user/images/chart.jpg` 或 `C:\Users\user\images\chart.jpg`）
+- **`page_idx`**: 表示内容在原始文档中出现的页码（从0开始的索引）
+- **内容顺序**: 项目按照在列表中出现的顺序进行处理
+
+此方法在以下情况下特别有用：
+- 您有来自外部解析器的内容（非MinerU/Docling）
+- 您想要处理程序化生成的内容
+- 您需要将来自多个源的内容插入到单个知识库中
+- 您有想要重用的缓存解析结果
 
 ---
 
