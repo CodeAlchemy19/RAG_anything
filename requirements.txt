@@ -5,21 +5,17 @@ lightrag-hku
 # Enhanced markdown conversion (optional)
 markdown
 
+# Enhanced markdown conversion (optional)
+
 # MinerU 2.0 packages (replaces magic-pdf)
 mineru[core]
 pygments
 
 # Progress bars for batch processing
 tqdm
-weasyprint
 
 # Progress bars for batch processing
-tqdm
-
-# Enhanced markdown conversion (optional)
-markdown
 weasyprint
-pygments
 
 # Note: Optional dependencies are now defined in setup.py extras_require:
 # - [image]: Pillow>=10.0.0 (for BMP, TIFF, GIF, WebP format conversion)

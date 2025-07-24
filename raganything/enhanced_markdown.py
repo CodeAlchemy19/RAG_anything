@@ -20,12 +20,14 @@ import subprocess
 
 try:
     import markdown
+
     MARKDOWN_AVAILABLE = True
 except ImportError:
     MARKDOWN_AVAILABLE = False
 
 try:
     from weasyprint import HTML
+
     WEASYPRINT_AVAILABLE = True
 except ImportError:
     WEASYPRINT_AVAILABLE = False
@@ -33,6 +35,7 @@ except ImportError:
 try:
     # Check if pandoc module exists (not used directly, just for detection)
     import importlib.util
+
     spec = importlib.util.find_spec("pandoc")
     PANDOC_AVAILABLE = spec is not None
 except ImportError:
