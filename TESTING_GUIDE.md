@@ -124,7 +124,7 @@ from pathlib import Path
 
 def test_advanced_markdown():
     """Test advanced markdown conversion features"""
-    
+
     # Create custom configuration
     config = MarkdownConfig(
         page_size="A4",
@@ -138,17 +138,17 @@ def test_advanced_markdown():
         code { background-color: #f8f9fa; padding: 2px 4px; }
         """
     )
-    
+
     # Create converter
     converter = EnhancedMarkdownConverter(config)
-    
+
     # Test backend information
     info = converter.get_backend_info()
     print("Backend Information:")
     for backend, available in info["available_backends"].items():
         status = "✅" if available else "❌"
         print(f"  {status} {backend}")
-    
+
     # Create test content
     test_content = """# Advanced Test Document
 
@@ -180,12 +180,12 @@ def process_document(file_path: str) -> str:
 ## Conclusion
 The enhanced markdown conversion provides excellent formatting.
 """
-    
+
     # Test conversion
     with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as temp_file:
         temp_file.write(test_content)
         temp_md_path = temp_file.name
-    
+
     try:
         # Test different methods
         for method in ["auto", "weasyprint", "pandoc_system"]:
@@ -202,7 +202,7 @@ The enhanced markdown conversion provides excellent formatting.
                     print(f"❌ {method}: Failed")
             except Exception as e:
                 print(f"❌ {method}: {str(e)}")
-    
+
     finally:
         # Clean up
         Path(temp_md_path).unlink()
@@ -222,7 +222,7 @@ from pathlib import Path
 
 def test_batch_parser():
     """Test basic batch parser functionality"""
-    
+
     # Create batch parser
     batch_parser = BatchParser(
         parser_type="mineru",
@@ -231,31 +231,31 @@ def test_batch_parser():
         timeout_per_file=60,
         skip_installation_check=True  # Bypass installation check for testing
     )
-    
+
     # Test supported extensions
     extensions = batch_parser.get_supported_extensions()
     print(f"✅ Supported extensions: {extensions}")
-    
+
     # Test file filtering
     test_files = [
         "document.pdf",
-        "report.docx", 
+        "report.docx",
         "data.xlsx",
         "unsupported.xyz"
     ]
-    
+
     supported_files = batch_parser.filter_supported_files(test_files)
     print(f"✅ File filtering: {len(supported_files)}/{len(test_files)} files supported")
-    
+
     # Create test files
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        
+
         # Create test markdown files
         for i in range(3):
             test_file = temp_path / f"test_{i}.md"
             test_file.write_text(f"# Test Document {i}\n\nContent for test {i}.")
-        
+
         # Test batch processing (will fail without MinerU, but tests setup)
         try:
             result = batch_parser.process_batch(
@@ -283,7 +283,7 @@ def create_mock_files():
     """Create mock files for testing"""
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        
+
         # Create various file types
         files = {
             "document.md": "# Test Document\n\nThis is a test.",
@@ -291,18 +291,18 @@ def create_mock_files():
             "data.csv": "name,value\nA,1\nB,2\nC,3",
             "config.json": '{"setting": "value"}'
         }
-        
+
         for filename, content in files.items():
             file_path = temp_path / filename
             file_path.write_text(content)
-        
+
         return temp_path, list(files.keys())
 
 def test_batch_with_mock_files():
     """Test batch processing with mock files"""
-    
+
     temp_path, file_list = create_mock_files()
-    
+
     # Create batch parser
     batch_parser = BatchParser(
         parser_type="mineru",
@@ -310,15 +310,15 @@ def test_batch_with_mock_files():
         show_progress=True,
         skip_installation_check=True
     )
-    
+
     # Test file filtering
     all_files = [str(temp_path / f) for f in file_list]
     supported_files = batch_parser.filter_supported_files(all_files)
-    
+
     print(f"✅ Total files: {len(all_files)}")
     print(f"✅ Supported files: {len(supported_files)}")
     print(f"✅ Success rate: {len(supported_files)/len(all_files)*100:.1f}%")
-    
+
     # Test batch processing setup (without actual parsing)
     try:
         result = batch_parser.process_batch(
@@ -351,11 +351,11 @@ from pathlib import Path
 
 def test_rag_integration():
     """Test integration with RAG-Anything"""
-    
+
     # Create temporary working directory
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        
+
         # Create test configuration
         config = RAGAnythingConfig(
             working_dir=str(temp_path / "rag_storage"),
@@ -366,14 +366,14 @@ def test_rag_integration():
             max_concurrent_files=2,
             recursive_folder_processing=True
         )
-        
+
         # Test RAG-Anything initialization
         try:
             rag = RAGAnything(config=config)
             print("✅ RAG-Anything initialized successfully")
         except Exception as e:
             print(f"⚠️ RAG-Anything initialization: {str(e)}")
-        
+
         # Test batch processing methods exist
         batch_methods = [
             'process_documents_batch',
@@ -382,13 +382,13 @@ def test_rag_integration():
             'filter_supported_files',
             'process_documents_with_rag_batch'
         ]
-        
+
         print("\nBatch Processing Methods:")
         for method in batch_methods:
             available = hasattr(rag, method)
             status = "✅" if available else "❌"
             print(f"  {status} {method}")
-        
+
         # Test enhanced markdown integration
         print("\nEnhanced Markdown Integration:")
         try:
@@ -420,7 +420,7 @@ from raganything.enhanced_markdown import EnhancedMarkdownConverter
 def create_large_markdown(size_kb=100):
     """Create a large markdown file for performance testing"""
     content = "# Large Test Document\n\n"
-    
+
     # Add sections to reach target size
     sections = size_kb // 2  # Rough estimate
     for i in range(sections):
@@ -448,36 +448,36 @@ def function_{i}():
 | Value D{i} | Value E{i} | Value F{i} |
 
 """
-    
+
     return content
 
 def test_markdown_performance():
     """Test enhanced markdown conversion performance"""
-    
+
     print("Enhanced Markdown Performance Test")
     print("=" * 40)
-    
+
     # Test different file sizes
     sizes = [10, 50, 100]  # KB
-    
+
     for size_kb in sizes:
         print(f"\nTesting {size_kb}KB document:")
-        
+
         # Create test file
         content = create_large_markdown(size_kb)
-        
+
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as temp_file:
             temp_file.write(content)
             temp_md_path = temp_file.name
-        
+
         try:
             converter = EnhancedMarkdownConverter()
-            
+
             # Test different methods
             for method in ["weasyprint", "pandoc_system"]:
                 try:
                     output_path = f"perf_test_{size_kb}kb_{method}.pdf"
-                    
+
                     start_time = time.time()
                     success = converter.convert_file_to_pdf(
                         input_path=temp_md_path,
@@ -485,16 +485,16 @@ def test_markdown_performance():
                         method=method
                     )
                     end_time = time.time()
-                    
+
                     if success:
                         duration = end_time - start_time
                         print(f"  ✅ {method}: {duration:.2f}s")
                     else:
                         print(f"  ❌ {method}: Failed")
-                        
+
                 except Exception as e:
                     print(f"  ❌ {method}: {str(e)}")
-        
+
         finally:
             # Clean up
             Path(temp_md_path).unlink()
@@ -605,13 +605,13 @@ from datetime import datetime
 
 def generate_test_report():
     """Generate comprehensive test report"""
-    
+
     report = {
         "timestamp": datetime.now().isoformat(),
         "python_version": sys.version,
         "tests": {}
     }
-    
+
     # Test imports
     try:
         from raganything.batch_parser import BatchParser
@@ -620,7 +620,7 @@ def generate_test_report():
         report["tests"]["imports"] = {"status": "✅", "message": "All modules imported successfully"}
     except Exception as e:
         report["tests"]["imports"] = {"status": "❌", "message": str(e)}
-    
+
     # Test enhanced markdown
     try:
         converter = EnhancedMarkdownConverter()
@@ -631,7 +631,7 @@ def generate_test_report():
         }
     except Exception as e:
         report["tests"]["enhanced_markdown"] = {"status": "❌", "message": str(e)}
-    
+
     # Test batch processing
     try:
         batch_parser = BatchParser(skip_installation_check=True)
@@ -642,17 +642,17 @@ def generate_test_report():
         }
     except Exception as e:
         report["tests"]["batch_processing"] = {"status": "❌", "message": str(e)}
-    
+
     # Generate report
     print("Test Report")
     print("=" * 50)
     print(f"Timestamp: {report['timestamp']}")
     print(f"Python Version: {report['python_version']}")
     print()
-    
+
     for test_name, result in report["tests"].items():
         print(f"{result['status']} {test_name}: {result['message']}")
-    
+
     # Summary
     passed = sum(1 for r in report["tests"].values() if r["status"] == "✅")
     total = len(report["tests"])
@@ -757,4 +757,4 @@ time python -m raganything.enhanced_markdown test.md --output test.pdf
 
 ---
 
-**This comprehensive testing guide ensures thorough validation of all new features!** 🎉 
+**This comprehensive testing guide ensures thorough validation of all new features!** 🎉

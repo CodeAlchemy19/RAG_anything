@@ -296,4 +296,4 @@ logging.basicConfig(level=logging.DEBUG)
 
 ## Conclusion
 
-The batch processing and enhanced markdown conversion features significantly improve RAG-Anything's capabilities for processing large document collections and generating high-quality PDFs from markdown content. These features are designed to be easy to use while providing advanced configuration options for power users. 
+The batch processing and enhanced markdown conversion features significantly improve RAG-Anything's capabilities for processing large document collections and generating high-quality PDFs from markdown content. These features are designed to be easy to use while providing advanced configuration options for power users.
