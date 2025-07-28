@@ -319,6 +319,7 @@ class EnhancedMarkdownConverter:
                 "Pandoc not available. Install from: https://pandoc.org/installing.html"
             )
 
+        temp_md_path = None
         try:
             import subprocess
 
@@ -344,9 +345,6 @@ class EnhancedMarkdownConverter:
             # Run pandoc
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
 
-            # Clean up temp file
-            os.unlink(temp_md_path)
-
             if result.returncode == 0:
                 self.logger.info(
                     f"Successfully converted to PDF using Pandoc: {output_path}"
@@ -359,6 +357,15 @@ class EnhancedMarkdownConverter:
         except Exception as e:
             self.logger.error(f"Pandoc conversion failed: {str(e)}")
             return False
+
+        finally:
+            if temp_md_path and os.path.exists(temp_md_path):
+                try:
+                    os.unlink(temp_md_path)
+                except OSError as e:
+                    self.logger.error(
+                        f"Failed to clean up temp file {temp_md_path}: {str(e)}"
+                    )
 
     def convert_markdown_to_pdf(
         self, markdown_content: str, output_path: str, method: str = "auto"
