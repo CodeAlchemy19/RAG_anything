@@ -11,6 +11,7 @@ __pycache__/
 .venv/
 env/
 venv/
+
 *.env*
 .env_example
 
@@ -71,3 +72,8 @@ test_*
 
 # Cline files
 memory-bank/
+
+# AI
+.claude/
+.cursor/
+CLAUDE.md
