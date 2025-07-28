@@ -439,19 +439,27 @@ class BaseModalProcessor:
             logger.error(f"Error getting context for item {item_info}: {e}")
             return ""
 
-    async def process_multimodal_content(
+    async def generate_description_only(
         self,
         modal_content,
         content_type: str,
-        file_path: str = "manual_creation",
-        entity_name: str = None,
         item_info: Dict[str, Any] = None,
-        batch_mode: bool = False,
-        doc_id: str = None,
-        chunk_order_index: int = 0,
+        entity_name: str = None,
     ) -> Tuple[str, Dict[str, Any]]:
-        """Process multimodal content with context support"""
-        # Subclasses need to implement specific processing logic
+        """
+        Generate text description and entity info only, without entity relation extraction.
+        Used for batch processing stage 1.
+
+        Args:
+            modal_content: Modal content to process
+            content_type: Type of modal content
+            item_info: Item information for context extraction
+            entity_name: Optional predefined entity name
+
+        Returns:
+            Tuple of (description, entity_info)
+        """
+        # Subclasses must implement this method
         raise NotImplementedError("Subclasses must implement this method")
 
     async def _create_entity_and_chunk(
@@ -799,20 +807,28 @@ class ImageModalProcessor(BaseModalProcessor):
             logger.error(f"Failed to encode image {image_path}: {e}")
             return ""
 
-    async def process_multimodal_content(
+    async def generate_description_only(
         self,
         modal_content,
         content_type: str,
-        file_path: str = "manual_creation",
-        entity_name: str = None,
         item_info: Dict[str, Any] = None,
-        batch_mode: bool = False,
-        doc_id: str = None,
-        chunk_order_index: int = 0,
+        entity_name: str = None,
     ) -> Tuple[str, Dict[str, Any]]:
-        """Process image content with context support"""
+        """
+        Generate image description and entity info only, without entity relation extraction.
+        Used for batch processing stage 1.
+
+        Args:
+            modal_content: Image content to process
+            content_type: Type of modal content ("image")
+            item_info: Item information for context extraction
+            entity_name: Optional predefined entity name
+
+        Returns:
+            Tuple of (enhanced_caption, entity_info)
+        """
         try:
-            # Parse image content
+            # Parse image content (reuse existing logic)
             if isinstance(modal_content, str):
                 try:
                     content_data = json.loads(modal_content)
@@ -824,6 +840,17 @@ class ImageModalProcessor(BaseModalProcessor):
             image_path = content_data.get("img_path")
             captions = content_data.get("img_caption", [])
             footnotes = content_data.get("img_footnote", [])
+
+            # Validate image path
+            if not image_path:
+                raise ValueError(
+                    f"No image path provided in modal_content: {modal_content}"
+                )
+
+            # Convert to Path object and check if it exists
+            image_path_obj = Path(image_path)
+            if not image_path_obj.exists():
+                raise FileNotFoundError(f"Image file not found: {image_path}")
 
             # Extract context for current item
             context = ""
@@ -853,12 +880,7 @@ class ImageModalProcessor(BaseModalProcessor):
                     footnotes=footnotes if footnotes else "None",
                 )
 
-            # If image path exists, try to encode image
-            logger.debug(f"Begin Analysis of Image: {image_path}")
-
-            if not image_path or not Path(image_path).exists():
-                raise FileNotFoundError(f"Image file not found: {image_path}")
-
+            # Encode image to base64
             image_base64 = self._encode_image_to_base64(image_path)
             if not image_base64:
                 raise RuntimeError(f"Failed to encode image to base64: {image_path}")
@@ -870,10 +892,54 @@ class ImageModalProcessor(BaseModalProcessor):
                 system_prompt=PROMPTS["IMAGE_ANALYSIS_SYSTEM"],
             )
 
-            # Parse response
+            # Parse response (reuse existing logic)
             enhanced_caption, entity_info = self._parse_response(response, entity_name)
 
+            return enhanced_caption, entity_info
+
+        except Exception as e:
+            logger.error(f"Error generating image description: {e}")
+            # Fallback processing
+            fallback_entity = {
+                "entity_name": entity_name
+                if entity_name
+                else f"image_{compute_mdhash_id(str(modal_content))}",
+                "entity_type": "image",
+                "summary": f"Image content: {str(modal_content)[:100]}",
+            }
+            return str(modal_content), fallback_entity
+
+    async def process_multimodal_content(
+        self,
+        modal_content,
+        content_type: str,
+        file_path: str = "manual_creation",
+        entity_name: str = None,
+        item_info: Dict[str, Any] = None,
+        batch_mode: bool = False,
+        doc_id: str = None,
+        chunk_order_index: int = 0,
+    ) -> Tuple[str, Dict[str, Any]]:
+        """Process image content with context support"""
+        try:
+            # Generate description and entity info
+            enhanced_caption, entity_info = await self.generate_description_only(
+                modal_content, content_type, item_info, entity_name
+            )
+
             # Build complete image content
+            if isinstance(modal_content, str):
+                try:
+                    content_data = json.loads(modal_content)
+                except json.JSONDecodeError:
+                    content_data = {"description": modal_content}
+            else:
+                content_data = modal_content
+
+            image_path = content_data.get("img_path", "")
+            captions = content_data.get("img_caption", [])
+            footnotes = content_data.get("img_footnote", [])
+
             modal_chunk = PROMPTS["image_chunk"].format(
                 image_path=image_path,
                 captions=", ".join(captions) if captions else "None",
@@ -944,6 +1010,96 @@ class ImageModalProcessor(BaseModalProcessor):
 class TableModalProcessor(BaseModalProcessor):
     """Processor specialized for table content"""
 
+    async def generate_description_only(
+        self,
+        modal_content,
+        content_type: str,
+        item_info: Dict[str, Any] = None,
+        entity_name: str = None,
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        Generate table description and entity info only, without entity relation extraction.
+        Used for batch processing stage 1.
+
+        Args:
+            modal_content: Table content to process
+            content_type: Type of modal content ("table")
+            item_info: Item information for context extraction
+            entity_name: Optional predefined entity name
+
+        Returns:
+            Tuple of (enhanced_caption, entity_info)
+        """
+        try:
+            # Parse table content (reuse existing logic)
+            if isinstance(modal_content, str):
+                try:
+                    content_data = json.loads(modal_content)
+                except json.JSONDecodeError:
+                    content_data = {"table_body": modal_content}
+            else:
+                content_data = modal_content
+
+            table_img_path = content_data.get("img_path")
+            table_caption = content_data.get("table_caption", [])
+            table_body = content_data.get("table_body", "")
+            table_footnote = content_data.get("table_footnote", [])
+
+            # Extract context for current item
+            context = ""
+            if item_info:
+                context = self._get_context_for_item(item_info)
+
+            # Build table analysis prompt with context
+            if context:
+                table_prompt = PROMPTS.get(
+                    "table_prompt_with_context", PROMPTS["table_prompt"]
+                ).format(
+                    context=context,
+                    entity_name=entity_name
+                    if entity_name
+                    else "descriptive name for this table",
+                    table_img_path=table_img_path,
+                    table_caption=table_caption if table_caption else "None",
+                    table_body=table_body,
+                    table_footnote=table_footnote if table_footnote else "None",
+                )
+            else:
+                table_prompt = PROMPTS["table_prompt"].format(
+                    entity_name=entity_name
+                    if entity_name
+                    else "descriptive name for this table",
+                    table_img_path=table_img_path,
+                    table_caption=table_caption if table_caption else "None",
+                    table_body=table_body,
+                    table_footnote=table_footnote if table_footnote else "None",
+                )
+
+            # Call LLM for table analysis
+            response = await self.modal_caption_func(
+                table_prompt,
+                system_prompt=PROMPTS["TABLE_ANALYSIS_SYSTEM"],
+            )
+
+            # Parse response (reuse existing logic)
+            enhanced_caption, entity_info = self._parse_table_response(
+                response, entity_name
+            )
+
+            return enhanced_caption, entity_info
+
+        except Exception as e:
+            logger.error(f"Error generating table description: {e}")
+            # Fallback processing
+            fallback_entity = {
+                "entity_name": entity_name
+                if entity_name
+                else f"table_{compute_mdhash_id(str(modal_content))}",
+                "entity_type": "table",
+                "summary": f"Table content: {str(modal_content)[:100]}",
+            }
+            return str(modal_content), fallback_entity
+
     async def process_multimodal_content(
         self,
         modal_content,
@@ -956,76 +1112,55 @@ class TableModalProcessor(BaseModalProcessor):
         chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process table content with context support"""
-        # Parse table content
-        if isinstance(modal_content, str):
-            try:
-                content_data = json.loads(modal_content)
-            except json.JSONDecodeError:
-                content_data = {"table_body": modal_content}
-        else:
-            content_data = modal_content
-
-        table_img_path = content_data.get("img_path")
-        table_caption = content_data.get("table_caption", [])
-        table_body = content_data.get("table_body", "")
-        table_footnote = content_data.get("table_footnote", [])
-
-        logger.debug(f"Begin Analysis of Table: {table_img_path}")
-
-        # Extract context for current item
-        context = ""
-        if item_info:
-            context = self._get_context_for_item(item_info)
-
-        # Build table analysis prompt with context
-        if context:
-            table_prompt = PROMPTS.get(
-                "table_prompt_with_context", PROMPTS["table_prompt"]
-            ).format(
-                context=context,
-                entity_name=entity_name
-                if entity_name
-                else "descriptive name for this table",
-                table_img_path=table_img_path,
-                table_caption=table_caption if table_caption else "None",
-                table_body=table_body,
-                table_footnote=table_footnote if table_footnote else "None",
-            )
-        else:
-            table_prompt = PROMPTS["table_prompt"].format(
-                entity_name=entity_name
-                if entity_name
-                else "descriptive name for this table",
-                table_img_path=table_img_path,
-                table_caption=table_caption if table_caption else "None",
-                table_body=table_body,
-                table_footnote=table_footnote if table_footnote else "None",
+        try:
+            # Generate description and entity info
+            enhanced_caption, entity_info = await self.generate_description_only(
+                modal_content, content_type, item_info, entity_name
             )
 
-        response = await self.modal_caption_func(
-            table_prompt,
-            system_prompt=PROMPTS["TABLE_ANALYSIS_SYSTEM"],
-        )
+            # Parse table content for building complete chunk
+            if isinstance(modal_content, str):
+                try:
+                    content_data = json.loads(modal_content)
+                except json.JSONDecodeError:
+                    content_data = {"table_body": modal_content}
+            else:
+                content_data = modal_content
 
-        # Parse response
-        enhanced_caption, entity_info = self._parse_table_response(
-            response, entity_name
-        )
+            table_img_path = content_data.get("img_path")
+            table_caption = content_data.get("table_caption", [])
+            table_body = content_data.get("table_body", "")
+            table_footnote = content_data.get("table_footnote", [])
 
-        # TODO: Add Retry Mechanism
+            # Build complete table content
+            modal_chunk = PROMPTS["table_chunk"].format(
+                table_img_path=table_img_path,
+                table_caption=", ".join(table_caption) if table_caption else "None",
+                table_body=table_body,
+                table_footnote=", ".join(table_footnote) if table_footnote else "None",
+                enhanced_caption=enhanced_caption,
+            )
 
-        # Build complete table content
-        modal_chunk = PROMPTS["table_chunk"].format(
-            table_img_path=table_img_path,
-            table_caption=", ".join(table_caption) if table_caption else "None",
-            table_body=table_body,
-            table_footnote=", ".join(table_footnote) if table_footnote else "None",
-            enhanced_caption=enhanced_caption,
-        )
+            return await self._create_entity_and_chunk(
+                modal_chunk,
+                entity_info,
+                file_path,
+                batch_mode,
+                doc_id,
+                chunk_order_index,
+            )
 
-        return await self._create_entity_and_chunk(
-            modal_chunk, entity_info, file_path, batch_mode, doc_id, chunk_order_index
-        )
+        except Exception as e:
+            logger.error(f"Error processing table content: {e}")
+            # Fallback processing
+            fallback_entity = {
+                "entity_name": entity_name
+                if entity_name
+                else f"table_{compute_mdhash_id(str(modal_content))}",
+                "entity_type": "table",
+                "summary": f"Table content: {str(modal_content)[:100]}",
+            }
+            return str(modal_content), fallback_entity
 
     def _parse_table_response(
         self, response: str, entity_name: str = None
@@ -1069,6 +1204,90 @@ class TableModalProcessor(BaseModalProcessor):
 class EquationModalProcessor(BaseModalProcessor):
     """Processor specialized for equation content"""
 
+    async def generate_description_only(
+        self,
+        modal_content,
+        content_type: str,
+        item_info: Dict[str, Any] = None,
+        entity_name: str = None,
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        Generate equation description and entity info only, without entity relation extraction.
+        Used for batch processing stage 1.
+
+        Args:
+            modal_content: Equation content to process
+            content_type: Type of modal content ("equation")
+            item_info: Item information for context extraction
+            entity_name: Optional predefined entity name
+
+        Returns:
+            Tuple of (enhanced_caption, entity_info)
+        """
+        try:
+            # Parse equation content (reuse existing logic)
+            if isinstance(modal_content, str):
+                try:
+                    content_data = json.loads(modal_content)
+                except json.JSONDecodeError:
+                    content_data = {"equation": modal_content}
+            else:
+                content_data = modal_content
+
+            equation_text = content_data.get("text")
+            equation_format = content_data.get("text_format", "")
+
+            # Extract context for current item
+            context = ""
+            if item_info:
+                context = self._get_context_for_item(item_info)
+
+            # Build equation analysis prompt with context
+            if context:
+                equation_prompt = PROMPTS.get(
+                    "equation_prompt_with_context", PROMPTS["equation_prompt"]
+                ).format(
+                    context=context,
+                    equation_text=equation_text,
+                    equation_format=equation_format,
+                    entity_name=entity_name
+                    if entity_name
+                    else "descriptive name for this equation",
+                )
+            else:
+                equation_prompt = PROMPTS["equation_prompt"].format(
+                    equation_text=equation_text,
+                    equation_format=equation_format,
+                    entity_name=entity_name
+                    if entity_name
+                    else "descriptive name for this equation",
+                )
+
+            # Call LLM for equation analysis
+            response = await self.modal_caption_func(
+                equation_prompt,
+                system_prompt=PROMPTS["EQUATION_ANALYSIS_SYSTEM"],
+            )
+
+            # Parse response (reuse existing logic)
+            enhanced_caption, entity_info = self._parse_equation_response(
+                response, entity_name
+            )
+
+            return enhanced_caption, entity_info
+
+        except Exception as e:
+            logger.error(f"Error generating equation description: {e}")
+            # Fallback processing
+            fallback_entity = {
+                "entity_name": entity_name
+                if entity_name
+                else f"equation_{compute_mdhash_id(str(modal_content))}",
+                "entity_type": "equation",
+                "summary": f"Equation content: {str(modal_content)[:100]}",
+            }
+            return str(modal_content), fallback_entity
+
     async def process_multimodal_content(
         self,
         modal_content,
@@ -1081,66 +1300,51 @@ class EquationModalProcessor(BaseModalProcessor):
         chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process equation content with context support"""
-        # Parse equation content
-        if isinstance(modal_content, str):
-            try:
-                content_data = json.loads(modal_content)
-            except json.JSONDecodeError:
-                content_data = {"equation": modal_content}
-        else:
-            content_data = modal_content
-
-        equation_text = content_data.get("text")
-        equation_format = content_data.get("text_format", "")
-
-        logger.debug(f"Begin Analysis of Equation: {equation_text}")
-
-        # Extract context for current item
-        context = ""
-        if item_info:
-            context = self._get_context_for_item(item_info)
-
-        # Build equation analysis prompt with context
-        if context:
-            equation_prompt = PROMPTS.get(
-                "equation_prompt_with_context", PROMPTS["equation_prompt"]
-            ).format(
-                context=context,
-                equation_text=equation_text,
-                equation_format=equation_format,
-                entity_name=entity_name
-                if entity_name
-                else "descriptive name for this equation",
-            )
-        else:
-            equation_prompt = PROMPTS["equation_prompt"].format(
-                equation_text=equation_text,
-                equation_format=equation_format,
-                entity_name=entity_name
-                if entity_name
-                else "descriptive name for this equation",
+        try:
+            # Generate description and entity info
+            enhanced_caption, entity_info = await self.generate_description_only(
+                modal_content, content_type, item_info, entity_name
             )
 
-        response = await self.modal_caption_func(
-            equation_prompt,
-            system_prompt=PROMPTS["EQUATION_ANALYSIS_SYSTEM"],
-        )
+            # Parse equation content for building complete chunk
+            if isinstance(modal_content, str):
+                try:
+                    content_data = json.loads(modal_content)
+                except json.JSONDecodeError:
+                    content_data = {"equation": modal_content}
+            else:
+                content_data = modal_content
 
-        # Parse response
-        enhanced_caption, entity_info = self._parse_equation_response(
-            response, entity_name
-        )
+            equation_text = content_data.get("text")
+            equation_format = content_data.get("text_format", "")
 
-        # Build complete equation content
-        modal_chunk = PROMPTS["equation_chunk"].format(
-            equation_text=equation_text,
-            equation_format=equation_format,
-            enhanced_caption=enhanced_caption,
-        )
+            # Build complete equation content
+            modal_chunk = PROMPTS["equation_chunk"].format(
+                equation_text=equation_text,
+                equation_format=equation_format,
+                enhanced_caption=enhanced_caption,
+            )
 
-        return await self._create_entity_and_chunk(
-            modal_chunk, entity_info, file_path, batch_mode, doc_id, chunk_order_index
-        )
+            return await self._create_entity_and_chunk(
+                modal_chunk,
+                entity_info,
+                file_path,
+                batch_mode,
+                doc_id,
+                chunk_order_index,
+            )
+
+        except Exception as e:
+            logger.error(f"Error processing equation content: {e}")
+            # Fallback processing
+            fallback_entity = {
+                "entity_name": entity_name
+                if entity_name
+                else f"equation_{compute_mdhash_id(str(modal_content))}",
+                "entity_type": "equation",
+                "summary": f"Equation content: {str(modal_content)[:100]}",
+            }
+            return str(modal_content), fallback_entity
 
     def _parse_equation_response(
         self, response: str, entity_name: str = None
@@ -1184,6 +1388,80 @@ class EquationModalProcessor(BaseModalProcessor):
 class GenericModalProcessor(BaseModalProcessor):
     """Generic processor for other types of modal content"""
 
+    async def generate_description_only(
+        self,
+        modal_content,
+        content_type: str,
+        item_info: Dict[str, Any] = None,
+        entity_name: str = None,
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        Generate generic modal description and entity info only, without entity relation extraction.
+        Used for batch processing stage 1.
+
+        Args:
+            modal_content: Generic modal content to process
+            content_type: Type of modal content
+            item_info: Item information for context extraction
+            entity_name: Optional predefined entity name
+
+        Returns:
+            Tuple of (enhanced_caption, entity_info)
+        """
+        try:
+            # Extract context for current item
+            context = ""
+            if item_info:
+                context = self._get_context_for_item(item_info)
+
+            # Build generic analysis prompt with context
+            if context:
+                generic_prompt = PROMPTS.get(
+                    "generic_prompt_with_context", PROMPTS["generic_prompt"]
+                ).format(
+                    context=context,
+                    content_type=content_type,
+                    entity_name=entity_name
+                    if entity_name
+                    else f"descriptive name for this {content_type}",
+                    content=str(modal_content),
+                )
+            else:
+                generic_prompt = PROMPTS["generic_prompt"].format(
+                    content_type=content_type,
+                    entity_name=entity_name
+                    if entity_name
+                    else f"descriptive name for this {content_type}",
+                    content=str(modal_content),
+                )
+
+            # Call LLM for generic analysis
+            response = await self.modal_caption_func(
+                generic_prompt,
+                system_prompt=PROMPTS["GENERIC_ANALYSIS_SYSTEM"].format(
+                    content_type=content_type
+                ),
+            )
+
+            # Parse response (reuse existing logic)
+            enhanced_caption, entity_info = self._parse_generic_response(
+                response, entity_name, content_type
+            )
+
+            return enhanced_caption, entity_info
+
+        except Exception as e:
+            logger.error(f"Error generating {content_type} description: {e}")
+            # Fallback processing
+            fallback_entity = {
+                "entity_name": entity_name
+                if entity_name
+                else f"{content_type}_{compute_mdhash_id(str(modal_content))}",
+                "entity_type": content_type,
+                "summary": f"{content_type} content: {str(modal_content)[:100]}",
+            }
+            return str(modal_content), fallback_entity
+
     async def process_multimodal_content(
         self,
         modal_content,
@@ -1196,56 +1474,39 @@ class GenericModalProcessor(BaseModalProcessor):
         chunk_order_index: int = 0,
     ) -> Tuple[str, Dict[str, Any]]:
         """Process generic modal content with context support"""
-        logger.debug(f"Begin Analysis of {content_type}: {modal_content}")
-
-        # Extract context for current item
-        context = ""
-        if item_info:
-            context = self._get_context_for_item(item_info)
-
-        # Build generic analysis prompt with context
-        if context:
-            generic_prompt = PROMPTS.get(
-                "generic_prompt_with_context", PROMPTS["generic_prompt"]
-            ).format(
-                context=context,
-                content_type=content_type,
-                entity_name=entity_name
-                if entity_name
-                else f"descriptive name for this {content_type}",
-                content=str(modal_content),
-            )
-        else:
-            generic_prompt = PROMPTS["generic_prompt"].format(
-                content_type=content_type,
-                entity_name=entity_name
-                if entity_name
-                else f"descriptive name for this {content_type}",
-                content=str(modal_content),
+        try:
+            # Generate description and entity info
+            enhanced_caption, entity_info = await self.generate_description_only(
+                modal_content, content_type, item_info, entity_name
             )
 
-        response = await self.modal_caption_func(
-            generic_prompt,
-            system_prompt=PROMPTS["GENERIC_ANALYSIS_SYSTEM"].format(
-                content_type=content_type
-            ),
-        )
+            # Build complete content
+            modal_chunk = PROMPTS["generic_chunk"].format(
+                content_type=content_type.title(),
+                content=str(modal_content),
+                enhanced_caption=enhanced_caption,
+            )
 
-        # Parse response
-        enhanced_caption, entity_info = self._parse_generic_response(
-            response, entity_name, content_type
-        )
+            return await self._create_entity_and_chunk(
+                modal_chunk,
+                entity_info,
+                file_path,
+                batch_mode,
+                doc_id,
+                chunk_order_index,
+            )
 
-        # Build complete content
-        modal_chunk = PROMPTS["generic_chunk"].format(
-            content_type=content_type.title(),
-            content=str(modal_content),
-            enhanced_caption=enhanced_caption,
-        )
-
-        return await self._create_entity_and_chunk(
-            modal_chunk, entity_info, file_path, batch_mode, doc_id, chunk_order_index
-        )
+        except Exception as e:
+            logger.error(f"Error processing {content_type} content: {e}")
+            # Fallback processing
+            fallback_entity = {
+                "entity_name": entity_name
+                if entity_name
+                else f"{content_type}_{compute_mdhash_id(str(modal_content))}",
+                "entity_type": content_type,
+                "summary": f"{content_type} content: {str(modal_content)[:100]}",
+            }
+            return str(modal_content), fallback_entity
 
     def _parse_generic_response(
         self, response: str, entity_name: str = None, content_type: str = "content"
