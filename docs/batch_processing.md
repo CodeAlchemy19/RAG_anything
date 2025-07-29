@@ -67,14 +67,14 @@ async def async_batch_processing():
         max_workers=4,
         show_progress=True
     )
-    
+
     # Process files asynchronously
     result = await batch_parser.process_batch_async(
         file_paths=["doc1.pdf", "doc2.docx"],
         output_dir="./output",
         parse_method="auto"
     )
-    
+
     return result
 
 # Run async processing
@@ -170,7 +170,7 @@ class BatchProcessingResult:
     processing_time: float           # Total processing time in seconds
     errors: Dict[str, str]           # Error messages for failed files
     output_dir: str                  # Output directory used
-    
+
     def summary(self) -> str:        # Human-readable summary
     def success_rate(self) -> float: # Success rate as percentage
 ```
@@ -181,16 +181,16 @@ class BatchProcessingResult:
 class BatchParser:
     def __init__(self, parser_type: str = "mineru", max_workers: int = 4, ...):
         """Initialize batch parser"""
-    
+
     def get_supported_extensions(self) -> List[str]:
         """Get list of supported file extensions"""
-    
+
     def filter_supported_files(self, file_paths: List[str], recursive: bool = True) -> List[str]:
         """Filter files to only supported types"""
-    
+
     def process_batch(self, file_paths: List[str], output_dir: str, ...) -> BatchProcessingResult:
         """Process files in batch"""
-    
+
     async def process_batch_async(self, file_paths: List[str], output_dir: str, ...) -> BatchProcessingResult:
         """Process files in batch asynchronously"""
 ```
@@ -312,16 +312,16 @@ result = batch_parser.process_batch(
 ```python
 def process_with_retry(file_paths, max_retries=3):
     """Process files with retry logic"""
-    
+
     for attempt in range(max_retries):
         result = batch_parser.process_batch(file_paths, "./output")
-        
+
         if not result.failed_files:
             break  # All files processed successfully
-        
+
         print(f"Attempt {attempt + 1}: {len(result.failed_files)} files failed")
         file_paths = result.failed_files  # Retry failed files
-    
+
     return result
 ```
 
@@ -338,4 +338,4 @@ def process_with_retry(file_paths, max_retries=3):
 
 ## Conclusion
 
-The batch processing feature significantly improves RAG-Anything's throughput for large document collections. It provides flexible configuration options, comprehensive error handling, and seamless integration with the existing RAG-Anything pipeline. 
+The batch processing feature significantly improves RAG-Anything's throughput for large document collections. It provides flexible configuration options, comprehensive error handling, and seamless integration with the existing RAG-Anything pipeline.

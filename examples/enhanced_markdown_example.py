@@ -20,6 +20,7 @@ import tempfile
 
 # Add project root directory to Python path
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent))
 
 from raganything.enhanced_markdown import EnhancedMarkdownConverter, MarkdownConfig
@@ -27,7 +28,7 @@ from raganything.enhanced_markdown import EnhancedMarkdownConverter, MarkdownCon
 
 def create_sample_markdown_content():
     """Create comprehensive sample markdown content for testing"""
-    
+
     # Basic sample
     basic_content = """# Basic Markdown Sample
 
@@ -136,7 +137,7 @@ converter:
 
 ### Processing Times
 - **Small documents** (< 10 pages): 1-3 seconds
-- **Medium documents** (10-50 pages): 3-10 seconds  
+- **Medium documents** (10-50 pages): 3-10 seconds
 - **Large documents** (> 50 pages): 10-30 seconds
 
 ## Advanced Features
@@ -200,17 +201,17 @@ The enhanced markdown conversion system provides professional-quality PDF genera
 
 ---
 
-*Generated on: 2024-01-15*  
+*Generated on: 2024-01-15*
 *Version: 1.0.0*
 """
 
     # Academic paper sample
     academic_content = """# Research Paper: Advanced Document Processing
 
-**Authors:** Alice Johnson¹, Bob Smith², Carol Williams¹  
-**Affiliations:**  
-¹ University of Technology  
-² Research Institute  
+**Authors:** Alice Johnson¹, Bob Smith², Carol Williams¹
+**Affiliations:**
+¹ University of Technology
+² Research Institute
 
 ## Abstract
 
@@ -294,18 +295,18 @@ Both backends support syntax highlighting through Pygments:
 def analyze_performance(backend, documents):
     '''Analyze conversion performance for given backend'''
     results = []
-    
+
     for doc in documents:
         start_time = time.time()
         success = backend.convert(doc)
         end_time = time.time()
-        
+
         results.append({
             'document': doc,
             'time': end_time - start_time,
             'success': success
         })
-    
+
     return results
 ```
 
@@ -356,15 +357,15 @@ This research demonstrates that enhanced markdown conversion provides significan
 
 ---
 
-**Manuscript received:** January 10, 2024  
-**Accepted for publication:** January 15, 2024  
+**Manuscript received:** January 10, 2024
+**Accepted for publication:** January 15, 2024
 **Published online:** January 20, 2024
 """
 
     return {
         "basic": basic_content,
         "technical": technical_content,
-        "academic": academic_content
+        "academic": academic_content,
     }
 
 
@@ -373,11 +374,11 @@ def demonstrate_basic_conversion():
     print("\n" + "=" * 60)
     print("BASIC MARKDOWN CONVERSION DEMONSTRATION")
     print("=" * 60)
-    
+
     try:
         # Create converter with default settings
         converter = EnhancedMarkdownConverter()
-        
+
         # Show backend information
         backend_info = converter.get_backend_info()
         print("Available conversion backends:")
@@ -385,32 +386,32 @@ def demonstrate_basic_conversion():
             status = "✅" if available else "❌"
             print(f"  {status} {backend}")
         print(f"Recommended backend: {backend_info['recommended_backend']}")
-        
+
         # Get sample content
         samples = create_sample_markdown_content()
         temp_dir = Path(tempfile.mkdtemp())
-        
+
         # Convert basic sample
         basic_md_path = temp_dir / "basic_sample.md"
-        with open(basic_md_path, 'w', encoding='utf-8') as f:
-            f.write(samples['basic'])
-        
+        with open(basic_md_path, "w", encoding="utf-8") as f:
+            f.write(samples["basic"])
+
         print(f"\nConverting basic sample: {basic_md_path}")
-        
+
         success = converter.convert_file_to_pdf(
             input_path=str(basic_md_path),
             output_path=str(temp_dir / "basic_sample.pdf"),
-            method="auto"  # Let the system choose the best backend
+            method="auto",  # Let the system choose the best backend
         )
-        
+
         if success:
             print("✅ Basic conversion successful!")
             print(f"   Output: {temp_dir / 'basic_sample.pdf'}")
         else:
             print("❌ Basic conversion failed")
-        
+
         return success, temp_dir
-        
+
     except Exception as e:
         print(f"❌ Basic conversion demonstration failed: {str(e)}")
         return False, None
@@ -421,71 +422,76 @@ def demonstrate_backend_comparison():
     print("\n" + "=" * 60)
     print("BACKEND COMPARISON DEMONSTRATION")
     print("=" * 60)
-    
+
     try:
         samples = create_sample_markdown_content()
         temp_dir = Path(tempfile.mkdtemp())
-        
+
         # Create technical document
         tech_md_path = temp_dir / "technical.md"
-        with open(tech_md_path, 'w', encoding='utf-8') as f:
-            f.write(samples['technical'])
-        
-        print(f"Testing different backends with technical document...")
-        
+        with open(tech_md_path, "w", encoding="utf-8") as f:
+            f.write(samples["technical"])
+
+        print("Testing different backends with technical document...")
+
         # Test different backends
         backends = ["auto", "weasyprint", "pandoc"]
         results = {}
-        
+
         for backend in backends:
             try:
                 print(f"\nTesting {backend} backend...")
-                
+
                 converter = EnhancedMarkdownConverter()
                 output_path = temp_dir / f"technical_{backend}.pdf"
-                
+
                 import time
+
                 start_time = time.time()
-                
+
                 success = converter.convert_file_to_pdf(
                     input_path=str(tech_md_path),
                     output_path=str(output_path),
-                    method=backend
+                    method=backend,
                 )
-                
+
                 end_time = time.time()
                 conversion_time = end_time - start_time
-                
+
                 if success:
-                    file_size = output_path.stat().st_size if output_path.exists() else 0
-                    print(f"  ✅ {backend}: Success in {conversion_time:.2f}s, {file_size} bytes")
+                    file_size = (
+                        output_path.stat().st_size if output_path.exists() else 0
+                    )
+                    print(
+                        f"  ✅ {backend}: Success in {conversion_time:.2f}s, {file_size} bytes"
+                    )
                     results[backend] = {
-                        'success': True,
-                        'time': conversion_time,
-                        'size': file_size,
-                        'output': str(output_path)
+                        "success": True,
+                        "time": conversion_time,
+                        "size": file_size,
+                        "output": str(output_path),
                     }
                 else:
                     print(f"  ❌ {backend}: Failed")
-                    results[backend] = {'success': False, 'time': conversion_time}
-                    
+                    results[backend] = {"success": False, "time": conversion_time}
+
             except Exception as e:
                 print(f"  ❌ {backend}: Error - {str(e)}")
-                results[backend] = {'success': False, 'error': str(e)}
-        
+                results[backend] = {"success": False, "error": str(e)}
+
         # Summary
         print("\n" + "-" * 40)
         print("BACKEND COMPARISON SUMMARY")
         print("-" * 40)
-        successful_backends = [b for b, r in results.items() if r.get('success', False)]
+        successful_backends = [b for b, r in results.items() if r.get("success", False)]
         print(f"Successful backends: {successful_backends}")
-        
+
         if successful_backends:
-            fastest = min(successful_backends, key=lambda b: results[b]['time'])
+            fastest = min(successful_backends, key=lambda b: results[b]["time"])
             print(f"Fastest backend: {fastest} ({results[fastest]['time']:.2f}s)")
-        
+
         return results, temp_dir
-        
+
     except Exception as e:
         print(f"❌ Backend comparison demonstration failed: {str(e)}")
         return None, None
@@ -496,11 +502,11 @@ def demonstrate_custom_styling():
     print("\n" + "=" * 60)
     print("CUSTOM STYLING DEMONSTRATION")
     print("=" * 60)
-    
+
     try:
         samples = create_sample_markdown_content()
         temp_dir = Path(tempfile.mkdtemp())
-        
+
         # Create custom CSS
         custom_css = """
         body {
@@ -512,7 +518,7 @@ def demonstrate_custom_styling():
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         h1 {
             color: #c0392b;
             font-size: 2.2em;
@@ -520,7 +526,7 @@ def demonstrate_custom_styling():
             padding-bottom: 0.5em;
             margin-top: 2em;
         }
-        
+
         h2 {
             color: #8e44ad;
             font-size: 1.6em;
@@ -528,13 +534,13 @@ def demonstrate_custom_styling():
             padding-bottom: 0.3em;
             margin-top: 1.5em;
         }
-        
+
         h3 {
             color: #2980b9;
             font-size: 1.3em;
             margin-top: 1.2em;
         }
-        
+
         code {
             background-color: #ecf0f1;
             color: #e74c3c;
@@ -543,7 +549,7 @@ def demonstrate_custom_styling():
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
         }
-        
+
         pre {
             background-color: #2c3e50;
             color: #ecf0f1;
@@ -553,13 +559,13 @@ def demonstrate_custom_styling():
             overflow-x: auto;
             font-size: 0.9em;
         }
-        
+
         pre code {
             background-color: transparent;
             color: inherit;
             padding: 0;
         }
-        
+
         blockquote {
             background-color: #f8f9fa;
             border-left: 5px solid #3498db;
@@ -568,7 +574,7 @@ def demonstrate_custom_styling():
             font-style: italic;
             color: #555;
         }
-        
+
         table {
             border-collapse: collapse;
             width: 100%;
@@ -578,7 +584,7 @@ def demonstrate_custom_styling():
             overflow: hidden;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         th {
             background-color: #3498db;
             color: white;
@@ -586,41 +592,41 @@ def demonstrate_custom_styling():
             text-align: left;
             font-weight: bold;
         }
-        
+
         td {
             padding: 10px 15px;
             border-bottom: 1px solid #ecf0f1;
         }
-        
+
         tr:nth-child(even) {
             background-color: #f8f9fa;
         }
-        
+
         tr:hover {
             background-color: #e8f4fd;
         }
-        
+
         ul, ol {
             margin-bottom: 1em;
             padding-left: 2em;
         }
-        
+
         li {
             margin-bottom: 0.5em;
             line-height: 1.6;
         }
-        
+
         a {
             color: #3498db;
             text-decoration: none;
             border-bottom: 1px dotted #3498db;
         }
-        
+
         a:hover {
             color: #2980b9;
             border-bottom: 1px solid #2980b9;
         }
-        
+
         .toc {
             background-color: #f8f9fa;
             border: 2px solid #e9ecef;
@@ -628,29 +634,29 @@ def demonstrate_custom_styling():
             padding: 20px;
             margin: 2em 0;
         }
-        
+
         .toc h2 {
             color: #2c3e50;
             margin-top: 0;
             border-bottom: none;
         }
-        
+
         .toc ul {
             list-style-type: none;
             padding-left: 0;
         }
-        
+
         .toc li {
             margin-bottom: 0.8em;
         }
-        
+
         .toc a {
             color: #2c3e50;
             font-weight: 500;
             border-bottom: none;
         }
         """
-        
+
         # Create custom configuration
         config = MarkdownConfig(
             page_size="A4",
@@ -659,16 +665,16 @@ def demonstrate_custom_styling():
             line_height="1.4",
             include_toc=True,
             syntax_highlighting=True,
-            custom_css=custom_css
+            custom_css=custom_css,
         )
-        
+
         converter = EnhancedMarkdownConverter(config)
-        
+
         # Convert academic sample with custom styling
         academic_md_path = temp_dir / "academic_styled.md"
-        with open(academic_md_path, 'w', encoding='utf-8') as f:
-            f.write(samples['academic'])
-        
+        with open(academic_md_path, "w", encoding="utf-8") as f:
+            f.write(samples["academic"])
+
         print("Converting academic paper with custom styling...")
         print("Custom styling features:")
         print("  - Custom color scheme (reds, purples, blues)")
@@ -677,32 +683,32 @@ def demonstrate_custom_styling():
         print("  - Styled code blocks with dark theme")
         print("  - Custom blockquote styling")
         print("  - Professional header styling")
-        
+
         success = converter.convert_file_to_pdf(
             input_path=str(academic_md_path),
             output_path=str(temp_dir / "academic_styled.pdf"),
-            method="weasyprint"  # WeasyPrint is best for custom CSS
+            method="weasyprint",  # WeasyPrint is best for custom CSS
         )
-        
+
         if success:
             print("✅ Custom styling conversion successful!")
             print(f"   Output: {temp_dir / 'academic_styled.pdf'}")
-            
+
             # Also create a default version for comparison
             default_converter = EnhancedMarkdownConverter()
             default_success = default_converter.convert_file_to_pdf(
                 input_path=str(academic_md_path),
                 output_path=str(temp_dir / "academic_default.pdf"),
-                method="weasyprint"
+                method="weasyprint",
             )
-            
+
             if default_success:
                 print(f"   Comparison (default): {temp_dir / 'academic_default.pdf'}")
         else:
             print("❌ Custom styling conversion failed")
-        
+
         return success, temp_dir
-        
+
     except Exception as e:
         print(f"❌ Custom styling demonstration failed: {str(e)}")
         return False, None
@@ -713,7 +719,7 @@ def demonstrate_content_conversion():
     print("\n" + "=" * 60)
     print("CONTENT CONVERSION DEMONSTRATION")
     print("=" * 60)
-    
+
     try:
         # Create markdown content programmatically
         dynamic_content = f"""# Dynamic Content Example
@@ -762,38 +768,38 @@ Direct content conversion is useful for:
 - API-based document services
 - Real-time content processing
 """
-        
+
         temp_dir = Path(tempfile.mkdtemp())
         converter = EnhancedMarkdownConverter()
-        
+
         print("Converting dynamically generated markdown content...")
         print("Content includes:")
         print("  - System information")
         print("  - Dynamic tables with current values")
         print("  - Generated timestamps")
         print("  - Programmatic examples")
-        
+
         # Convert content directly to PDF
         output_path = temp_dir / "dynamic_content.pdf"
-        
+
         success = converter.convert_markdown_to_pdf(
             markdown_content=dynamic_content,
             output_path=str(output_path),
-            method="auto"
+            method="auto",
         )
-        
+
         if success:
             print("✅ Content conversion successful!")
             print(f"   Output: {output_path}")
-            
+
             # Show file size
             file_size = output_path.stat().st_size
             print(f"   Generated PDF size: {file_size} bytes")
         else:
             print("❌ Content conversion failed")
-        
+
         return success, temp_dir
-        
+
     except Exception as e:
         print(f"❌ Content conversion demonstration failed: {str(e)}")
         return False, None
@@ -804,14 +810,14 @@ def demonstrate_error_handling():
     print("\n" + "=" * 60)
     print("ERROR HANDLING DEMONSTRATION")
     print("=" * 60)
-    
+
     try:
         temp_dir = Path(tempfile.mkdtemp())
-        
+
         # Test cases with various issues
         test_cases = {
             "invalid_markdown": """# Invalid Markdown
-            
+
 This markdown has some {{invalid}} syntax and [broken links](http://nonexistent.invalid).
 
 ```unknown_language
@@ -841,98 +847,106 @@ Symbols: ♠ ♣ ♥ ♦ ☀ ☁ ☂ ☃ ☄ ★ ☆ ☉ ☊ ☋ ☌ ☍ ☎ ☏
 Arrows: ← ↑ → ↓ ↔ ↕ ↖ ↗ ↘ ↙
 """,
             "empty_content": "",
-            "minimal_content": "# Just a title"
+            "minimal_content": "# Just a title",
         }
-        
+
         print("Testing error handling with various content types...")
-        
+
         results = {}
-        
+
         for test_name, content in test_cases.items():
             print(f"\nTesting: {test_name}")
-            
+
             try:
                 # Try multiple backends for each test case
                 for backend in ["auto", "weasyprint", "pandoc"]:
                     try:
                         converter = EnhancedMarkdownConverter()
                         output_path = temp_dir / f"{test_name}_{backend}.pdf"
-                        
+
                         success = converter.convert_markdown_to_pdf(
                             markdown_content=content,
                             output_path=str(output_path),
-                            method=backend
+                            method=backend,
                         )
-                        
+
                         if success:
-                            file_size = output_path.stat().st_size if output_path.exists() else 0
+                            file_size = (
+                                output_path.stat().st_size
+                                if output_path.exists()
+                                else 0
+                            )
                             print(f"  ✅ {backend}: Success ({file_size} bytes)")
                             results[f"{test_name}_{backend}"] = {
-                                'success': True,
-                                'size': file_size
+                                "success": True,
+                                "size": file_size,
                             }
                         else:
                             print(f"  ❌ {backend}: Failed")
-                            results[f"{test_name}_{backend}"] = {'success': False}
-                            
+                            results[f"{test_name}_{backend}"] = {"success": False}
+
                     except Exception as e:
                         print(f"  ❌ {backend}: Error - {str(e)[:60]}...")
                         results[f"{test_name}_{backend}"] = {
-                            'success': False,
-                            'error': str(e)
+                            "success": False,
+                            "error": str(e),
                         }
-                        
+
             except Exception as e:
                 print(f"  ❌ Test case failed: {str(e)}")
-        
+
         # Demonstrate robust conversion with fallbacks
-        print(f"\nDemonstrating robust conversion with fallback logic...")
-        
+        print("\nDemonstrating robust conversion with fallback logic...")
+
         def robust_convert(content, output_path):
             """Convert with multiple backend fallbacks"""
             backends = ["weasyprint", "pandoc", "auto"]
-            
+
             for backend in backends:
                 try:
                     converter = EnhancedMarkdownConverter()
                     success = converter.convert_markdown_to_pdf(
                         markdown_content=content,
                         output_path=output_path,
-                        method=backend
+                        method=backend,
                     )
                     if success:
                         return backend, True
                 except Exception:
                     continue
-            
+
             return None, False
-        
+
         # Test robust conversion
         test_content = test_cases["complex_content"]
         robust_output = temp_dir / "robust_conversion.pdf"
-        
+
         successful_backend, success = robust_convert(test_content, str(robust_output))
-        
+
         if success:
             print(f"✅ Robust conversion successful using {successful_backend}")
             print(f"   Output: {robust_output}")
         else:
             print("❌ All backends failed for robust conversion")
-        
+
         # Summary
         print("\n" + "-" * 40)
         print("ERROR HANDLING SUMMARY")
         print("-" * 40)
-        successful_conversions = sum(1 for r in results.values() if r.get('success', False))
+        successful_conversions = sum(
+            1 for r in results.values() if r.get("success", False)
+        )
         total_attempts = len(results)
-        success_rate = (successful_conversions / total_attempts * 100) if total_attempts > 0 else 0
-        
+        success_rate = (
+            (successful_conversions / total_attempts * 100) if total_attempts > 0 else 0
+        )
+
         print(f"Total conversion attempts: {total_attempts}")
         print(f"Successful conversions: {successful_conversions}")
         print(f"Success rate: {success_rate:.1f}%")
-        
+
         return results, temp_dir
-        
+
     except Exception as e:
         print(f"❌ Error handling demonstration failed: {str(e)}")
         return None, None
@@ -943,62 +957,72 @@ def main():
     # Configure logging
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    
+
     print("RAG-Anything Enhanced Markdown Conversion Demonstration")
     print("=" * 70)
-    print("This example demonstrates various enhanced markdown conversion capabilities:")
+    print(
+        "This example demonstrates various enhanced markdown conversion capabilities:"
+    )
     print("  - Basic markdown to PDF conversion")
     print("  - Multiple backend comparison (WeasyPrint vs Pandoc)")
     print("  - Custom CSS styling and professional formatting")
     print("  - Direct content conversion without file I/O")
     print("  - Comprehensive error handling and fallback mechanisms")
-    
+
     results = {}
-    
+
     # Run demonstrations
     print("\n🚀 Starting demonstrations...")
-    
+
     # Basic conversion
     success, temp_dir = demonstrate_basic_conversion()
-    results['basic'] = success
-    
+    results["basic"] = success
+
     # Backend comparison
     backend_results, _ = demonstrate_backend_comparison()
-    results['backends'] = backend_results
-    
+    results["backends"] = backend_results
+
     # Custom styling
     styling_success, _ = demonstrate_custom_styling()
-    results['styling'] = styling_success
-    
+    results["styling"] = styling_success
+
     # Content conversion
     content_success, _ = demonstrate_content_conversion()
-    results['content'] = content_success
-    
+    results["content"] = content_success
+
     # Error handling
     error_results, _ = demonstrate_error_handling()
-    results['error_handling'] = error_results
-    
+    results["error_handling"] = error_results
+
     # Summary
     print("\n" + "=" * 70)
     print("DEMONSTRATION SUMMARY")
     print("=" * 70)
-    
+
     print("✅ Features Successfully Demonstrated:")
-    if results['basic']:
+    if results["basic"]:
         print("  - Basic markdown to PDF conversion")
-    if results['backends']:
-        successful_backends = [b for b, r in results['backends'].items() if r.get('success', False)]
+    if results["backends"]:
+        successful_backends = [
+            b for b, r in results["backends"].items() if r.get("success", False)
+        ]
         print(f"  - Multiple backends: {successful_backends}")
-    if results['styling']:
+    if results["styling"]:
         print("  - Custom CSS styling and professional formatting")
-    if results['content']:
+    if results["content"]:
         print("  - Direct content conversion without file I/O")
-    if results['error_handling']:
-        success_rate = sum(1 for r in results['error_handling'].values() if r.get('success', False)) / len(results['error_handling']) * 100
+    if results["error_handling"]:
+        success_rate = (
+            sum(
+                1 for r in results["error_handling"].values() if r.get("success", False)
+            )
+            / len(results["error_handling"])
+            * 100
+        )
         print(f"  - Error handling with {success_rate:.1f}% overall success rate")
-    
+
     print("\n📊 Key Capabilities Highlighted:")
     print("  - Professional PDF generation with high-quality typography")
     print("  - Multiple conversion backends with automatic selection")
@@ -1008,7 +1032,7 @@ def main():
     print("  - Image embedding with proper scaling")
     print("  - Table of contents generation with navigation")
     print("  - Comprehensive error handling and fallback mechanisms")
-    
+
     print("\n💡 Best Practices Demonstrated:")
     print("  - Choose WeasyPrint for web-style documents and custom CSS")
     print("  - Choose Pandoc for academic papers and complex formatting")
@@ -1018,7 +1042,7 @@ def main():
     print("  - Test custom CSS with simple content first")
     print("  - Handle errors gracefully with multiple backend attempts")
     print("  - Use appropriate page sizes and margins for target use case")
-    
+
     print("\n🎯 Integration Patterns:")
     print("  - Standalone conversion for document generation")
     print("  - Integration with RAG-Anything document pipeline")
@@ -1028,4 +1052,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

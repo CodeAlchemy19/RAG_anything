@@ -96,21 +96,21 @@ config = MarkdownConfig(
     line_height="1.5",        # Line spacing
     include_toc=True,         # Generate table of contents
     syntax_highlighting=True, # Enable code syntax highlighting
-    
+
     # Custom CSS styling
     custom_css="""
-    body { 
-        font-family: 'Georgia', serif; 
+    body {
+        font-family: 'Georgia', serif;
         color: #333;
     }
-    h1 { 
-        color: #2c3e50; 
-        border-bottom: 2px solid #3498db; 
+    h1 {
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
         padding-bottom: 0.3em;
     }
-    code { 
-        background-color: #f8f9fa; 
-        padding: 2px 4px; 
+    code {
+        background-color: #f8f9fa;
+        padding: 2px 4px;
         border-radius: 3px;
     }
     pre {
@@ -232,22 +232,22 @@ class MarkdownConfig:
     margin: str = "1in"                # CSS margin format
     font_size: str = "12pt"            # Base font size
     line_height: str = "1.5"           # Line spacing multiplier
-    
+
     # Content options
     include_toc: bool = True           # Generate table of contents
     syntax_highlighting: bool = True   # Enable code highlighting
     image_max_width: str = "100%"      # Maximum image width
     table_style: str = "..."           # Default table CSS
-    
+
     # Styling
     css_file: Optional[str] = None     # External CSS file path
     custom_css: Optional[str] = None   # Inline CSS content
     template_file: Optional[str] = None # Custom HTML template
-    
+
     # Output options
     output_format: str = "pdf"         # Currently only PDF supported
     output_dir: Optional[str] = None   # Output directory
-    
+
     # Metadata
     metadata: Optional[Dict[str, str]] = None  # Document metadata
 ```
@@ -347,7 +347,7 @@ This document provides comprehensive technical specifications.
 
 ### System Components
 1. **Parser Engine**: Handles document processing
-2. **Storage Layer**: Manages data persistence  
+2. **Storage Layer**: Manages data persistence
 3. **Query Interface**: Provides search capabilities
 
 ### Code Implementation
@@ -437,8 +437,8 @@ sudo apt-get install pandoc wkhtmltopdf
 # Use web-safe fonts
 config = MarkdownConfig(
     custom_css="""
-    body { 
-        font-family: 'Arial', 'Helvetica', sans-serif; 
+    body {
+        font-family: 'Arial', 'Helvetica', sans-serif;
     }
     """
 )
@@ -468,10 +468,10 @@ result = converter.convert_file_to_pdf("test.md", "test.pdf")
 def robust_conversion(input_path, output_path):
     """Convert with fallback backends"""
     converter = EnhancedMarkdownConverter()
-    
+
     # Try backends in order of preference
     backends = ["weasyprint", "pandoc", "auto"]
-    
+
     for backend in backends:
         try:
             success = converter.convert_file_to_pdf(
@@ -485,7 +485,7 @@ def robust_conversion(input_path, output_path):
         except Exception as e:
             print(f"❌ {backend} failed: {str(e)}")
             continue
-    
+
     print("❌ All backends failed")
     return False
 ```
@@ -498,19 +498,19 @@ def robust_conversion(input_path, output_path):
 class EnhancedMarkdownConverter:
     def __init__(self, config: Optional[MarkdownConfig] = None):
         """Initialize converter with optional configuration"""
-    
+
     def convert_file_to_pdf(self, input_path: str, output_path: str, method: str = "auto") -> bool:
         """Convert markdown file to PDF"""
-    
+
     def convert_markdown_to_pdf(self, markdown_content: str, output_path: str, method: str = "auto") -> bool:
         """Convert markdown content to PDF"""
-    
+
     def get_backend_info(self) -> Dict[str, Any]:
         """Get information about available backends"""
-    
+
     def convert_with_weasyprint(self, markdown_content: str, output_path: str) -> bool:
         """Convert using WeasyPrint backend"""
-    
+
     def convert_with_pandoc(self, markdown_content: str, output_path: str) -> bool:
         """Convert using Pandoc backend"""
 ```
@@ -549,4 +549,4 @@ class EnhancedMarkdownConverter:
 
 ## Conclusion
 
-The enhanced markdown conversion feature provides professional-quality PDF generation with flexible styling options and multiple backend support. It seamlessly integrates with RAG-Anything's document processing pipeline while offering standalone functionality for markdown-to-PDF conversion needs. 
+The enhanced markdown conversion feature provides professional-quality PDF generation with flexible styling options and multiple backend support. It seamlessly integrates with RAG-Anything's document processing pipeline while offering standalone functionality for markdown-to-PDF conversion needs.
