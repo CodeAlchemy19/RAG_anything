@@ -1286,42 +1286,35 @@ class DoclingParser(Parser):
                 with open(json_file, "r", encoding="utf-8") as f:
                     docling_content = json.load(f)
                     # Convert docling format to minerU format
-                    children = docling_content["body"]["children"]
-                    cnt = 0
-                    for child in children:
-                        cnt += 1
-                        tag = child["$ref"]
-                        type = tag.split("/")[1]
-                        num = tag.split("/")[2]
-                        block = docling_content[type][int(num)]
-                        if type != "groups":
-                            content_list.append(
-                                self.read_from_block(block, type, num, file_subdir, cnt)
-                            )
-                        else:
-                            members = block["children"]
-                            for member in members:
-                                member_tag = member["$ref"]
-                                member_type = member_tag.split("/")[1]
-                                member_num = member_tag.split("/")[2]
-                                member_block = docling_content[member_type][
-                                    int(member_num)
-                                ]
-                                content_list.append(
-                                    self.read_from_block(
-                                        member_block,
-                                        member_type,
-                                        member_num,
-                                        file_subdir,
-                                        cnt,
-                                    )
-                                )
+                    content_list = self.read_from_block_recursive(docling_content["body"], "body", file_subdir, 0, "0", docling_content)
             except Exception as e:
                 logging.warning(f"Could not read or convert JSON file {json_file}: {e}")
         return content_list, md_content
 
+
+    def read_from_block_recursive(self, block, type: str, output_dir: Path, cnt: int, num: str, docling_content: Dict[str, Any]) -> List[Dict[str, Any]]:
+        content_list = []
+        if not block.get("children"):
+            cnt+=1
+            content_list.append(self.read_from_block(block, type, output_dir, cnt, num))
+        else:
+            if not type in ["groups", "body"]:
+                cnt+=1
+                content_list.append(self.read_from_block(block, type, output_dir, cnt, num))
+            members = block["children"]
+            for member in members:
+                cnt+=1
+                member_tag = member["$ref"]
+                member_type = member_tag.split("/")[1]
+                member_num = member_tag.split("/")[2]  
+                member_block = docling_content[member_type][
+                    int(member_num)
+                ]
+                content_list.extend(self.read_from_block_recursive(member_block, member_type, output_dir, cnt, member_num, docling_content))
+        return content_list
+
     def read_from_block(
-        self, block, type: str, num: str, output_dir: Path, cnt: int
+        self, block, type: str, output_dir: Path, cnt: int, num: str
     ) -> Dict[str, Any]:
         if type == "texts":
             if block["label"] == "formula":
@@ -1330,13 +1323,13 @@ class DoclingParser(Parser):
                     "img_path": "",
                     "text": block["orig"],
                     "text_format": "unkown",
-                    "page_idx": int(cnt) / 10,
+                    "page_idx": cnt // 10,
                 }
             else:
                 return {
                     "type": "text",
                     "text": block["orig"],
-                    "page_idx": int(cnt) / 10,
+                    "page_idx": cnt // 10,
                 }
         elif type == "pictures":
             try:
@@ -1353,14 +1346,14 @@ class DoclingParser(Parser):
                     "img_path": str(image_path.resolve()),  # Convert to absolute path
                     "image_caption": block.get("caption", ""),
                     "image_footnote": block.get("footnote", ""),
-                    "page_idx": int(cnt) / 10,
+                    "page_idx": cnt // 10,
                 }
             except Exception as e:
                 logging.warning(f"Failed to process image {num}: {e}")
                 return {
                     "type": "text",
                     "text": f"[Image processing failed: {block.get('caption', '')}]",
-                    "page_idx": int(cnt) / 10,
+                    "page_idx": cnt // 10,
                 }
         else:
             try:
@@ -1370,14 +1363,14 @@ class DoclingParser(Parser):
                     "table_caption": block.get("caption", ""),
                     "table_footnote": block.get("footnote", ""),
                     "table_body": block.get("data", []),
-                    "page_idx": int(cnt) / 10,
+                    "page_idx": cnt // 10,
                 }
             except Exception as e:
                 logging.warning(f"Failed to process table {num}: {e}")
                 return {
                     "type": "text",
                     "text": f"[Table processing failed: {block.get('caption', '')}]",
-                    "page_idx": int(cnt) / 10,
+                    "page_idx": cnt // 10,
                 }
 
     def parse_office_doc(
