@@ -1286,31 +1286,54 @@ class DoclingParser(Parser):
                 with open(json_file, "r", encoding="utf-8") as f:
                     docling_content = json.load(f)
                     # Convert docling format to minerU format
-                    content_list = self.read_from_block_recursive(docling_content["body"], "body", file_subdir, 0, "0", docling_content)
+                    content_list = self.read_from_block_recursive(
+                        docling_content["body"],
+                        "body",
+                        file_subdir,
+                        0,
+                        "0",
+                        docling_content,
+                    )
             except Exception as e:
                 logging.warning(f"Could not read or convert JSON file {json_file}: {e}")
         return content_list, md_content
 
-
-    def read_from_block_recursive(self, block, type: str, output_dir: Path, cnt: int, num: str, docling_content: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def read_from_block_recursive(
+        self,
+        block,
+        type: str,
+        output_dir: Path,
+        cnt: int,
+        num: str,
+        docling_content: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
         content_list = []
         if not block.get("children"):
-            cnt+=1
+            cnt += 1
             content_list.append(self.read_from_block(block, type, output_dir, cnt, num))
         else:
-            if not type in ["groups", "body"]:
-                cnt+=1
-                content_list.append(self.read_from_block(block, type, output_dir, cnt, num))
+            if type not in ["groups", "body"]:
+                cnt += 1
+                content_list.append(
+                    self.read_from_block(block, type, output_dir, cnt, num)
+                )
             members = block["children"]
             for member in members:
-                cnt+=1
+                cnt += 1
                 member_tag = member["$ref"]
                 member_type = member_tag.split("/")[1]
-                member_num = member_tag.split("/")[2]  
-                member_block = docling_content[member_type][
-                    int(member_num)
-                ]
-                content_list.extend(self.read_from_block_recursive(member_block, member_type, output_dir, cnt, member_num, docling_content))
+                member_num = member_tag.split("/")[2]
+                member_block = docling_content[member_type][int(member_num)]
+                content_list.extend(
+                    self.read_from_block_recursive(
+                        member_block,
+                        member_type,
+                        output_dir,
+                        cnt,
+                        member_num,
+                        docling_content,
+                    )
+                )
         return content_list
 
     def read_from_block(
