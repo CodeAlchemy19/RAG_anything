@@ -681,7 +681,7 @@ class ProcessorMixin:
 
         # Stage 1: Concurrent generation of descriptions using correct processors for each type
         async def process_single_item_with_correct_processor(
-            item: Dict[str, Any], index: int
+            item: Dict[str, Any], index: int, file_path: str
         ):
             """Process single item using the correct processor for its type"""
             async with semaphore:
@@ -725,6 +725,7 @@ class ProcessorMixin:
                         "item_info": item_info,
                         "chunk_order_index": existing_chunks_count + index,
                         "processor": processor,  # Keep reference to the processor used
+                        "file_path": file_path,  # Add file_path to the result
                     }
 
                 except Exception as e:
@@ -735,7 +736,9 @@ class ProcessorMixin:
 
         # Process all items concurrently with correct processors
         tasks = [
-            asyncio.create_task(process_single_item_with_correct_processor(item, i))
+            asyncio.create_task(
+                process_single_item_with_correct_processor(item, i, file_path)
+            )
             for i, item in enumerate(multimodal_items)
         ]
 
