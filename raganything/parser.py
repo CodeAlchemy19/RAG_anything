@@ -552,13 +552,13 @@ class MineruParser(Parser):
         output_dir: Union[str, Path],
         method: str = "auto",
         lang: Optional[str] = None,
-        backend: str = "pipeline",
+        backend: Optional[str] = None,
         start_page: Optional[int] = None,
         end_page: Optional[int] = None,
         formula: bool = True,
         table: bool = True,
         device: Optional[str] = None,
-        source: str = "huggingface",
+        source: Optional[str] = None,
         vlm_url: Optional[str] = None,
     ) -> None:
         """
@@ -586,12 +586,12 @@ class MineruParser(Parser):
             str(output_dir),
             "-m",
             method,
-            "-b",
-            backend,
-            "--source",
-            source,
         ]
 
+        if backend:
+            cmd.extend(["-b", backend])
+        if source:
+            cmd.extend(["--source", source])
         if lang:
             cmd.extend(["-l", lang])
         if start_page is not None:
