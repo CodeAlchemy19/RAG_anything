@@ -113,10 +113,6 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
             os.makedirs(self.working_dir)
             self.logger.info(f"Created working directory: {self.working_dir}")
 
-        # If LightRAG is provided, initialize processors immediately
-        if self.lightrag is not None:
-            self._initialize_processors()
-
         # Log configuration info
         self.logger.info("RAGAnything initialized with config:")
         self.logger.info(f"  Working directory: {self.config.working_dir}")
@@ -223,17 +219,51 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
 
     async def _ensure_lightrag_initialized(self):
         """Ensure LightRAG instance is initialized, create if necessary"""
-        if self.lightrag is not None:
-            return
 
-        # Check parser installation
+        # Check parser installation first
         if not self.doc_parser.check_installation():
             raise RuntimeError(
                 f"Parser '{self.config.parser}' is not properly installed. "
                 "Please install it using pip install or uv pip install."
             )
 
-        # Validate required functions
+        if self.lightrag is not None:
+            # LightRAG was pre-provided, but we need to ensure it's properly initialized
+            # and that parse_cache is set up
+
+            # Ensure LightRAG storages are initialized
+            if (
+                not hasattr(self.lightrag, "_storages_status")
+                or self.lightrag._storages_status.name != "INITIALIZED"
+            ):
+                self.logger.info(
+                    "Initializing storages for pre-provided LightRAG instance"
+                )
+                await self.lightrag.initialize_storages()
+                from lightrag.kg.shared_storage import initialize_pipeline_status
+
+                await initialize_pipeline_status()
+
+            # Initialize parse cache if not already done
+            if self.parse_cache is None:
+                self.logger.info(
+                    "Initializing parse cache for pre-provided LightRAG instance"
+                )
+                self.parse_cache = self.lightrag.key_string_value_json_storage_cls(
+                    namespace="parse_cache",
+                    workspace=self.lightrag.workspace,
+                    global_config=self.lightrag.__dict__,
+                    embedding_func=self.embedding_func,
+                )
+                await self.parse_cache.initialize()
+
+            # Initialize processors if not already done
+            if not self.modal_processors:
+                self._initialize_processors()
+
+            return
+
+        # Validate required functions for creating new LightRAG instance
         if self.llm_model_func is None:
             raise ValueError(
                 "llm_model_func must be provided when LightRAG is not pre-initialized"
