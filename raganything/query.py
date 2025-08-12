@@ -325,7 +325,7 @@ class QueryMixin:
         query_param = QueryParam(mode=mode, only_need_prompt=True, **kwargs)
         raw_prompt = await self.lightrag.aquery(query, param=query_param)
 
-        self.logger.info("Retrieved raw prompt from LightRAG")
+        self.logger.debug("Retrieved raw prompt from LightRAG")
 
         # 2. Extract and process image paths
         enhanced_prompt, images_found = await self._process_image_paths_for_vlm(
@@ -335,7 +335,7 @@ class QueryMixin:
         if not images_found:
             self.logger.info("No valid images found, falling back to normal query")
             # Fallback to normal query
-            return await self.aquery(query, mode=mode, **kwargs)
+            return await self.lightrag.aquery(query, param=query_param)
 
         self.logger.info(f"Processed {images_found} images for VLM")
 
@@ -532,13 +532,20 @@ class QueryMixin:
         self._current_images_base64 = []
 
         # Enhanced regex pattern for matching image paths
-        # Matches patterns like "Image Path: \path\to\image.jpg"
-        image_path_pattern = r"Image Path:\s*([^\r\n]+)"
+        # Matches only the path ending with image file extensions
+        image_path_pattern = (
+            r"Image Path:\s*([^\r\n]*?\.(?:jpg|jpeg|png|gif|bmp|webp|tiff|tif))"
+        )
+
+        # First, let's see what matches we find
+        matches = re.findall(image_path_pattern, prompt)
+        self.logger.info(f"Found {len(matches)} image path matches in prompt")
 
         def replace_image_path(match):
             nonlocal images_processed
 
             image_path = match.group(1).strip()
+            self.logger.debug(f"Processing image path: '{image_path}'")
 
             # Validate path format (basic check)
             if not image_path or len(image_path) < 3:
@@ -546,11 +553,17 @@ class QueryMixin:
                 return match.group(0)  # Keep original
 
             # Use utility function to validate image file
-            if not validate_image_file(image_path):
+            self.logger.debug(f"Calling validate_image_file for: {image_path}")
+            is_valid = validate_image_file(image_path)
+            self.logger.debug(f"Validation result for {image_path}: {is_valid}")
+
+            if not is_valid:
+                self.logger.warning(f"Image validation failed for: {image_path}")
                 return match.group(0)  # Keep original if validation fails
 
             try:
                 # Encode image to base64 using utility function
+                self.logger.debug(f"Attempting to encode image: {image_path}")
                 image_base64 = encode_image_to_base64(image_path)
                 if image_base64:
                     images_processed += 1
@@ -558,7 +571,11 @@ class QueryMixin:
                     self._current_images_base64.append(image_base64)
 
                     # Keep original path info and add VLM marker
-                    return f"Image Path: {image_path}\n[VLM_IMAGE_{images_processed}]"
+                    result = f"Image Path: {image_path}\n[VLM_IMAGE_{images_processed}]"
+                    self.logger.debug(
+                        f"Successfully processed image {images_processed}: {image_path}"
+                    )
+                    return result
                 else:
                     self.logger.error(f"Failed to encode image: {image_path}")
                     return match.group(0)  # Keep original if encoding failed
