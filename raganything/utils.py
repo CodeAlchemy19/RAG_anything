@@ -4,7 +4,9 @@ Utility functions for RAGAnything
 Contains helper functions for content separation, text insertion, and other utilities
 """
 
+import base64
 from typing import Dict, List, Any, Tuple
+from pathlib import Path
 from lightrag.utils import logger
 
 
@@ -52,6 +54,73 @@ def separate_content(
         logger.info(f"  - Multimodal type distribution: {modal_types}")
 
     return text_content, multimodal_items
+
+
+def encode_image_to_base64(image_path: str) -> str:
+    """
+    Encode image file to base64 string
+
+    Args:
+        image_path: Path to the image file
+
+    Returns:
+        str: Base64 encoded string, empty string if encoding fails
+    """
+    try:
+        with open(image_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+        return encoded_string
+    except Exception as e:
+        logger.error(f"Failed to encode image {image_path}: {e}")
+        return ""
+
+
+def validate_image_file(image_path: str, max_size_mb: int = 50) -> bool:
+    """
+    Validate if a file is a valid image file
+
+    Args:
+        image_path: Path to the image file
+        max_size_mb: Maximum file size in MB
+
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    try:
+        path = Path(image_path)
+
+        # Check if file exists
+        if not path.exists():
+            logger.warning(f"Image file not found: {image_path}")
+            return False
+
+        # Check file extension
+        image_extensions = [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".bmp",
+            ".webp",
+            ".tiff",
+            ".tif",
+        ]
+        if not any(str(path).lower().endswith(ext) for ext in image_extensions):
+            logger.warning(f"File does not appear to be an image: {image_path}")
+            return False
+
+        # Check file size
+        file_size = path.stat().st_size
+        max_size = max_size_mb * 1024 * 1024
+        if file_size > max_size:
+            logger.warning(f"Image file too large ({file_size} bytes): {image_path}")
+            return False
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to validate image {image_path}: {e}")
+        return False
 
 
 async def insert_text_content(

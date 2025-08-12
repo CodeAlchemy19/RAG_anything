@@ -48,6 +48,7 @@
 ---
 
 ## 🎉 新闻
+- [X] [2025.08.12]🎯📢 🔍 RAGAnything 现在支持 **VLM增强查询** 模式！当文档包含图片时，系统可以自动将图片与文本上下文一起直接传递给VLM进行综合多模态分析。
 - [X] [2025.07.05]🎯📢 RAGAnything 新增[上下文配置模块](docs/context_aware_processing.md)，支持为多模态内容处理添加相关上下文信息。
 - [X] [2025.07.04]🎯📢 RAGAnything 现在支持多模态内容查询，实现了集成文本、图像、表格和公式处理的增强检索生成功能。
 - [X] [2025.07.03]🎯📢 RAGAnything 在GitHub上达到了1K星标🌟！感谢您的支持和贡献。
@@ -315,9 +316,22 @@ async def main():
 
     # 定义视觉模型函数用于图像处理
     def vision_model_func(
-        prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs
+        prompt, system_prompt=None, history_messages=[], image_data=None, messages=None, **kwargs
     ):
-        if image_data:
+        # 如果提供了messages格式（用于多模态VLM增强查询），直接使用
+        if messages:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=messages,
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        # 传统单图片格式
+        elif image_data:
             return openai_complete_if_cache(
                 "gpt-4o",
                 "",
@@ -346,6 +360,7 @@ async def main():
                 base_url=base_url,
                 **kwargs,
             )
+        # 纯文本格式
         else:
             return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
@@ -547,7 +562,7 @@ class CustomModalProcessor(GenericModalProcessor):
 
 #### 5. 查询选项
 
-RAG-Anything 提供两种类型的查询方法：
+RAG-Anything 提供三种类型的查询方法：
 
 **纯文本查询** - 使用LightRAG直接进行知识库搜索：
 ```python
@@ -561,7 +576,36 @@ text_result_naive = await rag.aquery("你的问题", mode="naive")
 sync_text_result = rag.query("你的问题", mode="hybrid")
 ```
 
-**多模态查询** - 包含多模态内容分析的增强查询：
+**VLM增强查询** - 使用VLM自动分析检索上下文中的图像：
+```python
+# VLM增强查询（当提供vision_model_func时自动启用）
+vlm_result = await rag.aquery(
+    "分析文档中的图表和数据",
+    mode="hybrid"
+    # vlm_enhanced=True 当vision_model_func可用时自动设置
+)
+
+# 手动控制VLM增强
+vlm_enabled = await rag.aquery(
+    "这个文档中的图片显示了什么内容？",
+    mode="hybrid",
+    vlm_enhanced=True  # 强制启用VLM增强
+)
+
+vlm_disabled = await rag.aquery(
+    "这个文档中的图片显示了什么内容？",
+    mode="hybrid",
+    vlm_enhanced=False  # 强制禁用VLM增强
+)
+
+# 当文档包含图片时，VLM可以直接查看和分析图片
+# 系统将自动：
+# 1. 检索包含图片路径的相关上下文
+# 2. 加载图片并编码为base64格式
+# 3. 将文本上下文和图片一起发送给VLM进行综合分析
+```
+
+**多模态查询** - 包含特定多模态内容分析的增强查询：
 ```python
 # 包含表格数据的查询
 table_result = await rag.aquery_with_multimodal(
@@ -642,9 +686,22 @@ async def load_existing_lightrag():
 
     # 定义视觉模型函数用于图像处理
     def vision_model_func(
-        prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs
+        prompt, system_prompt=None, history_messages=[], image_data=None, messages=None, **kwargs
     ):
-        if image_data:
+        # 如果提供了messages格式（用于多模态VLM增强查询），直接使用
+        if messages:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=messages,
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        # 传统单图片格式
+        elif image_data:
             return openai_complete_if_cache(
                 "gpt-4o",
                 "",
@@ -673,6 +730,7 @@ async def load_existing_lightrag():
                 base_url=base_url,
                 **kwargs,
             )
+        # 纯文本格式
         else:
             return lightrag_instance.llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
@@ -735,8 +793,21 @@ async def insert_content_list_example():
             **kwargs,
         )
 
-    def vision_model_func(prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs):
-        if image_data:
+    def vision_model_func(prompt, system_prompt=None, history_messages=[], image_data=None, messages=None, **kwargs):
+        # 如果提供了messages格式（用于多模态VLM增强查询），直接使用
+        if messages:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=messages,
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        # 传统单图片格式
+        elif image_data:
             return openai_complete_if_cache(
                 "gpt-4o",
                 "",
@@ -756,6 +827,7 @@ async def insert_content_list_example():
                 base_url=base_url,
                 **kwargs,
             )
+        # 纯文本格式
         else:
             return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 

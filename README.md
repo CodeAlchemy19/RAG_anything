@@ -48,6 +48,7 @@
 ---
 
 ## 🎉 News
+- [X] [2025.08.12]🎯📢 🔍 RAG-Anything now supports **VLM Enhanced Query** mode! When documents contain images, the system can automatically pass images directly to VLM for comprehensive multimodal analysis alongside text context.
 - [X] [2025.07.05]🎯📢 RAG-Anything now features a [context configuration module](docs/context_aware_processing.md), enabling intelligent integration of relevant contextual information to enhance multimodal content processing.
 - [X] [2025.07.04]🎯📢 🚀 RAG-Anything now supports multimodal query capabilities, enabling enhanced RAG with seamless processing of text, images, tables, and equations.
 - [X] [2025.07.03]🎯📢 🎉 RAG-Anything has reached 1k🌟 stars on GitHub! Thank you for your incredible support and valuable contributions to the project.
@@ -319,9 +320,22 @@ async def main():
 
     # Define vision model function for image processing
     def vision_model_func(
-        prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs
+        prompt, system_prompt=None, history_messages=[], image_data=None, messages=None, **kwargs
     ):
-        if image_data:
+        # If messages format is provided (for multimodal VLM enhanced query), use it directly
+        if messages:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=messages,
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        # Traditional single image format
+        elif image_data:
             return openai_complete_if_cache(
                 "gpt-4o",
                 "",
@@ -350,6 +364,7 @@ async def main():
                 base_url=base_url,
                 **kwargs,
             )
+        # Pure text format
         else:
             return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
@@ -549,7 +564,7 @@ class CustomModalProcessor(GenericModalProcessor):
 
 #### 5. Query Options
 
-RAG-Anything provides two types of query methods:
+RAG-Anything provides three types of query methods:
 
 **Pure Text Queries** - Direct knowledge base search using LightRAG:
 ```python
@@ -563,7 +578,36 @@ text_result_naive = await rag.aquery("Your question", mode="naive")
 sync_text_result = rag.query("Your question", mode="hybrid")
 ```
 
-**Multimodal Queries** - Enhanced queries with multimodal content analysis:
+**VLM Enhanced Queries** - Automatically analyze images in retrieved context using VLM:
+```python
+# VLM enhanced query (automatically enabled when vision_model_func is provided)
+vlm_result = await rag.aquery(
+    "Analyze the charts and figures in the document",
+    mode="hybrid"
+    # vlm_enhanced=True is automatically set when vision_model_func is available
+)
+
+# Manually control VLM enhancement
+vlm_enabled = await rag.aquery(
+    "What do the images show in this document?",
+    mode="hybrid",
+    vlm_enhanced=True  # Force enable VLM enhancement
+)
+
+vlm_disabled = await rag.aquery(
+    "What do the images show in this document?",
+    mode="hybrid",
+    vlm_enhanced=False  # Force disable VLM enhancement
+)
+
+# When documents contain images, VLM can see and analyze them directly
+# The system will automatically:
+# 1. Retrieve relevant context containing image paths
+# 2. Load and encode images as base64
+# 3. Send both text context and images to VLM for comprehensive analysis
+```
+
+**Multimodal Queries** - Enhanced queries with specific multimodal content analysis:
 ```python
 # Query with table data
 table_result = await rag.aquery_with_multimodal(
@@ -645,9 +689,22 @@ async def load_existing_lightrag():
 
     # Define vision model function for image processing
     def vision_model_func(
-        prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs
+        prompt, system_prompt=None, history_messages=[], image_data=None, messages=None, **kwargs
     ):
-        if image_data:
+        # If messages format is provided (for multimodal VLM enhanced query), use it directly
+        if messages:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=messages,
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        # Traditional single image format
+        elif image_data:
             return openai_complete_if_cache(
                 "gpt-4o",
                 "",
@@ -676,6 +733,7 @@ async def load_existing_lightrag():
                 base_url=base_url,
                 **kwargs,
             )
+        # Pure text format
         else:
             return lightrag_instance.llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
@@ -738,8 +796,21 @@ async def insert_content_list_example():
             **kwargs,
         )
 
-    def vision_model_func(prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs):
-        if image_data:
+    def vision_model_func(prompt, system_prompt=None, history_messages=[], image_data=None, messages=None, **kwargs):
+        # If messages format is provided (for multimodal VLM enhanced query), use it directly
+        if messages:
+            return openai_complete_if_cache(
+                "gpt-4o",
+                "",
+                system_prompt=None,
+                history_messages=[],
+                messages=messages,
+                api_key=api_key,
+                base_url=base_url,
+                **kwargs,
+            )
+        # Traditional single image format
+        elif image_data:
             return openai_complete_if_cache(
                 "gpt-4o",
                 "",
@@ -759,6 +830,7 @@ async def insert_content_list_example():
                 base_url=base_url,
                 **kwargs,
             )
+        # Pure text format
         else:
             return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
