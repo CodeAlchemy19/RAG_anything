@@ -335,6 +335,7 @@ class QueryMixin:
         if not images_found:
             self.logger.info("No valid images found, falling back to normal query")
             # Fallback to normal query
+            query_param = QueryParam(mode=mode, **kwargs)
             return await self.lightrag.aquery(query, param=query_param)
 
         self.logger.info(f"Processed {images_found} images for VLM")
