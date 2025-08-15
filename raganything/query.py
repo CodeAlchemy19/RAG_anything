@@ -6,12 +6,17 @@ Contains all query-related methods for both text and multimodal queries
 
 import json
 import hashlib
+import re
 from typing import Dict, List, Any
 from pathlib import Path
 from lightrag import QueryParam
 from lightrag.utils import always_get_an_event_loop
 from raganything.prompt import PROMPTS
-from raganything.utils import get_processor_for_type
+from raganything.utils import (
+    get_processor_for_type,
+    encode_image_to_base64,
+    validate_image_file,
+)
 
 
 class QueryMixin:
@@ -92,7 +97,7 @@ class QueryMixin:
 
         return f"multimodal_query:{cache_hash}"
 
-    async def aquery(self, query: str, mode: str = "hybrid", **kwargs) -> str:
+    async def aquery(self, query: str, mode: str = "mix", **kwargs) -> str:
         """
         Pure text query - directly calls LightRAG's query functionality
 
@@ -100,6 +105,9 @@ class QueryMixin:
             query: Query text
             mode: Query mode ("local", "global", "hybrid", "naive", "mix", "bypass")
             **kwargs: Other query parameters, will be passed to QueryParam
+                - vlm_enhanced: bool, default True when vision_model_func is available.
+                  If True, will parse image paths in retrieved context and replace them
+                  with base64 encoded images for VLM processing.
 
         Returns:
             str: Query result
@@ -107,6 +115,30 @@ class QueryMixin:
         if self.lightrag is None:
             raise ValueError(
                 "No LightRAG instance available. Please process documents first or provide a pre-initialized LightRAG instance."
+            )
+
+        # Check if VLM enhanced query should be used
+        vlm_enhanced = kwargs.pop("vlm_enhanced", None)
+
+        # Auto-determine VLM enhanced based on availability
+        if vlm_enhanced is None:
+            vlm_enhanced = (
+                hasattr(self, "vision_model_func")
+                and self.vision_model_func is not None
+            )
+
+        # Use VLM enhanced query if enabled and available
+        if (
+            vlm_enhanced
+            and hasattr(self, "vision_model_func")
+            and self.vision_model_func
+        ):
+            return await self.aquery_vlm_enhanced(query, mode=mode, **kwargs)
+        elif vlm_enhanced and (
+            not hasattr(self, "vision_model_func") or not self.vision_model_func
+        ):
+            self.logger.warning(
+                "VLM enhanced query requested but vision_model_func is not available, falling back to normal query"
             )
 
         # Create query parameters
@@ -125,7 +157,7 @@ class QueryMixin:
         self,
         query: str,
         multimodal_content: List[Dict[str, Any]] = None,
-        mode: str = "hybrid",
+        mode: str = "mix",
         **kwargs,
     ) -> str:
         """
@@ -210,15 +242,12 @@ class QueryMixin:
             query, multimodal_content
         )
 
-        # Create query parameters
-        query_param = QueryParam(mode=mode, **kwargs)
-
         self.logger.info(
             f"Generated enhanced query length: {len(enhanced_query)} characters"
         )
 
         # Execute enhanced query
-        result = await self.lightrag.aquery(enhanced_query, param=query_param)
+        result = await self.aquery(enhanced_query, mode=mode, **kwargs)
 
         # Save to cache if available and enabled
         if (
@@ -262,6 +291,62 @@ class QueryMixin:
                 self.logger.debug(f"Error persisting multimodal query cache: {e}")
 
         self.logger.info("Multimodal query completed")
+        return result
+
+    async def aquery_vlm_enhanced(self, query: str, mode: str = "mix", **kwargs) -> str:
+        """
+        VLM enhanced query - replaces image paths in retrieved context with base64 encoded images for VLM processing
+
+        Args:
+            query: User query
+            mode: Underlying LightRAG query mode
+            **kwargs: Other query parameters
+
+        Returns:
+            str: VLM query result
+        """
+        # Ensure VLM is available
+        if not hasattr(self, "vision_model_func") or not self.vision_model_func:
+            raise ValueError(
+                "VLM enhanced query requires vision_model_func. "
+                "Please provide a vision model function when initializing RAGAnything."
+            )
+
+        # Ensure LightRAG is initialized
+        await self._ensure_lightrag_initialized()
+
+        self.logger.info(f"Executing VLM enhanced query: {query[:100]}...")
+
+        # Clear previous image cache
+        if hasattr(self, "_current_images_base64"):
+            delattr(self, "_current_images_base64")
+
+        # 1. Get original retrieval prompt (without generating final answer)
+        query_param = QueryParam(mode=mode, only_need_prompt=True, **kwargs)
+        raw_prompt = await self.lightrag.aquery(query, param=query_param)
+
+        self.logger.debug("Retrieved raw prompt from LightRAG")
+
+        # 2. Extract and process image paths
+        enhanced_prompt, images_found = await self._process_image_paths_for_vlm(
+            raw_prompt
+        )
+
+        if not images_found:
+            self.logger.info("No valid images found, falling back to normal query")
+            # Fallback to normal query
+            query_param = QueryParam(mode=mode, **kwargs)
+            return await self.lightrag.aquery(query, param=query_param)
+
+        self.logger.info(f"Processed {images_found} images for VLM")
+
+        # 3. Build VLM message format
+        messages = self._build_vlm_messages_with_images(enhanced_prompt, query)
+
+        # 4. Call VLM for question answering
+        result = await self._call_vlm_with_multimodal_content(messages)
+
+        self.logger.info("VLM enhanced query completed")
         return result
 
     async def _process_multimodal_query_content(
@@ -431,8 +516,192 @@ class QueryMixin:
 
         return description
 
+    async def _process_image_paths_for_vlm(self, prompt: str) -> tuple[str, int]:
+        """
+        Process image paths in prompt, keeping original paths and adding VLM markers
+
+        Args:
+            prompt: Original prompt
+
+        Returns:
+            tuple: (processed prompt, image count)
+        """
+        enhanced_prompt = prompt
+        images_processed = 0
+
+        # Initialize image cache
+        self._current_images_base64 = []
+
+        # Enhanced regex pattern for matching image paths
+        # Matches only the path ending with image file extensions
+        image_path_pattern = (
+            r"Image Path:\s*([^\r\n]*?\.(?:jpg|jpeg|png|gif|bmp|webp|tiff|tif))"
+        )
+
+        # First, let's see what matches we find
+        matches = re.findall(image_path_pattern, prompt)
+        self.logger.info(f"Found {len(matches)} image path matches in prompt")
+
+        def replace_image_path(match):
+            nonlocal images_processed
+
+            image_path = match.group(1).strip()
+            self.logger.debug(f"Processing image path: '{image_path}'")
+
+            # Validate path format (basic check)
+            if not image_path or len(image_path) < 3:
+                self.logger.warning(f"Invalid image path format: {image_path}")
+                return match.group(0)  # Keep original
+
+            # Use utility function to validate image file
+            self.logger.debug(f"Calling validate_image_file for: {image_path}")
+            is_valid = validate_image_file(image_path)
+            self.logger.debug(f"Validation result for {image_path}: {is_valid}")
+
+            if not is_valid:
+                self.logger.warning(f"Image validation failed for: {image_path}")
+                return match.group(0)  # Keep original if validation fails
+
+            try:
+                # Encode image to base64 using utility function
+                self.logger.debug(f"Attempting to encode image: {image_path}")
+                image_base64 = encode_image_to_base64(image_path)
+                if image_base64:
+                    images_processed += 1
+                    # Save base64 to instance variable for later use
+                    self._current_images_base64.append(image_base64)
+
+                    # Keep original path info and add VLM marker
+                    result = f"Image Path: {image_path}\n[VLM_IMAGE_{images_processed}]"
+                    self.logger.debug(
+                        f"Successfully processed image {images_processed}: {image_path}"
+                    )
+                    return result
+                else:
+                    self.logger.error(f"Failed to encode image: {image_path}")
+                    return match.group(0)  # Keep original if encoding failed
+
+            except Exception as e:
+                self.logger.error(f"Failed to process image {image_path}: {e}")
+                return match.group(0)  # Keep original
+
+        # Execute replacement
+        enhanced_prompt = re.sub(
+            image_path_pattern, replace_image_path, enhanced_prompt
+        )
+
+        return enhanced_prompt, images_processed
+
+    def _build_vlm_messages_with_images(
+        self, enhanced_prompt: str, user_query: str
+    ) -> List[Dict]:
+        """
+        Build VLM message format, using markers to correspond images with text positions
+
+        Args:
+            enhanced_prompt: Enhanced prompt with image markers
+            user_query: User query
+
+        Returns:
+            List[Dict]: VLM message format
+        """
+        images_base64 = getattr(self, "_current_images_base64", [])
+
+        if not images_base64:
+            # Pure text mode
+            return [
+                {
+                    "role": "user",
+                    "content": f"Context:\n{enhanced_prompt}\n\nUser Question: {user_query}",
+                }
+            ]
+
+        # Build multimodal content
+        content_parts = []
+
+        # Split text at image markers and insert images
+        text_parts = enhanced_prompt.split("[VLM_IMAGE_")
+
+        for i, text_part in enumerate(text_parts):
+            if i == 0:
+                # First text part
+                if text_part.strip():
+                    content_parts.append({"type": "text", "text": text_part})
+            else:
+                # Find marker number and insert corresponding image
+                marker_match = re.match(r"(\d+)\](.*)", text_part, re.DOTALL)
+                if marker_match:
+                    image_num = (
+                        int(marker_match.group(1)) - 1
+                    )  # Convert to 0-based index
+                    remaining_text = marker_match.group(2)
+
+                    # Insert corresponding image
+                    if 0 <= image_num < len(images_base64):
+                        content_parts.append(
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{images_base64[image_num]}"
+                                },
+                            }
+                        )
+
+                    # Insert remaining text
+                    if remaining_text.strip():
+                        content_parts.append({"type": "text", "text": remaining_text})
+
+        # Add user question
+        content_parts.append(
+            {
+                "type": "text",
+                "text": f"\n\nUser Question: {user_query}\n\nPlease answer based on the context and images provided.",
+            }
+        )
+
+        return [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant that can analyze both text and image content to provide comprehensive answers.",
+            },
+            {"role": "user", "content": content_parts},
+        ]
+
+    async def _call_vlm_with_multimodal_content(self, messages: List[Dict]) -> str:
+        """
+        Call VLM to process multimodal content
+
+        Args:
+            messages: VLM message format
+
+        Returns:
+            str: VLM response result
+        """
+        try:
+            user_message = messages[1]
+            content = user_message["content"]
+            system_prompt = messages[0]["content"]
+
+            if isinstance(content, str):
+                # Pure text mode
+                result = await self.vision_model_func(
+                    content, system_prompt=system_prompt
+                )
+            else:
+                # Multimodal mode - pass complete messages directly to VLM
+                result = await self.vision_model_func(
+                    "",  # Empty prompt since we're using messages format
+                    messages=messages,
+                )
+
+            return result
+
+        except Exception as e:
+            self.logger.error(f"VLM call failed: {e}")
+            raise
+
     # Synchronous versions of query methods
-    def query(self, query: str, mode: str = "hybrid", **kwargs) -> str:
+    def query(self, query: str, mode: str = "mix", **kwargs) -> str:
         """
         Synchronous version of pure text query
 
@@ -440,6 +709,9 @@ class QueryMixin:
             query: Query text
             mode: Query mode ("local", "global", "hybrid", "naive", "mix", "bypass")
             **kwargs: Other query parameters, will be passed to QueryParam
+                - vlm_enhanced: bool, default True when vision_model_func is available.
+                  If True, will parse image paths in retrieved context and replace them
+                  with base64 encoded images for VLM processing.
 
         Returns:
             str: Query result
@@ -451,7 +723,7 @@ class QueryMixin:
         self,
         query: str,
         multimodal_content: List[Dict[str, Any]] = None,
-        mode: str = "hybrid",
+        mode: str = "mix",
         **kwargs,
     ) -> str:
         """

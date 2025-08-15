@@ -129,9 +129,27 @@ async def process_with_rag(
 
         # Define vision model function for image processing
         def vision_model_func(
-            prompt, system_prompt=None, history_messages=[], image_data=None, **kwargs
+            prompt,
+            system_prompt=None,
+            history_messages=[],
+            image_data=None,
+            messages=None,
+            **kwargs,
         ):
-            if image_data:
+            # If messages format is provided (for multimodal VLM enhanced query), use it directly
+            if messages:
+                return openai_complete_if_cache(
+                    "gpt-4o",
+                    "",
+                    system_prompt=None,
+                    history_messages=[],
+                    messages=messages,
+                    api_key=api_key,
+                    base_url=base_url,
+                    **kwargs,
+                )
+            # Traditional single image format
+            elif image_data:
                 return openai_complete_if_cache(
                     "gpt-4o",
                     "",
@@ -160,6 +178,7 @@ async def process_with_rag(
                     base_url=base_url,
                     **kwargs,
                 )
+            # Pure text format
             else:
                 return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
