@@ -149,10 +149,8 @@ async def insert_text_content(
     file_paths: str | list[str] | None = None,
     scheme_name: str | None = None,
 ):
-    """将纯文本内容插入 LightRAG
-
-    调用 LightRAG 的插入方法，将处理后的纯文本内容添加到知识图谱中。
-    支持多种文本分割和ID生成策略。
+    """
+    Insert pure text content into LightRAG
 
     Args:
         lightrag: LightRAG instance
@@ -169,15 +167,20 @@ async def insert_text_content(
     logger.info("Starting text content insertion into LightRAG...")
 
     # Use LightRAG's insert method with all parameters
-    await lightrag.ainsert(
-        input=input,
-        multimodal_content=multimodal_content,
-        file_paths=file_paths,
-        split_by_character=split_by_character,
-        split_by_character_only=split_by_character_only,
-        ids=ids,
-        scheme_name=scheme_name,
-    )
+    try:
+        await lightrag.ainsert(
+            input=input,
+            multimodal_content=multimodal_content,
+            file_paths=file_paths,
+            split_by_character=split_by_character,
+            split_by_character_only=split_by_character_only,
+            ids=ids,
+            scheme_name=scheme_name,
+        )
+    except Exception as e:
+        logger.info(f"Error: {e}")
+        logger.info("If the error is caused by the ainsert function not having a multimodal content parameter, please update the raganything branch of lightrag")
+    
 
     logger.info("Text content insertion complete")
 

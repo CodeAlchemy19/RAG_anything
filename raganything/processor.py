@@ -10,6 +10,7 @@ import hashlib
 import json
 from typing import Dict, List, Any, Tuple, Optional
 from pathlib import Path
+from zipfile import error
 
 from raganything.base import DocStatus
 from raganything.parser import MineruParser, DoclingParser
@@ -351,7 +352,7 @@ class ProcessorMixin:
                         doc_parser.parse_image,
                         image_path=file_path,
                         output_dir=output_dir,
-                        **kwargs,
+                        **kwargs
                     )
                 else:
                     # Fallback to MinerU for image parsing if current parser doesn't support it
@@ -379,7 +380,7 @@ class ProcessorMixin:
                     doc_parser.parse_office_doc,
                     doc_path=file_path,
                     output_dir=output_dir,
-                    **kwargs,
+                    **kwargs
                 )
             else:
                 # For other or unknown formats, use generic parser
@@ -439,12 +440,7 @@ class ProcessorMixin:
         return content_list, doc_id
 
     async def _process_multimodal_content(
-        self,
-        multimodal_items: List[Dict[str, Any]],
-        file_path: str,
-        doc_id: str,
-        pipeline_status: Optional[Any] = None,
-        pipeline_status_lock: Optional[Any] = None,
+        self, multimodal_items: List[Dict[str, Any]], file_path: str, doc_id: str, pipeline_status: Optional[Any] = None, pipeline_status_lock: Optional[Any] = None
     ):
         """
         Process multimodal content (using specialized processors)
@@ -497,9 +493,12 @@ class ProcessorMixin:
         # Use ProcessorMixin's own batch processing that can handle multiple content types
         log_message = "Starting multimodal content processing..."
         self.logger.info(log_message)
-        async with pipeline_status_lock:
-            pipeline_status["latest_message"] = log_message
-            pipeline_status["history_messages"].append(log_message)
+        if pipeline_status_lock and pipeline_status:
+            async with pipeline_status_lock:
+                pipeline_status["latest_message"] = log_message
+                pipeline_status["history_messages"].append(
+                    log_message
+                )
 
         try:
             # Ensure LightRAG is initialized
@@ -514,9 +513,10 @@ class ProcessorMixin:
 
             log_message = "Multimodal content processing complete"
             self.logger.info(log_message)
-            async with pipeline_status_lock:
-                pipeline_status["latest_message"] = log_message
-                pipeline_status["history_messages"].append(log_message)
+            if pipeline_status_lock and pipeline_status:
+                async with pipeline_status_lock:
+                    pipeline_status["latest_message"] = log_message
+                    pipeline_status["history_messages"].append(log_message)
 
         except Exception as e:
             self.logger.error(f"Error in multimodal processing: {e}")
@@ -1313,11 +1313,94 @@ class ProcessorMixin:
         split_by_character: str | None = None,
         split_by_character_only: bool = False,
         doc_id: str | None = None,
-        scheme_name: str | None = None,
         **kwargs,
     ):
         """
         Complete document processing workflow
+
+        Args:
+            file_path: Path to the file to process
+            output_dir: output directory (defaults to config.parser_output_dir)
+            parse_method: Parse method (defaults to config.parse_method)
+            display_stats: Whether to display content statistics (defaults to config.display_content_stats)
+            split_by_character: Optional character to split the text by
+            split_by_character_only: If True, split only by the specified character
+            doc_id: Optional document ID, if not provided will be generated from content
+            **kwargs: Additional parameters for parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
+        """
+        # Ensure LightRAG is initialized
+        await self._ensure_lightrag_initialized()
+
+        # Use config defaults if not provided
+        if output_dir is None:
+            output_dir = self.config.parser_output_dir
+        if parse_method is None:
+            parse_method = self.config.parse_method
+        if display_stats is None:
+            display_stats = self.config.display_content_stats
+
+        self.logger.info(f"Starting complete document processing: {file_path}")
+
+        # Step 1: Parse document
+        content_list, content_based_doc_id = await self.parse_document(
+            file_path, output_dir, parse_method, display_stats, **kwargs
+        )
+
+        # Use provided doc_id or fall back to content-based doc_id
+        if doc_id is None:
+            doc_id = content_based_doc_id
+
+        # Step 2: Separate text and multimodal content
+        text_content, multimodal_items = separate_content(content_list)
+
+        # Step 2.5: Set content source for context extraction in multimodal processing
+        if hasattr(self, "set_content_source_for_context") and multimodal_items:
+            self.logger.info(
+                "Setting content source for context-aware multimodal processing..."
+            )
+            self.set_content_source_for_context(
+                content_list, self.config.content_format
+            )
+
+        # Step 3: Insert pure text content with all parameters
+        if text_content.strip():
+            file_name = os.path.basename(file_path)
+            await insert_text_content(
+                self.lightrag,
+                input=text_content,
+                file_paths=file_name,
+                split_by_character=split_by_character,
+                split_by_character_only=split_by_character_only,
+                ids=doc_id,
+            )
+
+        # Step 4: Process multimodal content (using specialized processors)
+        if multimodal_items:
+            await self._process_multimodal_content(multimodal_items, file_path, doc_id)
+        else:
+            # If no multimodal content, mark multimodal processing as complete
+            # This ensures the document status properly reflects completion of all processing
+            await self._mark_multimodal_processing_complete(doc_id)
+            self.logger.debug(
+                f"No multimodal content found in document {doc_id}, marked multimodal processing as complete"
+            )
+
+        self.logger.info(f"Document {file_path} processing complete!")
+
+    async def process_document_complete_lightrag_api(
+        self,
+        file_path: str,
+        output_dir: str = None,
+        parse_method: str = None,
+        display_stats: bool = None,
+        split_by_character: str | None = None,
+        split_by_character_only: bool = False,
+        doc_id: str | None = None,
+        scheme_name: str | None = None,
+        **kwargs,
+    ):
+        """
+        API exclusively for LightRAG calls: Complete document processing workflow
 
         Args:
             file_path: Path to the file to process
@@ -1348,40 +1431,39 @@ class ProcessorMixin:
             doc_pre_id = f"doc-pre-{file_name}"
             current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
             if not current_doc_status:
-                await self.lightrag.doc_status.upsert(
-                    {
-                        doc_pre_id: {
-                            "status": DocStatus.READY,
-                            "content": "",
-                            "content_summary": "",
-                            "multimodal_content": [],
-                            "scheme_name": scheme_name,
-                            "content_length": 0,
-                            "created_at": "",
-                            "updated_at": "",
-                            "file_path": file_path,
-                        }
+                await self.lightrag.doc_status.upsert({
+                    doc_pre_id: {
+                        'status': DocStatus.READY,
+                        'content': '',
+                        'content_summary': '',
+                        'multimodal_content': [],
+                        'scheme_name': scheme_name,
+                        'content_length': 0,
+                        'created_at': '',
+                        'updated_at': '',
+                        'file_path': file_path
                     }
-                )
-                current_doc_status = await self.lightrag.doc_status.get_by_id(
-                    doc_pre_id
-                )
+                })
+                current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
 
-            from lightrag.kg.shared_storage import (
-                get_namespace_data,
-                get_pipeline_status_lock,
-            )
+            from lightrag.kg.shared_storage import get_namespace_data, get_pipeline_status_lock
+            from datetime import datetime
 
             pipeline_status = await get_namespace_data("pipeline_status")
             pipeline_status_lock = get_pipeline_status_lock()
 
             async with pipeline_status_lock:
-                pipeline_status.update({"scan_disabled": True})
-                pipeline_status["history_messages"].append("Now is not allowed to scan")
+                pipeline_status.update({
+                    "scan_disabled": True
+                })
+                pipeline_status["history_messages"].append(f"Now is not allowed to scan")
 
-            await self.lightrag.doc_status.upsert(
-                {doc_pre_id: {**current_doc_status, "status": DocStatus.HANDLING}}
-            )
+            await self.lightrag.doc_status.upsert({
+                doc_pre_id: {
+                    **current_doc_status,
+                    "status": DocStatus.HANDLING
+                }
+            })
 
             # Step 1: Parse document
             content_list, content_based_doc_id = await self.parse_document(
@@ -1430,14 +1512,12 @@ class ProcessorMixin:
             #
             # self.logger.info(f"Document {file_path} processing complete!")
             async with pipeline_status_lock:
-                pipeline_status.update({"scan_disabled": False})
-                pipeline_status["latest_message"] = (
-                    f"RAGAnything processing completed for {file_name}"
-                )
-                pipeline_status["history_messages"].append(
-                    f"RAGAnything processing completed for {file_name}"
-                )
-                pipeline_status["history_messages"].append("Now is allowed to scan")
+                pipeline_status.update({
+                    "scan_disabled": False
+                })
+                pipeline_status["latest_message"] = f"RAGAnything processing completed for {file_name}"
+                pipeline_status["history_messages"].append(f"RAGAnything processing completed for {file_name}")
+                pipeline_status["history_messages"].append(f"Now is allowed to scan")
 
             return True
 
@@ -1450,6 +1530,7 @@ class ProcessorMixin:
                 pipeline_status["history_messages"].append(error_msg)
 
             return False
+
 
     async def insert_content_list(
         self,
@@ -1534,7 +1615,7 @@ class ProcessorMixin:
             file_name = os.path.basename(file_path)
             await insert_text_content(
                 self.lightrag,
-                text_content,
+                input=text_content,
                 file_paths=file_name,
                 split_by_character=split_by_character,
                 split_by_character_only=split_by_character_only,
