@@ -1370,7 +1370,6 @@ class ProcessorMixin:
             await insert_text_content(
                 self.lightrag,
                 input=text_content,
-                multimodal_content=None,
                 file_paths=file_name,
                 split_by_character=split_by_character,
                 split_by_character_only=split_by_character_only,
@@ -1621,7 +1620,6 @@ class ProcessorMixin:
             await insert_text_content(
                 self.lightrag,
                 input=text_content,
-                multimodal_content=None,
                 file_paths=file_name,
                 split_by_character=split_by_character,
                 split_by_character_only=split_by_character_only,
