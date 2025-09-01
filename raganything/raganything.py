@@ -91,6 +91,9 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
     parse_cache: Optional[Any] = field(default=None, init=False)
     """Parse result cache storage using LightRAG KV storage."""
 
+    _parser_installation_checked: bool = field(default=False, init=False)
+    """Flag to track if parser installation has been checked."""
+
     def __post_init__(self):
         """Post-initialization setup following LightRAG pattern"""
         # Initialize configuration if not provided
@@ -221,16 +224,18 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         """Ensure LightRAG instance is initialized, create if necessary"""
 
         # Check parser installation first
-        if not self.doc_parser.check_installation():
-            raise RuntimeError(
-                f"Parser '{self.config.parser}' is not properly installed. "
-                "Please install it using pip install or uv pip install."
-            )
+        if not self._parser_installation_checked:
+            if not self.doc_parser.check_installation():
+                raise RuntimeError(
+                    f"Parser '{self.config.parser}' is not properly installed. "
+                    "Please install it using pip install or uv pip install."
+                )
+            self._parser_installation_checked = True
+            self.logger.info(f"Parser '{self.config.parser}' installation verified")
 
         if self.lightrag is not None:
             # LightRAG was pre-provided, but we need to ensure it's properly initialized
             # and that parse_cache is set up
-
             # Ensure LightRAG storages are initialized
             if (
                 not hasattr(self.lightrag, "_storages_status")
@@ -368,6 +373,17 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
             bool: True if the configured parser is properly installed
         """
         return self.doc_parser.check_installation()
+
+    def verify_parser_installation_once(self) -> bool:
+        if not self._parser_installation_checked:
+            if not self.doc_parser.check_installation():
+                raise RuntimeError(
+                    f"Parser '{self.config.parser}' is not properly installed. "
+                    "Please install it using pip install or uv pip install."
+                )
+            self._parser_installation_checked = True
+            self.logger.info(f"Parser '{self.config.parser}' installation verified")
+        return True
 
     def get_config_info(self) -> Dict[str, Any]:
         """Get current configuration information"""
