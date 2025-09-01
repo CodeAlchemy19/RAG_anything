@@ -16,6 +16,7 @@ from raganything.parser import MineruParser, DoclingParser
 from raganything.utils import (
     separate_content,
     insert_text_content,
+    insert_text_content_with_multimodal_content,
     get_processor_for_type,
 )
 import asyncio
@@ -1414,23 +1415,26 @@ class ProcessorMixin:
             doc_id: Optional document ID, if not provided will be generated from content
             **kwargs: Additional parameters for parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
         """
-        # Ensure LightRAG is initialized
-        await self._ensure_lightrag_initialized()
-
-        # Use config defaults if not provided
-        if output_dir is None:
-            output_dir = self.config.parser_output_dir
-        if parse_method is None:
-            parse_method = self.config.parse_method
-        if display_stats is None:
-            display_stats = self.config.display_content_stats
-
-        self.logger.info(f"Starting complete document processing: {file_path}")
-
         file_name = os.path.basename(file_path)
+        doc_pre_id = f"doc-pre-{file_name}"
+        pipeline_status = None
+        pipeline_status_lock = None
 
         try:
-            doc_pre_id = f"doc-pre-{file_name}"
+            # Ensure LightRAG is initialized
+            await self._ensure_lightrag_initialized()
+
+            # Use config defaults if not provided
+            if output_dir is None:
+                output_dir = self.config.parser_output_dir
+            if parse_method is None:
+                parse_method = self.config.parse_method
+            if display_stats is None:
+                display_stats = self.config.display_content_stats
+
+            self.logger.info(f"Starting complete document processing: {file_path}")
+
+            # Initialize doc status
             current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
             if not current_doc_status:
                 await self.lightrag.doc_status.upsert(
@@ -1460,6 +1464,7 @@ class ProcessorMixin:
             pipeline_status = await get_namespace_data("pipeline_status")
             pipeline_status_lock = get_pipeline_status_lock()
 
+            # Set processing status
             async with pipeline_status_lock:
                 pipeline_status.update({"scan_disabled": True})
                 pipeline_status["history_messages"].append("Now is not allowed to scan")
@@ -1491,7 +1496,7 @@ class ProcessorMixin:
 
             # Step 3: Insert pure text content with all parameters
             if text_content.strip():
-                await insert_text_content(
+                await insert_text_content_with_multimodal_content(
                     self.lightrag,
                     input=text_content,
                     multimodal_content=multimodal_items,
@@ -1514,6 +1519,8 @@ class ProcessorMixin:
             #     )
             #
             # self.logger.info(f"Document {file_path} processing complete!")
+
+            # Success: Update pipeline status
             async with pipeline_status_lock:
                 pipeline_status.update({"scan_disabled": False})
                 pipeline_status["latest_message"] = (
@@ -1524,15 +1531,40 @@ class ProcessorMixin:
                 )
                 pipeline_status["history_messages"].append("Now is allowed to scan")
 
+            self.logger.info(f"Document {file_path} processing completed successfully")
             return True
 
         except Exception as e:
-            self.logger.error(f"Error processing document {file_path}")
+            self.logger.error(f"Error processing document {file_path}: {str(e)}")
+            self.logger.debug("Exception details:", exc_info=True)
 
-            async with pipeline_status_lock:
-                error_msg = f"RAGAnything processing failed for {file_name}: {str(e)}"
-                pipeline_status["latest_message"] = error_msg
-                pipeline_status["history_messages"].append(error_msg)
+            # Update doc status to Failed
+            try:
+                await self.lightrag.doc_status.upsert(
+                    {
+                        doc_pre_id: {
+                            **current_doc_status,
+                            "status": DocStatus.FAILED,
+                            "error_msg": str(e),
+                        }
+                    }
+                )
+                await self.lightrag.doc_status.index_done_callback()
+                self.logger.info(f"Updated doc_status to Failed for {doc_pre_id}")
+            except Exception as status_update_error:
+                self.logger.error(f"Failed to update doc_status to Failed: {status_update_error}")
+
+            # Update pipeline status
+            if pipeline_status_lock and pipeline_status:
+                try:
+                    async with pipeline_status_lock:
+                        pipeline_status.update({"scan_disabled": False})
+                        error_msg = f"RAGAnything processing failed for {file_name}: {str(e)}"
+                        pipeline_status["latest_message"] = error_msg
+                        pipeline_status["history_messages"].append(error_msg)
+                        pipeline_status["history_messages"].append("Now is allowed to scan")
+                except Exception as pipeline_update_error:
+                    self.logger.error(f"Failed to update pipeline status: {pipeline_update_error}")
 
             return False
 
