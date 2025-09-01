@@ -1552,19 +1552,27 @@ class ProcessorMixin:
                 await self.lightrag.doc_status.index_done_callback()
                 self.logger.info(f"Updated doc_status to Failed for {doc_pre_id}")
             except Exception as status_update_error:
-                self.logger.error(f"Failed to update doc_status to Failed: {status_update_error}")
+                self.logger.error(
+                    f"Failed to update doc_status to Failed: {status_update_error}"
+                )
 
             # Update pipeline status
             if pipeline_status_lock and pipeline_status:
                 try:
                     async with pipeline_status_lock:
                         pipeline_status.update({"scan_disabled": False})
-                        error_msg = f"RAGAnything processing failed for {file_name}: {str(e)}"
+                        error_msg = (
+                            f"RAGAnything processing failed for {file_name}: {str(e)}"
+                        )
                         pipeline_status["latest_message"] = error_msg
                         pipeline_status["history_messages"].append(error_msg)
-                        pipeline_status["history_messages"].append("Now is allowed to scan")
+                        pipeline_status["history_messages"].append(
+                            "Now is allowed to scan"
+                        )
                 except Exception as pipeline_update_error:
-                    self.logger.error(f"Failed to update pipeline status: {pipeline_update_error}")
+                    self.logger.error(
+                        f"Failed to update pipeline status: {pipeline_update_error}"
+                    )
 
             return False
 
