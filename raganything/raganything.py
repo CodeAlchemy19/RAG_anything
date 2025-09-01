@@ -385,7 +385,6 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
             self.logger.info(f"Parser '{self.config.parser}' installation verified")
         return True
 
-
     def get_config_info(self) -> Dict[str, Any]:
         """Get current configuration information"""
         config_info = {

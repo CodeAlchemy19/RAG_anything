@@ -10,7 +10,6 @@ import hashlib
 import json
 from typing import Dict, List, Any, Tuple, Optional
 from pathlib import Path
-from zipfile import error
 
 from raganything.base import DocStatus
 from raganything.parser import MineruParser, DoclingParser
@@ -352,7 +351,7 @@ class ProcessorMixin:
                         doc_parser.parse_image,
                         image_path=file_path,
                         output_dir=output_dir,
-                        **kwargs
+                        **kwargs,
                     )
                 else:
                     # Fallback to MinerU for image parsing if current parser doesn't support it
@@ -380,7 +379,7 @@ class ProcessorMixin:
                     doc_parser.parse_office_doc,
                     doc_path=file_path,
                     output_dir=output_dir,
-                    **kwargs
+                    **kwargs,
                 )
             else:
                 # For other or unknown formats, use generic parser
@@ -440,7 +439,12 @@ class ProcessorMixin:
         return content_list, doc_id
 
     async def _process_multimodal_content(
-        self, multimodal_items: List[Dict[str, Any]], file_path: str, doc_id: str, pipeline_status: Optional[Any] = None, pipeline_status_lock: Optional[Any] = None
+        self,
+        multimodal_items: List[Dict[str, Any]],
+        file_path: str,
+        doc_id: str,
+        pipeline_status: Optional[Any] = None,
+        pipeline_status_lock: Optional[Any] = None,
     ):
         """
         Process multimodal content (using specialized processors)
@@ -496,9 +500,7 @@ class ProcessorMixin:
         if pipeline_status_lock and pipeline_status:
             async with pipeline_status_lock:
                 pipeline_status["latest_message"] = log_message
-                pipeline_status["history_messages"].append(
-                    log_message
-                )
+                pipeline_status["history_messages"].append(log_message)
 
         try:
             # Ensure LightRAG is initialized
@@ -1431,39 +1433,40 @@ class ProcessorMixin:
             doc_pre_id = f"doc-pre-{file_name}"
             current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
             if not current_doc_status:
-                await self.lightrag.doc_status.upsert({
-                    doc_pre_id: {
-                        'status': DocStatus.READY,
-                        'content': '',
-                        'content_summary': '',
-                        'multimodal_content': [],
-                        'scheme_name': scheme_name,
-                        'content_length': 0,
-                        'created_at': '',
-                        'updated_at': '',
-                        'file_path': file_path
+                await self.lightrag.doc_status.upsert(
+                    {
+                        doc_pre_id: {
+                            "status": DocStatus.READY,
+                            "content": "",
+                            "content_summary": "",
+                            "multimodal_content": [],
+                            "scheme_name": scheme_name,
+                            "content_length": 0,
+                            "created_at": "",
+                            "updated_at": "",
+                            "file_path": file_path,
+                        }
                     }
-                })
-                current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
+                )
+                current_doc_status = await self.lightrag.doc_status.get_by_id(
+                    doc_pre_id
+                )
 
-            from lightrag.kg.shared_storage import get_namespace_data, get_pipeline_status_lock
-            from datetime import datetime
+            from lightrag.kg.shared_storage import (
+                get_namespace_data,
+                get_pipeline_status_lock,
+            )
 
             pipeline_status = await get_namespace_data("pipeline_status")
             pipeline_status_lock = get_pipeline_status_lock()
 
             async with pipeline_status_lock:
-                pipeline_status.update({
-                    "scan_disabled": True
-                })
-                pipeline_status["history_messages"].append(f"Now is not allowed to scan")
+                pipeline_status.update({"scan_disabled": True})
+                pipeline_status["history_messages"].append("Now is not allowed to scan")
 
-            await self.lightrag.doc_status.upsert({
-                doc_pre_id: {
-                    **current_doc_status,
-                    "status": DocStatus.HANDLING
-                }
-            })
+            await self.lightrag.doc_status.upsert(
+                {doc_pre_id: {**current_doc_status, "status": DocStatus.HANDLING}}
+            )
 
             # Step 1: Parse document
             content_list, content_based_doc_id = await self.parse_document(
@@ -1512,12 +1515,14 @@ class ProcessorMixin:
             #
             # self.logger.info(f"Document {file_path} processing complete!")
             async with pipeline_status_lock:
-                pipeline_status.update({
-                    "scan_disabled": False
-                })
-                pipeline_status["latest_message"] = f"RAGAnything processing completed for {file_name}"
-                pipeline_status["history_messages"].append(f"RAGAnything processing completed for {file_name}")
-                pipeline_status["history_messages"].append(f"Now is allowed to scan")
+                pipeline_status.update({"scan_disabled": False})
+                pipeline_status["latest_message"] = (
+                    f"RAGAnything processing completed for {file_name}"
+                )
+                pipeline_status["history_messages"].append(
+                    f"RAGAnything processing completed for {file_name}"
+                )
+                pipeline_status["history_messages"].append("Now is allowed to scan")
 
             return True
 
@@ -1530,7 +1535,6 @@ class ProcessorMixin:
                 pipeline_status["history_messages"].append(error_msg)
 
             return False
-
 
     async def insert_content_list(
         self,
