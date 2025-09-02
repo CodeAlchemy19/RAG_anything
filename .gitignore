@@ -76,4 +76,5 @@ memory-bank/
 # AI
 .claude/
 .cursor/
+.serena/
 CLAUDE.md
