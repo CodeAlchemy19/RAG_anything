@@ -1422,7 +1422,24 @@ class ProcessorMixin:
 
         try:
             # Ensure LightRAG is initialized
-            await self._ensure_lightrag_initialized()
+            result = await self._ensure_lightrag_initialized()
+            if not result["success"]:
+                current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
+                if not current_doc_status:
+                    await self.lightrag.doc_status.upsert(
+                        {
+                            doc_pre_id: {
+                                **current_doc_status,
+                                "status": DocStatus.FAILED,
+                                "error_msg": result["error"],
+                            }
+                        }
+                    )
+                    current_doc_status = await self.lightrag.doc_status.get_by_id(
+                        doc_pre_id
+                    )
+
+                return False
 
             # Use config defaults if not provided
             if output_dir is None:
@@ -1442,13 +1459,14 @@ class ProcessorMixin:
                         doc_pre_id: {
                             "status": DocStatus.READY,
                             "content": "",
+                            "error_msg": "",
                             "content_summary": "",
                             "multimodal_content": [],
                             "scheme_name": scheme_name,
                             "content_length": 0,
                             "created_at": "",
                             "updated_at": "",
-                            "file_path": file_path,
+                            "file_path": file_name,
                         }
                     }
                 )
@@ -1494,7 +1512,7 @@ class ProcessorMixin:
                     content_list, self.config.content_format
                 )
 
-            # Step 3: Insert pure text content with all parameters
+            # Step 3: Insert pure text content and multimodal content with all parameters
             if text_content.strip():
                 await insert_text_content_with_multimodal_content(
                     self.lightrag,
@@ -1506,19 +1524,6 @@ class ProcessorMixin:
                     ids=doc_id,
                     scheme_name=scheme_name,
                 )
-
-            # # Step 4: Process multimodal content (using specialized processors)
-            # if multimodal_items:
-            #     await self._process_multimodal_content(multimodal_items, file_path, doc_id)
-            # else:
-            #     # If no multimodal content, mark multimodal processing as complete
-            #     # This ensures the document status properly reflects completion of all processing
-            #     await self._mark_multimodal_processing_complete(doc_id)
-            #     self.logger.debug(
-            #         f"No multimodal content found in document {doc_id}, marked multimodal processing as complete"
-            #     )
-            #
-            # self.logger.info(f"Document {file_path} processing complete!")
 
             # Success: Update pipeline status
             async with pipeline_status_lock:

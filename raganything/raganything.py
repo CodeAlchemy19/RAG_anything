@@ -220,40 +220,101 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
             else:
                 self.logger.warning(f"Unknown config parameter: {key}")
 
+
     async def _ensure_lightrag_initialized(self):
         """Ensure LightRAG instance is initialized, create if necessary"""
+        try:
+            # Check parser installation first
+            if not self._parser_installation_checked:
+                if not self.doc_parser.check_installation():
+                    error_msg = (
+                        f"Parser '{self.config.parser}' is not properly installed. "
+                        "Please install it using 'pip install' or 'uv pip install'."
+                    )
+                    self.logger.error(error_msg)
+                    return {"success": False, "error": error_msg}
 
-        # Check parser installation first
-        if not self._parser_installation_checked:
-            if not self.doc_parser.check_installation():
-                raise RuntimeError(
-                    f"Parser '{self.config.parser}' is not properly installed. "
-                    "Please install it using pip install or uv pip install."
-                )
-            self._parser_installation_checked = True
-            self.logger.info(f"Parser '{self.config.parser}' installation verified")
+                self._parser_installation_checked = True
+                self.logger.info(f"Parser '{self.config.parser}' installation verified")
 
-        if self.lightrag is not None:
-            # LightRAG was pre-provided, but we need to ensure it's properly initialized
-            # and that parse_cache is set up
-            # Ensure LightRAG storages are initialized
-            if (
-                not hasattr(self.lightrag, "_storages_status")
-                or self.lightrag._storages_status.name != "INITIALIZED"
-            ):
-                self.logger.info(
-                    "Initializing storages for pre-provided LightRAG instance"
-                )
+            if self.lightrag is not None:
+                # LightRAG was pre-provided, but we need to ensure it's properly initialized
+                try:
+                    # Ensure LightRAG storages are initialized
+                    if (
+                            not hasattr(self.lightrag, "_storages_status")
+                            or self.lightrag._storages_status.name != "INITIALIZED"
+                    ):
+                        self.logger.info(
+                            "Initializing storages for pre-provided LightRAG instance"
+                        )
+                        await self.lightrag.initialize_storages()
+                        from lightrag.kg.shared_storage import initialize_pipeline_status
+                        await initialize_pipeline_status()
+
+                    # Initialize parse cache if not already done
+                    if self.parse_cache is None:
+                        self.logger.info(
+                            "Initializing parse cache for pre-provided LightRAG instance"
+                        )
+                        self.parse_cache = self.lightrag.key_string_value_json_storage_cls(
+                            namespace="parse_cache",
+                            workspace=self.lightrag.workspace,
+                            global_config=self.lightrag.__dict__,
+                            embedding_func=self.embedding_func,
+                        )
+                        await self.parse_cache.initialize()
+
+                    # Initialize processors if not already done
+                    if not self.modal_processors:
+                        self._initialize_processors()
+
+                    return {"success": True}
+
+                except Exception as e:
+                    error_msg = f"Failed to initialize pre-provided LightRAG instance: {str(e)}"
+                    self.logger.error(error_msg, exc_info=True)
+                    return {"success": False, "error": error_msg}
+
+            # Validate required functions for creating new LightRAG instance
+            if self.llm_model_func is None:
+                error_msg = "llm_model_func must be provided when LightRAG is not pre-initialized"
+                self.logger.error(error_msg)
+                return {"success": False, "error": error_msg}
+
+            if self.embedding_func is None:
+                error_msg = "embedding_func must be provided when LightRAG is not pre-initialized"
+                self.logger.error(error_msg)
+                return {"success": False, "error": error_msg}
+
+            from lightrag.kg.shared_storage import initialize_pipeline_status
+
+            # Prepare LightRAG initialization parameters
+            lightrag_params = {
+                "working_dir": self.working_dir,
+                "llm_model_func": self.llm_model_func,
+                "embedding_func": self.embedding_func,
+            }
+
+            # Merge user-provided lightrag_kwargs, which can override defaults
+            lightrag_params.update(self.lightrag_kwargs)
+
+            # Log the parameters being used for initialization (excluding sensitive data)
+            log_params = {
+                k: v
+                for k, v in lightrag_params.items()
+                if not callable(v)
+                   and k not in ["llm_model_kwargs", "vector_db_storage_cls_kwargs"]
+            }
+            self.logger.info(f"Initializing LightRAG with parameters: {log_params}")
+
+            try:
+                # Create LightRAG instance with merged parameters
+                self.lightrag = LightRAG(**lightrag_params)
                 await self.lightrag.initialize_storages()
-                from lightrag.kg.shared_storage import initialize_pipeline_status
-
                 await initialize_pipeline_status()
 
-            # Initialize parse cache if not already done
-            if self.parse_cache is None:
-                self.logger.info(
-                    "Initializing parse cache for pre-provided LightRAG instance"
-                )
+                # Initialize parse cache storage using LightRAG's KV storage
                 self.parse_cache = self.lightrag.key_string_value_json_storage_cls(
                     namespace="parse_cache",
                     workspace=self.lightrag.workspace,
@@ -262,62 +323,22 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                 )
                 await self.parse_cache.initialize()
 
-            # Initialize processors if not already done
-            if not self.modal_processors:
+                # Initialize processors after LightRAG is ready
                 self._initialize_processors()
 
-            return
+                self.logger.info("LightRAG, parse cache, and multimodal processors initialized")
+                return {"success": True}
 
-        # Validate required functions for creating new LightRAG instance
-        if self.llm_model_func is None:
-            raise ValueError(
-                "llm_model_func must be provided when LightRAG is not pre-initialized"
-            )
-        if self.embedding_func is None:
-            raise ValueError(
-                "embedding_func must be provided when LightRAG is not pre-initialized"
-            )
+            except Exception as e:
+                error_msg = f"Failed to initialize LightRAG instance: {str(e)}"
+                self.logger.error(error_msg, exc_info=True)
+                return {"success": False, "error": error_msg}
 
-        from lightrag.kg.shared_storage import initialize_pipeline_status
+        except Exception as e:
+            error_msg = f"Unexpected error during LightRAG initialization: {str(e)}"
+            self.logger.error(error_msg, exc_info=True)
+            return {"success": False, "error": error_msg}
 
-        # Prepare LightRAG initialization parameters
-        lightrag_params = {
-            "working_dir": self.working_dir,
-            "llm_model_func": self.llm_model_func,
-            "embedding_func": self.embedding_func,
-        }
-
-        # Merge user-provided lightrag_kwargs, which can override defaults
-        lightrag_params.update(self.lightrag_kwargs)
-
-        # Log the parameters being used for initialization (excluding sensitive data)
-        log_params = {
-            k: v
-            for k, v in lightrag_params.items()
-            if not callable(v)
-            and k not in ["llm_model_kwargs", "vector_db_storage_cls_kwargs"]
-        }
-        self.logger.info(f"Initializing LightRAG with parameters: {log_params}")
-
-        # Create LightRAG instance with merged parameters
-        self.lightrag = LightRAG(**lightrag_params)
-
-        await self.lightrag.initialize_storages()
-        await initialize_pipeline_status()
-
-        # Initialize parse cache storage using LightRAG's KV storage
-        self.parse_cache = self.lightrag.key_string_value_json_storage_cls(
-            namespace="parse_cache",
-            workspace=self.lightrag.workspace,
-            global_config=self.lightrag.__dict__,
-            embedding_func=self.embedding_func,
-        )
-        await self.parse_cache.initialize()
-
-        # Initialize processors after LightRAG is ready
-        self._initialize_processors()
-
-        self.logger.info("LightRAG, parse cache, and multimodal processors initialized")
 
     async def finalize_storages(self):
         """Finalize all storages including parse cache and LightRAG storages

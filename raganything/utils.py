@@ -163,19 +163,13 @@ async def insert_text_content(
     logger.info("Starting text content insertion into LightRAG...")
 
     # Use LightRAG's insert method with all parameters
-    try:
-        await lightrag.ainsert(
-            input=input,
-            file_paths=file_paths,
-            split_by_character=split_by_character,
-            split_by_character_only=split_by_character_only,
-            ids=ids,
-        )
-    except Exception as e:
-        logger.info(f"Error: {e}")
-        logger.info(
-            "If the error is caused by the ainsert function not having a multimodal content parameter, please update the raganything branch of lightrag"
-        )
+    await lightrag.ainsert(
+        input=input,
+        file_paths=file_paths,
+        split_by_character=split_by_character,
+        split_by_character_only=split_by_character_only,
+        ids=ids,
+    )
 
     logger.info("Text content insertion complete")
 
