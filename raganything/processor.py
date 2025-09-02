@@ -1424,7 +1424,9 @@ class ProcessorMixin:
             # Ensure LightRAG is initialized
             result = await self._ensure_lightrag_initialized()
             if not result["success"]:
-                current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
+                current_doc_status = await self.lightrag.doc_status.get_by_id(
+                    doc_pre_id
+                )
                 if not current_doc_status:
                     await self.lightrag.doc_status.upsert(
                         {

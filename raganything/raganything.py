@@ -220,7 +220,6 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
             else:
                 self.logger.warning(f"Unknown config parameter: {key}")
 
-
     async def _ensure_lightrag_initialized(self):
         """Ensure LightRAG instance is initialized, create if necessary"""
         try:
@@ -242,14 +241,17 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                 try:
                     # Ensure LightRAG storages are initialized
                     if (
-                            not hasattr(self.lightrag, "_storages_status")
-                            or self.lightrag._storages_status.name != "INITIALIZED"
+                        not hasattr(self.lightrag, "_storages_status")
+                        or self.lightrag._storages_status.name != "INITIALIZED"
                     ):
                         self.logger.info(
                             "Initializing storages for pre-provided LightRAG instance"
                         )
                         await self.lightrag.initialize_storages()
-                        from lightrag.kg.shared_storage import initialize_pipeline_status
+                        from lightrag.kg.shared_storage import (
+                            initialize_pipeline_status,
+                        )
+
                         await initialize_pipeline_status()
 
                     # Initialize parse cache if not already done
@@ -257,11 +259,13 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                         self.logger.info(
                             "Initializing parse cache for pre-provided LightRAG instance"
                         )
-                        self.parse_cache = self.lightrag.key_string_value_json_storage_cls(
-                            namespace="parse_cache",
-                            workspace=self.lightrag.workspace,
-                            global_config=self.lightrag.__dict__,
-                            embedding_func=self.embedding_func,
+                        self.parse_cache = (
+                            self.lightrag.key_string_value_json_storage_cls(
+                                namespace="parse_cache",
+                                workspace=self.lightrag.workspace,
+                                global_config=self.lightrag.__dict__,
+                                embedding_func=self.embedding_func,
+                            )
                         )
                         await self.parse_cache.initialize()
 
@@ -272,7 +276,9 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                     return {"success": True}
 
                 except Exception as e:
-                    error_msg = f"Failed to initialize pre-provided LightRAG instance: {str(e)}"
+                    error_msg = (
+                        f"Failed to initialize pre-provided LightRAG instance: {str(e)}"
+                    )
                     self.logger.error(error_msg, exc_info=True)
                     return {"success": False, "error": error_msg}
 
@@ -304,7 +310,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                 k: v
                 for k, v in lightrag_params.items()
                 if not callable(v)
-                   and k not in ["llm_model_kwargs", "vector_db_storage_cls_kwargs"]
+                and k not in ["llm_model_kwargs", "vector_db_storage_cls_kwargs"]
             }
             self.logger.info(f"Initializing LightRAG with parameters: {log_params}")
 
@@ -326,7 +332,9 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
                 # Initialize processors after LightRAG is ready
                 self._initialize_processors()
 
-                self.logger.info("LightRAG, parse cache, and multimodal processors initialized")
+                self.logger.info(
+                    "LightRAG, parse cache, and multimodal processors initialized"
+                )
                 return {"success": True}
 
             except Exception as e:
@@ -338,7 +346,6 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
             error_msg = f"Unexpected error during LightRAG initialization: {str(e)}"
             self.logger.error(error_msg, exc_info=True)
             return {"success": False, "error": error_msg}
-
 
     async def finalize_storages(self):
         """Finalize all storages including parse cache and LightRAG storages
