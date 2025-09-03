@@ -8,12 +8,15 @@ import os
 import time
 import hashlib
 import json
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 from pathlib import Path
+
+from raganything.base import DocStatus
 from raganything.parser import MineruParser, DoclingParser
 from raganything.utils import (
     separate_content,
     insert_text_content,
+    insert_text_content_with_multimodal_content,
     get_processor_for_type,
 )
 import asyncio
@@ -325,7 +328,8 @@ class ProcessorMixin:
 
             if ext in [".pdf"]:
                 self.logger.info("Detected PDF file, using parser for PDF...")
-                content_list = doc_parser.parse_pdf(
+                content_list = await asyncio.to_thread(
+                    doc_parser.parse_pdf,
                     pdf_path=file_path,
                     output_dir=output_dir,
                     method=parse_method,
@@ -344,8 +348,11 @@ class ProcessorMixin:
                 self.logger.info("Detected image file, using parser for images...")
                 # Use the selected parser's image parsing capability
                 if hasattr(doc_parser, "parse_image"):
-                    content_list = doc_parser.parse_image(
-                        image_path=file_path, output_dir=output_dir, **kwargs
+                    content_list = await asyncio.to_thread(
+                        doc_parser.parse_image,
+                        image_path=file_path,
+                        output_dir=output_dir,
+                        **kwargs,
                     )
                 else:
                     # Fallback to MinerU for image parsing if current parser doesn't support it
@@ -369,15 +376,19 @@ class ProcessorMixin:
                 self.logger.info(
                     "Detected Office or HTML document, using parser for Office/HTML..."
                 )
-                content_list = doc_parser.parse_office_doc(
-                    doc_path=file_path, output_dir=output_dir, **kwargs
+                content_list = await asyncio.to_thread(
+                    doc_parser.parse_office_doc,
+                    doc_path=file_path,
+                    output_dir=output_dir,
+                    **kwargs,
                 )
             else:
                 # For other or unknown formats, use generic parser
                 self.logger.info(
                     f"Using generic parser for {ext} file (method={parse_method})..."
                 )
-                content_list = doc_parser.parse_document(
+                content_list = await asyncio.to_thread(
+                    doc_parser.parse_document,
                     file_path=file_path,
                     method=parse_method,
                     output_dir=output_dir,
@@ -398,7 +409,7 @@ class ProcessorMixin:
             )
 
         self.logger.info(
-            f"Parsing complete! Extracted {len(content_list)} content blocks"
+            f"Parsing {file_path} complete! Extracted {len(content_list)} content blocks"
         )
 
         # Generate doc_id based on content
@@ -429,7 +440,12 @@ class ProcessorMixin:
         return content_list, doc_id
 
     async def _process_multimodal_content(
-        self, multimodal_items: List[Dict[str, Any]], file_path: str, doc_id: str
+        self,
+        multimodal_items: List[Dict[str, Any]],
+        file_path: str,
+        doc_id: str,
+        pipeline_status: Optional[Any] = None,
+        pipeline_status_lock: Optional[Any] = None,
     ):
         """
         Process multimodal content (using specialized processors)
@@ -438,7 +454,10 @@ class ProcessorMixin:
             multimodal_items: List of multimodal items
             file_path: File path (for reference)
             doc_id: Document ID for proper chunk association
+            pipeline_status: Pipeline status object
+            pipeline_status_lock: Pipeline status lock
         """
+
         if not multimodal_items:
             self.logger.debug("No multimodal content to process")
             return
@@ -477,9 +496,17 @@ class ProcessorMixin:
             # Continue with processing if cache check fails
 
         # Use ProcessorMixin's own batch processing that can handle multiple content types
-        self.logger.info("Starting multimodal content processing...")
+        log_message = "Starting multimodal content processing..."
+        self.logger.info(log_message)
+        if pipeline_status_lock and pipeline_status:
+            async with pipeline_status_lock:
+                pipeline_status["latest_message"] = log_message
+                pipeline_status["history_messages"].append(log_message)
 
         try:
+            # Ensure LightRAG is initialized
+            await self._ensure_lightrag_initialized()
+
             await self._process_multimodal_content_batch_type_aware(
                 multimodal_items=multimodal_items, file_path=file_path, doc_id=doc_id
             )
@@ -487,7 +514,12 @@ class ProcessorMixin:
             # Mark multimodal content as processed and update final status
             await self._mark_multimodal_processing_complete(doc_id)
 
-            self.logger.info("Multimodal content processing complete")
+            log_message = "Multimodal content processing complete"
+            self.logger.info(log_message)
+            if pipeline_status_lock and pipeline_status:
+                async with pipeline_status_lock:
+                    pipeline_status["latest_message"] = log_message
+                    pipeline_status["history_messages"].append(log_message)
 
         except Exception as e:
             self.logger.error(f"Error in multimodal processing: {e}")
@@ -789,7 +821,7 @@ class ProcessorMixin:
 
         # Stage 6: Use LightRAG's batch merge
         await self._batch_merge_lightrag_style_type_aware(
-            enhanced_chunk_results, file_path
+            enhanced_chunk_results, file_path, doc_id
         )
 
         # Stage 7: Update doc_status with integrated chunks_list
@@ -1104,7 +1136,7 @@ class ProcessorMixin:
         return enhanced_chunk_results
 
     async def _batch_merge_lightrag_style_type_aware(
-        self, enhanced_chunk_results: List[Tuple], file_path: str
+        self, enhanced_chunk_results: List[Tuple], file_path: str, doc_id: str = None
     ):
         """Use LightRAG's merge_nodes_and_edges for batch merge"""
         from lightrag.kg.shared_storage import (
@@ -1122,6 +1154,9 @@ class ProcessorMixin:
             entity_vdb=self.lightrag.entities_vdb,
             relationships_vdb=self.lightrag.relationships_vdb,
             global_config=self.lightrag.__dict__,
+            full_entities_storage=self.lightrag.full_entities,
+            full_relations_storage=self.lightrag.full_relations,
+            doc_id=doc_id,
             pipeline_status=pipeline_status,
             pipeline_status_lock=pipeline_status_lock,
             llm_response_cache=self.lightrag.llm_response_cache,
@@ -1335,7 +1370,7 @@ class ProcessorMixin:
             file_name = os.path.basename(file_path)
             await insert_text_content(
                 self.lightrag,
-                text_content,
+                input=text_content,
                 file_paths=file_name,
                 split_by_character=split_by_character,
                 split_by_character_only=split_by_character_only,
@@ -1354,6 +1389,199 @@ class ProcessorMixin:
             )
 
         self.logger.info(f"Document {file_path} processing complete!")
+
+    async def process_document_complete_lightrag_api(
+        self,
+        file_path: str,
+        output_dir: str = None,
+        parse_method: str = None,
+        display_stats: bool = None,
+        split_by_character: str | None = None,
+        split_by_character_only: bool = False,
+        doc_id: str | None = None,
+        scheme_name: str | None = None,
+        **kwargs,
+    ):
+        """
+        API exclusively for LightRAG calls: Complete document processing workflow
+
+        Args:
+            file_path: Path to the file to process
+            output_dir: output directory (defaults to config.parser_output_dir)
+            parse_method: Parse method (defaults to config.parse_method)
+            display_stats: Whether to display content statistics (defaults to config.display_content_stats)
+            split_by_character: Optional character to split the text by
+            split_by_character_only: If True, split only by the specified character
+            doc_id: Optional document ID, if not provided will be generated from content
+            **kwargs: Additional parameters for parser (e.g., lang, device, start_page, end_page, formula, table, backend, source)
+        """
+        file_name = os.path.basename(file_path)
+        doc_pre_id = f"doc-pre-{file_name}"
+        pipeline_status = None
+        pipeline_status_lock = None
+
+        try:
+            # Ensure LightRAG is initialized
+            result = await self._ensure_lightrag_initialized()
+            if not result["success"]:
+                current_doc_status = await self.lightrag.doc_status.get_by_id(
+                    doc_pre_id
+                )
+                if not current_doc_status:
+                    await self.lightrag.doc_status.upsert(
+                        {
+                            doc_pre_id: {
+                                **current_doc_status,
+                                "status": DocStatus.FAILED,
+                                "error_msg": result["error"],
+                            }
+                        }
+                    )
+                    current_doc_status = await self.lightrag.doc_status.get_by_id(
+                        doc_pre_id
+                    )
+
+                return False
+
+            # Use config defaults if not provided
+            if output_dir is None:
+                output_dir = self.config.parser_output_dir
+            if parse_method is None:
+                parse_method = self.config.parse_method
+            if display_stats is None:
+                display_stats = self.config.display_content_stats
+
+            self.logger.info(f"Starting complete document processing: {file_path}")
+
+            # Initialize doc status
+            current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
+            if not current_doc_status:
+                await self.lightrag.doc_status.upsert(
+                    {
+                        doc_pre_id: {
+                            "status": DocStatus.READY,
+                            "content": "",
+                            "error_msg": "",
+                            "content_summary": "",
+                            "multimodal_content": [],
+                            "scheme_name": scheme_name,
+                            "content_length": 0,
+                            "created_at": "",
+                            "updated_at": "",
+                            "file_path": file_name,
+                        }
+                    }
+                )
+                current_doc_status = await self.lightrag.doc_status.get_by_id(
+                    doc_pre_id
+                )
+
+            from lightrag.kg.shared_storage import (
+                get_namespace_data,
+                get_pipeline_status_lock,
+            )
+
+            pipeline_status = await get_namespace_data("pipeline_status")
+            pipeline_status_lock = get_pipeline_status_lock()
+
+            # Set processing status
+            async with pipeline_status_lock:
+                pipeline_status.update({"scan_disabled": True})
+                pipeline_status["history_messages"].append("Now is not allowed to scan")
+
+            await self.lightrag.doc_status.upsert(
+                {doc_pre_id: {**current_doc_status, "status": DocStatus.HANDLING}}
+            )
+
+            # Step 1: Parse document
+            content_list, content_based_doc_id = await self.parse_document(
+                file_path, output_dir, parse_method, display_stats, **kwargs
+            )
+
+            # Use provided doc_id or fall back to content-based doc_id
+            if doc_id is None:
+                doc_id = content_based_doc_id
+
+            # Step 2: Separate text and multimodal content
+            text_content, multimodal_items = separate_content(content_list)
+
+            # Step 2.5: Set content source for context extraction in multimodal processing
+            if hasattr(self, "set_content_source_for_context") and multimodal_items:
+                self.logger.info(
+                    "Setting content source for context-aware multimodal processing..."
+                )
+                self.set_content_source_for_context(
+                    content_list, self.config.content_format
+                )
+
+            # Step 3: Insert pure text content and multimodal content with all parameters
+            if text_content.strip():
+                await insert_text_content_with_multimodal_content(
+                    self.lightrag,
+                    input=text_content,
+                    multimodal_content=multimodal_items,
+                    file_paths=file_name,
+                    split_by_character=split_by_character,
+                    split_by_character_only=split_by_character_only,
+                    ids=doc_id,
+                    scheme_name=scheme_name,
+                )
+
+            # Success: Update pipeline status
+            async with pipeline_status_lock:
+                pipeline_status.update({"scan_disabled": False})
+                pipeline_status["latest_message"] = (
+                    f"RAGAnything processing completed for {file_name}"
+                )
+                pipeline_status["history_messages"].append(
+                    f"RAGAnything processing completed for {file_name}"
+                )
+                pipeline_status["history_messages"].append("Now is allowed to scan")
+
+            self.logger.info(f"Document {file_path} processing completed successfully")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Error processing document {file_path}: {str(e)}")
+            self.logger.debug("Exception details:", exc_info=True)
+
+            # Update doc status to Failed
+            try:
+                await self.lightrag.doc_status.upsert(
+                    {
+                        doc_pre_id: {
+                            **current_doc_status,
+                            "status": DocStatus.FAILED,
+                            "error_msg": str(e),
+                        }
+                    }
+                )
+                await self.lightrag.doc_status.index_done_callback()
+                self.logger.info(f"Updated doc_status to Failed for {doc_pre_id}")
+            except Exception as status_update_error:
+                self.logger.error(
+                    f"Failed to update doc_status to Failed: {status_update_error}"
+                )
+
+            # Update pipeline status
+            if pipeline_status_lock and pipeline_status:
+                try:
+                    async with pipeline_status_lock:
+                        pipeline_status.update({"scan_disabled": False})
+                        error_msg = (
+                            f"RAGAnything processing failed for {file_name}: {str(e)}"
+                        )
+                        pipeline_status["latest_message"] = error_msg
+                        pipeline_status["history_messages"].append(error_msg)
+                        pipeline_status["history_messages"].append(
+                            "Now is allowed to scan"
+                        )
+                except Exception as pipeline_update_error:
+                    self.logger.error(
+                        f"Failed to update pipeline status: {pipeline_update_error}"
+                    )
+
+            return False
 
     async def insert_content_list(
         self,
@@ -1438,7 +1666,7 @@ class ProcessorMixin:
             file_name = os.path.basename(file_path)
             await insert_text_content(
                 self.lightrag,
-                text_content,
+                input=text_content,
                 file_paths=file_name,
                 split_by_character=split_by_character,
                 split_by_character_only=split_by_character_only,
