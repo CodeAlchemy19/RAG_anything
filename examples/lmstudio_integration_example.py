@@ -1,11 +1,11 @@
 """
-LM Studio Integration Example with RAG-Anything
+LMStudio Integration Example with RAG-Anything
 
-This example demonstrates how to integrate LM Studio with RAG-Anything for local
+This example demonstrates how to integrate LMStudio with RAG-Anything for local
 multimodal document processing and querying.
 
 Requirements:
-- LM Studio running locally with server enabled
+- LMStudio running locally with server enabled
 - OpenAI Python package: pip install openai
 - RAG-Anything installed: pip install raganything
 
@@ -15,6 +15,7 @@ LMSTUDIO_API_HOST=http://localhost:1234/v1
 LMSTUDIO_API_KEY=lm-studio
 MODEL_CHOICE=your-model-name
 VISION_MODEL_CHOICE=your-vision-model-name  # Optional for vision tasks
+EMBEDDING_MODEL_CHOICE=text-embedding-nomic-embed-text-v1.5  # Default LMStudio embedding model
 """
 
 import os
@@ -32,14 +33,15 @@ from lightrag.utils import EmbeddingFunc
 from lightrag.llm.openai import openai_complete_if_cache
 
 class LMStudioRAGIntegration:
-    """Integration class for LM Studio with RAG-Anything."""
+    """Integration class for LMStudio with RAG-Anything."""
     
     def __init__(self):
-        # LM Studio configuration
+        # LMStudio configuration
         self.base_url = os.getenv('LMSTUDIO_API_HOST', 'http://localhost:1234/v1')
         self.api_key = os.getenv('LMSTUDIO_API_KEY', 'lm-studio')
         self.model_name = os.getenv('MODEL_CHOICE', 'openai/gpt-oss-20b')
         self.vision_model = os.getenv('VISION_MODEL_CHOICE', self.model_name)
+        self.embedding_model = os.getenv('EMBEDDING_MODEL_CHOICE', 'text-embedding-nomic-embed-text-v1.5')
         
         # Initialize AsyncOpenAI client for LightRAG compatibility
         self.client = AsyncOpenAI(
@@ -60,9 +62,9 @@ class LMStudioRAGIntegration:
         self.rag = None
     
     async def test_connection(self) -> bool:
-        """Test LM Studio connection."""
+        """Test LMStudio connection."""
         try:
-            print(f"🔌 Testing LM Studio connection at: {self.base_url}")
+            print(f"🔌 Testing LMStudio connection at: {self.base_url}")
             models = await self.client.models.list()
             print(f"✅ Connected successfully! Found {len(models.data)} models")
             
@@ -79,8 +81,8 @@ class LMStudioRAGIntegration:
         except Exception as e:
             print(f"❌ Connection failed: {str(e)}")
             print("\n💡 Troubleshooting tips:")
-            print("1. Ensure LM Studio is running")
-            print("2. Start the local server in LM Studio")
+            print("1. Ensure LMStudio is running")
+            print("2. Start the local server in LMStudio")
             print("3. Load a model or enable just-in-time loading")
             print(f"4. Verify server address: {self.base_url}")
             return False
@@ -101,7 +103,7 @@ class LMStudioRAGIntegration:
             
             result = response.choices[0].message.content.strip()
             print(f"✅ Chat test successful!")
-            print(f"🤖 Response: {result}")
+            print(f"Response: {result}")
             return True
         except Exception as e:
             print(f"❌ Chat test failed: {str(e)}")
@@ -184,48 +186,35 @@ class LMStudioRAGIntegration:
             return await self.llm_model_func(prompt, system_prompt, history_messages, **kwargs)
     
     def embedding_func_factory(self):
-        """Create embedding function. Note: LM Studio may not support embeddings directly."""
         async def embedding_func(texts: List[str]) -> List[List[float]]:
             """
-            Embedding function using LM Studio.
-            Note: This is a placeholder - LM Studio may not support embeddings API.
-            Consider using a local embedding model like sentence-transformers instead.
+            Embedding function using LMStudio's embedding API.
+            Uses nomic-embed-text-v1.5 as default model with 768 dimensions.
             """
             try:
-                # Try LM Studio embeddings API (if available)
                 embeddings = []
                 for text in texts:
                     response = await self.client.embeddings.create(
-                        model="text-embedding-ada-002",  # Adjust model name
+                        model=self.embedding_model,
                         input=text
                     )
                     embeddings.append(response.data[0].embedding)
                 return embeddings
             except Exception as e:
-                print(f"⚠️  LM Studio embeddings not available: {e}")
-                print("💡 Consider using sentence-transformers for local embeddings")
-                
-                # Fallback: Use sentence-transformers if available
-                try:
-                    from sentence_transformers import SentenceTransformer
-                    if not hasattr(self, '_embedding_model'):
-                        self._embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-                    return self._embedding_model.encode(texts).tolist()
-                except ImportError:
-                    raise RuntimeError(
-                        "Neither LM Studio embeddings nor sentence-transformers available. "
-                        "Install sentence-transformers: pip install sentence-transformers"
-                    )
+                print(f"❌ LMStudio embeddings failed with model '{self.embedding_model}': {e}")
+                raise RuntimeError(
+                    f"LMStudio embeddings unavailable. Ensure embedding model '{self.embedding_model}' is loaded."
+                )
         
         return EmbeddingFunc(
-            embedding_dim=384,  # Adjust based on your embedding model
-            max_token_size=512,
+            embedding_dim=768,  # nomic-embed-text-v1.5 default dimension
+            max_token_size=8192,  # nomic-embed-text-v1.5 context length
             func=embedding_func
         )
     
     async def initialize_rag(self):
-        """Initialize RAG-Anything with LM Studio functions."""
-        print("🚀 Initializing RAG-Anything with LM Studio...")
+        """Initialize RAG-Anything with LMStudio functions."""
+        print("Initializing RAG-Anything with LMStudio...")
         
         try:
             self.rag = RAGAnything(
@@ -241,7 +230,7 @@ class LMStudioRAGIntegration:
             return False
     
     async def process_document_example(self, file_path: str):
-        """Example: Process a document with LM Studio backend."""
+        """Example: Process a document with LMStudio backend."""
         if not self.rag:
             print("❌ RAG not initialized. Call initialize_rag() first.")
             return
@@ -274,9 +263,9 @@ class LMStudioRAGIntegration:
         print("\n🔍 Running example queries...")
         for query, mode in queries:
             try:
-                print(f"\n❓ Query ({mode}): {query}")
+                print(f"\nQuery ({mode}): {query}")
                 result = await self.rag.aquery(query, mode=mode)
-                print(f"💡 Answer: {result[:200]}...")
+                print(f"Answer: {result[:200]}...")
             except Exception as e:
                 print(f"❌ Query failed: {str(e)}")
     
@@ -287,7 +276,7 @@ class LMStudioRAGIntegration:
             return
         
         try:
-            print("\n🎨 Testing multimodal query...")
+            print("\nTesting multimodal query...")
             
             # Example with table data
             result = await self.rag.aquery_with_multimodal(
@@ -295,7 +284,7 @@ class LMStudioRAGIntegration:
                 multimodal_content=[{
                     "type": "table",
                     "table_data": """Method,Accuracy,Speed
-LM Studio + RAG,95.2%,Fast
+LMStudio + RAG,95.2%,Fast
 Traditional RAG,87.3%,Medium
 Baseline,75.1%,Slow""",
                     "table_caption": "Performance Comparison"
@@ -310,7 +299,7 @@ Baseline,75.1%,Slow""",
 async def main():
     """Main example function."""
     print("=" * 70)
-    print("🦾 LM Studio + RAG-Anything Integration Example")
+    print("LMStudio + RAG-Anything Integration Example")
     print("=" * 70)
     
     # Initialize integration
@@ -339,50 +328,13 @@ async def main():
     await integration.multimodal_query_example()
     
     print("\n" + "=" * 70)
-    print("🎉 Integration example completed successfully!")
+    print("Integration example completed successfully!")
     print("=" * 70)
     
     return True
 
-def create_env_template():
-    """Create .env template file."""
-    env_content = """# LM Studio Configuration
-LMSTUDIO_API_HOST=http://localhost:1234/v1
-LMSTUDIO_API_KEY=lm-studio
-
-# Model Configuration
-MODEL_CHOICE=your-model-name
-VISION_MODEL_CHOICE=your-vision-model-name
-
-# RAG Configuration
-WORKING_DIR=./lmstudio_rag_storage
-PARSER=mineru
-PARSE_METHOD=auto
-OUTPUT_DIR=./lmstudio_output
-
-# Processing Configuration
-ENABLE_IMAGE_PROCESSING=True
-ENABLE_TABLE_PROCESSING=True
-ENABLE_EQUATION_PROCESSING=True
-MAX_CONCURRENT_FILES=2
-"""
-    
-    with open('.env.lmstudio.example', 'w') as f:
-        f.write(env_content)
-    print("📁 Created .env.lmstudio.example - copy to .env and configure")
-
 if __name__ == "__main__":
-    print("Creating environment template...")
-    create_env_template()
-    
-    print("\n🚀 Starting LM Studio integration example...")
+    print("🚀 Starting LMStudio integration example...")
     success = asyncio.run(main())
-    
-    if success:
-        print("\n💡 Next steps:")
-        print("1. Copy .env.lmstudio.example to .env")
-        print("2. Configure your model names in .env")
-        print("3. Uncomment document processing lines with your PDF path")
-        print("4. Run the script to see full functionality")
     
     exit(0 if success else 1)
