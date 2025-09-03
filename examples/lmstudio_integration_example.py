@@ -1,11 +1,11 @@
 """
-LMStudio Integration Example with RAG-Anything
+LM Studio Integration Example with RAG-Anything
 
-This example demonstrates how to integrate LMStudio with RAG-Anything for local
+This example demonstrates how to integrate LM Studio with RAG-Anything for local
 multimodal document processing and querying.
 
 Requirements:
-- LMStudio running locally with server enabled
+- LM Studio running locally with server enabled
 - OpenAI Python package: pip install openai
 - RAG-Anything installed: pip install raganything
 
@@ -15,7 +15,7 @@ LMSTUDIO_API_HOST=http://localhost:1234/v1
 LMSTUDIO_API_KEY=lm-studio
 MODEL_CHOICE=your-model-name
 VISION_MODEL_CHOICE=your-vision-model-name  # Optional for vision tasks
-EMBEDDING_MODEL_CHOICE=text-embedding-nomic-embed-text-v1.5  # Default LMStudio embedding model
+EMBEDDING_MODEL_CHOICE=text-embedding-nomic-embed-text-v1.5  # Default LM Studio embedding model
 """
 
 import os
@@ -107,10 +107,10 @@ async def lmstudio_embedding_async(texts: List[str]) -> List[List[float]]:
     return embeddings.tolist()
 
 class LMStudioRAGIntegration:
-    """Integration class for LMStudio with RAG-Anything."""
+    """Integration class for LM Studio with RAG-Anything."""
     
     def __init__(self):
-        # LMStudio configuration
+        # LM Studio configuration
         self.base_url = os.getenv('LMSTUDIO_API_HOST', 'http://localhost:1234/v1')
         self.api_key = os.getenv('LMSTUDIO_API_KEY', 'lm-studio')
         self.model_name = os.getenv('MODEL_CHOICE', 'openai/gpt-oss-20b')
@@ -131,9 +131,9 @@ class LMStudioRAGIntegration:
         self.rag = None
 
     async def test_connection(self) -> bool:
-        """Test LMStudio connection."""
+        """Test LM Studio connection."""
         try:
-            print(f"🔌 Testing LMStudio connection at: {self.base_url}")
+            print(f"🔌 Testing LM Studio connection at: {self.base_url}")
             client = AsyncOpenAI(base_url=self.base_url, api_key=self.api_key)
             models = await client.models.list()
             print(f"✅ Connected successfully! Found {len(models.data)} models")
@@ -151,8 +151,8 @@ class LMStudioRAGIntegration:
         except Exception as e:
             print(f"❌ Connection failed: {str(e)}")
             print("\n💡 Troubleshooting tips:")
-            print("1. Ensure LMStudio is running")
-            print("2. Start the local server in LMStudio")
+            print("1. Ensure LM Studio is running")
+            print("2. Start the local server in LM Studio")
             print("3. Load a model or enable just-in-time loading")
             print(f"4. Verify server address: {self.base_url}")
             return False
@@ -207,8 +207,8 @@ class LMStudioRAGIntegration:
         )
     
     async def initialize_rag(self):
-        """Initialize RAG-Anything with LMStudio functions."""
-        print("Initializing RAG-Anything with LMStudio...")
+        """Initialize RAG-Anything with LM Studio functions."""
+        print("Initializing RAG-Anything with LM Studio...")
         
         try:
             self.rag = RAGAnything(
@@ -224,7 +224,7 @@ class LMStudioRAGIntegration:
             return False
     
     async def process_document_example(self, file_path: str):
-        """Example: Process a document with LMStudio backend."""
+        """Example: Process a document with LM Studio backend."""
         if not self.rag:
             print("❌ RAG not initialized. Call initialize_rag() first.")
             return
@@ -276,11 +276,11 @@ class LMStudioRAGIntegration:
             content_list = [
                 {
                     "type": "text",
-                    "text": """LMStudio Integration with RAG-Anything
+                    "text": """LM Studio Integration with RAG-Anything
                     
-This integration demonstrates how to connect LMStudio's local AI models with RAG-Anything's document processing capabilities. The system uses:
+This integration demonstrates how to connect LM Studio's local AI models with RAG-Anything's document processing capabilities. The system uses:
 
-- LMStudio for local LLM inference
+- LM Studio for local LLM inference
 - nomic-embed-text-v1.5 for embeddings (768 dimensions)  
 - RAG-Anything for document processing and retrieval
 
@@ -306,7 +306,7 @@ Key benefits include:
             
             # Simple text query example
             result = await self.rag.aquery(
-                "What are the key benefits of this LMStudio integration?",
+                "What are the key benefits of this LM Studio integration?",
                 mode="hybrid"
             )
             print(f"✅ Query result: {result[:300]}...")
@@ -317,7 +317,7 @@ Key benefits include:
 async def main():
     """Main example function."""
     print("=" * 70)
-    print("LMStudio + RAG-Anything Integration Example")
+    print("LM Studio + RAG-Anything Integration Example")
     print("=" * 70)
     
     # Initialize integration
@@ -352,7 +352,7 @@ async def main():
     return True
 
 if __name__ == "__main__":
-    print("🚀 Starting LMStudio integration example...")
+    print("🚀 Starting LM Studio integration example...")
     success = asyncio.run(main())
     
     exit(0 if success else 1)
