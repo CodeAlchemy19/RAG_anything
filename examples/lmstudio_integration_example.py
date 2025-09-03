@@ -32,6 +32,80 @@ from raganything import RAGAnything, RAGAnythingConfig
 from lightrag.utils import EmbeddingFunc
 from lightrag.llm.openai import openai_complete_if_cache
 
+LM_BASE_URL = os.getenv('LMSTUDIO_API_HOST', 'http://localhost:1234/v1')
+LM_API_KEY = os.getenv('LMSTUDIO_API_KEY', 'lm-studio')
+LM_MODEL_NAME = os.getenv('MODEL_CHOICE', 'openai/gpt-oss-20b')
+LM_VISION_MODEL_NAME = os.getenv('VISION_MODEL_CHOICE', LM_MODEL_NAME)
+LM_EMBED_MODEL = os.getenv('EMBEDDING_MODEL_CHOICE', 'text-embedding-nomic-embed-text-v1.5')
+
+async def lmstudio_llm_model_func(prompt: str, system_prompt: Optional[str] = None,
+                                  history_messages: List[Dict] = None, **kwargs) -> str:
+    """Top-level LLM function for LightRAG (pickle-safe)."""
+    return await openai_complete_if_cache(
+        model=LM_MODEL_NAME,
+        prompt=prompt,
+        system_prompt=system_prompt,
+        history_messages=history_messages or [],
+        base_url=LM_BASE_URL,
+        api_key=LM_API_KEY,
+        **kwargs,
+    )
+
+async def lmstudio_vision_model_func(prompt: str, system_prompt: Optional[str] = None,
+                                     history_messages: List[Dict] = None, image_data: Optional[str] = None,
+                                     messages: Optional[List[Dict]] = None, **kwargs) -> str:
+    """Top-level Vision/Multimodal function for LightRAG (pickle-safe)."""
+    try:
+        if messages:
+            return await openai_complete_if_cache(
+                model=LM_VISION_MODEL_NAME,
+                prompt="",
+                system_prompt=None,
+                history_messages=[],
+                messages=messages,
+                base_url=LM_BASE_URL,
+                api_key=LM_API_KEY,
+                **kwargs,
+            )
+        elif image_data:
+            vision_messages = []
+            if system_prompt:
+                vision_messages.append({"role": "system", "content": system_prompt})
+            if history_messages:
+                vision_messages.extend(history_messages)
+            vision_messages.append({
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}},
+                ],
+            })
+            return await openai_complete_if_cache(
+                model=LM_VISION_MODEL_NAME,
+                prompt="",
+                system_prompt=None,
+                history_messages=[],
+                messages=vision_messages,
+                base_url=LM_BASE_URL,
+                api_key=LM_API_KEY,
+                **kwargs,
+            )
+        else:
+            return await lmstudio_llm_model_func(prompt, system_prompt, history_messages, **kwargs)
+    except Exception:
+        return await lmstudio_llm_model_func(prompt, system_prompt, history_messages, **kwargs)
+
+async def lmstudio_embedding_async(texts: List[str]) -> List[List[float]]:
+    """Top-level embedding function for LightRAG (pickle-safe)."""
+    from lightrag.llm.openai import openai_embed
+    embeddings = await openai_embed(
+        texts=texts,
+        model=LM_EMBED_MODEL,
+        base_url=LM_BASE_URL,
+        api_key=LM_API_KEY,
+    )
+    return embeddings.tolist()
+
 class LMStudioRAGIntegration:
     """Integration class for LMStudio with RAG-Anything."""
     
@@ -42,16 +116,11 @@ class LMStudioRAGIntegration:
         self.model_name = os.getenv('MODEL_CHOICE', 'openai/gpt-oss-20b')
         self.vision_model = os.getenv('VISION_MODEL_CHOICE', self.model_name)
         self.embedding_model = os.getenv('EMBEDDING_MODEL_CHOICE', 'text-embedding-nomic-embed-text-v1.5')
-        
-        # Initialize AsyncOpenAI client for LightRAG compatibility
-        self.client = AsyncOpenAI(
-            base_url=self.base_url,
-            api_key=self.api_key,
-        )
+    
         
         # RAG-Anything configuration
         self.config = RAGAnythingConfig(
-            working_dir="./lmstudio_rag_storage",
+            working_dir="./rag_storage_lmstudio",
             parser="mineru",
             parse_method="auto",
             enable_image_processing=True,
@@ -60,12 +129,13 @@ class LMStudioRAGIntegration:
         )
         
         self.rag = None
-    
+
     async def test_connection(self) -> bool:
         """Test LMStudio connection."""
         try:
             print(f"🔌 Testing LMStudio connection at: {self.base_url}")
-            models = await self.client.models.list()
+            client = AsyncOpenAI(base_url=self.base_url, api_key=self.api_key)
+            models = await client.models.list()
             print(f"✅ Connected successfully! Found {len(models.data)} models")
             
             # Show available models
@@ -86,12 +156,18 @@ class LMStudioRAGIntegration:
             print("3. Load a model or enable just-in-time loading")
             print(f"4. Verify server address: {self.base_url}")
             return False
+        finally:
+            try:
+                await client.close()
+            except Exception:
+                pass
     
     async def test_chat_completion(self) -> bool:
         """Test basic chat functionality."""
         try:
             print(f"💬 Testing chat with model: {self.model_name}")
-            response = await self.client.chat.completions.create(
+            client = AsyncOpenAI(base_url=self.base_url, api_key=self.api_key)
+            response = await client.chat.completions.create(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": "You are a helpful AI assistant."},
@@ -108,108 +184,26 @@ class LMStudioRAGIntegration:
         except Exception as e:
             print(f"❌ Chat test failed: {str(e)}")
             return False
+        finally:
+            try:
+                await client.close()
+            except Exception:
+                pass
     
-    async def llm_model_func(self, prompt: str, system_prompt: Optional[str] = None, 
-                            history_messages: List[Dict] = None, **kwargs) -> str:
-        """LLM function compatible with LightRAG via openai_complete_if_cache."""
-        try:
-            # Use LightRAG's built-in function for better compatibility
-            return await openai_complete_if_cache(
-                model=self.model_name,
-                prompt=prompt,
-                system_prompt=system_prompt,
-                history_messages=history_messages or [],
-                base_url=self.base_url,
-                api_key=self.api_key,
-                **kwargs
-            )
-        except Exception as e:
-            print(f"❌ LLM function error: {str(e)}")
-            raise
+    def llm_model_func_factory(self):
+        """Deprecated: keep for backward compatibility; returns top-level function."""
+        return lmstudio_llm_model_func
     
-    async def vision_model_func(self, prompt: str, system_prompt: Optional[str] = None, 
-                               history_messages: List[Dict] = None, image_data: Optional[str] = None,
-                               messages: Optional[List[Dict]] = None, **kwargs) -> str:
-        """Vision model function for multimodal content."""
-        try:
-            # If messages format is provided (for VLM enhanced query), use LightRAG's function
-            if messages:
-                return await openai_complete_if_cache(
-                    model=self.vision_model,
-                    prompt="",  # Empty prompt when using messages format
-                    system_prompt=None,
-                    history_messages=[],
-                    messages=messages,
-                    base_url=self.base_url,
-                    api_key=self.api_key,
-                    **kwargs
-                )
-            
-            # Traditional single image format
-            elif image_data:
-                # Construct messages for image input
-                vision_messages = []
-                if system_prompt:
-                    vision_messages.append({"role": "system", "content": system_prompt})
-                if history_messages:
-                    vision_messages.extend(history_messages)
-                
-                vision_messages.append({
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}
-                        }
-                    ]
-                })
-                
-                return await openai_complete_if_cache(
-                    model=self.vision_model,
-                    prompt="",
-                    system_prompt=None,
-                    history_messages=[],
-                    messages=vision_messages,
-                    base_url=self.base_url,
-                    api_key=self.api_key,
-                    **kwargs
-                )
-            
-            # Pure text format - fallback to regular LLM
-            else:
-                return await self.llm_model_func(prompt, system_prompt, history_messages, **kwargs)
-                
-        except Exception as e:
-            print(f"❌ Vision model error: {str(e)}")
-            # Fallback to text-only model
-            return await self.llm_model_func(prompt, system_prompt, history_messages, **kwargs)
+    def vision_model_func_factory(self):
+        """Deprecated: keep for backward compatibility; returns top-level function."""
+        return lmstudio_vision_model_func
     
     def embedding_func_factory(self):
-        async def embedding_func(texts: List[str]) -> List[List[float]]:
-            """
-            Embedding function using LMStudio's embedding API.
-            Uses nomic-embed-text-v1.5 as default model with 768 dimensions.
-            """
-            try:
-                embeddings = []
-                for text in texts:
-                    response = await self.client.embeddings.create(
-                        model=self.embedding_model,
-                        input=text
-                    )
-                    embeddings.append(response.data[0].embedding)
-                return embeddings
-            except Exception as e:
-                print(f"❌ LMStudio embeddings failed with model '{self.embedding_model}': {e}")
-                raise RuntimeError(
-                    f"LMStudio embeddings unavailable. Ensure embedding model '{self.embedding_model}' is loaded."
-                )
-        
+        """Create a completely serializable embedding function."""
         return EmbeddingFunc(
             embedding_dim=768,  # nomic-embed-text-v1.5 default dimension
             max_token_size=8192,  # nomic-embed-text-v1.5 context length
-            func=embedding_func
+            func=lmstudio_embedding_async,
         )
     
     async def initialize_rag(self):
@@ -219,8 +213,8 @@ class LMStudioRAGIntegration:
         try:
             self.rag = RAGAnything(
                 config=self.config,
-                llm_model_func=self.llm_model_func,
-                vision_model_func=self.vision_model_func,
+                llm_model_func=lmstudio_llm_model_func,
+                vision_model_func=lmstudio_vision_model_func,
                 embedding_func=self.embedding_func_factory(),
             )
             print("✅ RAG-Anything initialized successfully!")
@@ -239,7 +233,7 @@ class LMStudioRAGIntegration:
             print(f"📄 Processing document: {file_path}")
             await self.rag.process_document_complete(
                 file_path=file_path,
-                output_dir="./lmstudio_output",
+                output_dir="./output_lmstudio",
                 parse_method="auto",
                 display_stats=True
             )
@@ -269,32 +263,56 @@ class LMStudioRAGIntegration:
             except Exception as e:
                 print(f"❌ Query failed: {str(e)}")
     
-    async def multimodal_query_example(self):
-        """Example multimodal query."""
+    async def simple_query_example(self):
+        """Example basic text query with sample content."""
         if not self.rag:
             print("❌ RAG not initialized")
             return
         
         try:
-            print("\nTesting multimodal query...")
+            print("\nAdding sample content for testing...")
             
-            # Example with table data
-            result = await self.rag.aquery_with_multimodal(
-                "Analyze this performance data and compare it with document content",
-                multimodal_content=[{
-                    "type": "table",
-                    "table_data": """Method,Accuracy,Speed
-LMStudio + RAG,95.2%,Fast
-Traditional RAG,87.3%,Medium
-Baseline,75.1%,Slow""",
-                    "table_caption": "Performance Comparison"
-                }],
+            # Create content list in the format expected by RAGAnything
+            content_list = [
+                {
+                    "type": "text",
+                    "text": """LMStudio Integration with RAG-Anything
+                    
+This integration demonstrates how to connect LMStudio's local AI models with RAG-Anything's document processing capabilities. The system uses:
+
+- LMStudio for local LLM inference
+- nomic-embed-text-v1.5 for embeddings (768 dimensions)  
+- RAG-Anything for document processing and retrieval
+
+Key benefits include:
+- Privacy: All processing happens locally
+- Performance: Direct API access to local models
+- Flexibility: Support for various document formats
+- Cost-effective: No external API usage""",
+                    "page_idx": 0
+                }
+            ]
+            
+            # Insert the content list using the correct method
+            await self.rag.insert_content_list(
+                content_list=content_list,
+                file_path="lmstudio_integration_demo.txt",
+                doc_id="demo-content-001",
+                display_stats=True
+            )
+            print("✅ Sample content added to knowledge base")
+            
+            print("\nTesting basic text query...")
+            
+            # Simple text query example
+            result = await self.rag.aquery(
+                "What are the key benefits of this LMStudio integration?",
                 mode="hybrid"
             )
-            print(f"✅ Multimodal query result: {result[:200]}...")
+            print(f"✅ Query result: {result[:300]}...")
             
         except Exception as e:
-            print(f"❌ Multimodal query failed: {str(e)}")
+            print(f"❌ Query failed: {str(e)}")
 
 async def main():
     """Main example function."""
@@ -324,8 +342,8 @@ async def main():
     # Example queries (uncomment after processing documents)
     # await integration.query_examples()
     
-    # Example multimodal query
-    await integration.multimodal_query_example()
+    # Example basic query
+    await integration.simple_query_example()
     
     print("\n" + "=" * 70)
     print("Integration example completed successfully!")

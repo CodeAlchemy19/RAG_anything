@@ -52,9 +52,8 @@ dev-dependencies = [
     "isort",
     "flake8",
     "mypy",
-    "openai",  # For examples that use OpenAI
-    "python-dotenv",  # For environment variable loading
-    "sentence-transformers",  # For local embeddings fallback
+    "openai",
+    "python-dotenv",
 ]
 
 [tool.setuptools.packages.find]
