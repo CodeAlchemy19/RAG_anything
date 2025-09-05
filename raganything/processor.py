@@ -12,7 +12,7 @@ from typing import Dict, List, Any, Tuple, Optional
 from pathlib import Path
 
 from raganything.base import DocStatus
-from raganything.parser import MineruParser, DoclingParser
+from raganything.parser import MineruParser, DoclingParser, MineruExecutionError
 from raganything.utils import (
     separate_content,
     insert_text_content,
@@ -395,18 +395,14 @@ class ProcessorMixin:
                     **kwargs,
                 )
 
+        except MineruExecutionError as e:
+            self.logger.error(f"Mineru command failed: {e}")
+            raise
         except Exception as e:
             self.logger.error(
                 f"Error during parsing with {self.config.parser} parser: {str(e)}"
             )
-            self.logger.warning("Falling back to MinerU parser...")
-            # If specific parser fails, fall back to MinerU parser
-            content_list = MineruParser().parse_document(
-                file_path=file_path,
-                method=parse_method,
-                output_dir=output_dir,
-                **kwargs,
-            )
+            raise e
 
         self.logger.info(
             f"Parsing {file_path} complete! Extracted {len(content_list)} content blocks"
@@ -668,6 +664,9 @@ class ProcessorMixin:
                 entity_vdb=self.lightrag.entities_vdb,
                 relationships_vdb=self.lightrag.relationships_vdb,
                 global_config=self.lightrag.__dict__,
+                full_entities_storage=self.lightrag.full_entities,
+                full_relations_storage=self.lightrag.full_relations,
+                doc_id=doc_id,
                 pipeline_status=pipeline_status,
                 pipeline_status_lock=pipeline_status_lock,
                 llm_response_cache=self.lightrag.llm_response_cache,
@@ -1400,6 +1399,7 @@ class ProcessorMixin:
         split_by_character_only: bool = False,
         doc_id: str | None = None,
         scheme_name: str | None = None,
+        parser: str | None = None,
         **kwargs,
     ):
         """
@@ -1420,27 +1420,26 @@ class ProcessorMixin:
         pipeline_status = None
         pipeline_status_lock = None
 
+        if parser:
+            self.config.parser = parser
+
+        current_doc_status = await self.lightrag.doc_status.get_by_id(
+            doc_pre_id
+        )
+
         try:
             # Ensure LightRAG is initialized
             result = await self._ensure_lightrag_initialized()
             if not result["success"]:
-                current_doc_status = await self.lightrag.doc_status.get_by_id(
-                    doc_pre_id
-                )
-                if not current_doc_status:
-                    await self.lightrag.doc_status.upsert(
-                        {
-                            doc_pre_id: {
-                                **current_doc_status,
-                                "status": DocStatus.FAILED,
-                                "error_msg": result["error"],
-                            }
+                await self.lightrag.doc_status.upsert(
+                    {
+                        doc_pre_id: {
+                            **current_doc_status,
+                            "status": DocStatus.FAILED,
+                            "error_msg": result["error"],
                         }
-                    )
-                    current_doc_status = await self.lightrag.doc_status.get_by_id(
-                        doc_pre_id
-                    )
-
+                    }
+                )
                 return False
 
             # Use config defaults if not provided
@@ -1490,13 +1489,32 @@ class ProcessorMixin:
                 pipeline_status["history_messages"].append("Now is not allowed to scan")
 
             await self.lightrag.doc_status.upsert(
-                {doc_pre_id: {**current_doc_status, "status": DocStatus.HANDLING}}
+                {doc_pre_id: {**current_doc_status, "status": DocStatus.HANDLING, "error_msg": ""}}
             )
 
+            content_list = []
+            content_based_doc_id = ''
+
+            try:
             # Step 1: Parse document
-            content_list, content_based_doc_id = await self.parse_document(
-                file_path, output_dir, parse_method, display_stats, **kwargs
-            )
+                content_list, content_based_doc_id = await self.parse_document(
+                    file_path, output_dir, parse_method, display_stats, **kwargs
+                )
+            except MineruExecutionError as e:
+                error_message = e.error_msg
+                if isinstance(e.error_msg, list):
+                    error_message = "\n".join(e.error_msg)
+                await self.lightrag.doc_status.upsert(
+                    {doc_pre_id: {**current_doc_status, "status": DocStatus.FAILED, "error_msg": error_message}}
+                )
+                self.logger.info(f"Error processing document {file_path}: MineruExecutionError")
+                return False
+            except Exception as e:
+                await self.lightrag.doc_status.upsert(
+                    {doc_pre_id: {**current_doc_status, "status": DocStatus.FAILED, "error_msg": str(e)}}
+                )
+                self.logger.info(f"Error processing document {file_path}: {str(e)}")
+                return False
 
             # Use provided doc_id or fall back to content-based doc_id
             if doc_id is None:
@@ -1546,22 +1564,16 @@ class ProcessorMixin:
             self.logger.debug("Exception details:", exc_info=True)
 
             # Update doc status to Failed
-            try:
-                await self.lightrag.doc_status.upsert(
-                    {
-                        doc_pre_id: {
-                            **current_doc_status,
-                            "status": DocStatus.FAILED,
-                            "error_msg": str(e),
-                        }
+            await self.lightrag.doc_status.upsert(
+                {
+                    doc_pre_id: {
+                        **current_doc_status,
+                        "status": DocStatus.FAILED,
+                        "error_msg": str(e),
                     }
-                )
-                await self.lightrag.doc_status.index_done_callback()
-                self.logger.info(f"Updated doc_status to Failed for {doc_pre_id}")
-            except Exception as status_update_error:
-                self.logger.error(
-                    f"Failed to update doc_status to Failed: {status_update_error}"
-                )
+                }
+            )
+            await self.lightrag.doc_status.index_done_callback()
 
             # Update pipeline status
             if pipeline_status_lock and pipeline_status:
