@@ -404,9 +404,11 @@ class ProcessorMixin:
             )
             raise e
 
-        self.logger.info(
-            f"Parsing {file_path} complete! Extracted {len(content_list)} content blocks"
-        )
+        msg = f"Parsing {file_path} complete! Extracted {len(content_list)} content blocks"
+        self.logger.info(msg)
+
+        if len(content_list) == 0:
+            raise ValueError("Parsing failed: No content was extracted")
 
         # Generate doc_id based on content
         doc_id = self._generate_content_based_doc_id(content_list)
@@ -1563,17 +1565,6 @@ class ProcessorMixin:
                     scheme_name=scheme_name,
                 )
 
-            # Success: Update pipeline status
-            async with pipeline_status_lock:
-                pipeline_status.update({"scan_disabled": False})
-                pipeline_status["latest_message"] = (
-                    f"RAGAnything processing completed for {file_name}"
-                )
-                pipeline_status["history_messages"].append(
-                    f"RAGAnything processing completed for {file_name}"
-                )
-                pipeline_status["history_messages"].append("Now is allowed to scan")
-
             self.logger.info(f"Document {file_path} processing completed successfully")
             return True
 
@@ -1612,6 +1603,17 @@ class ProcessorMixin:
                     )
 
             return False
+
+        finally:
+            async with pipeline_status_lock:
+                pipeline_status.update({"scan_disabled": False})
+                pipeline_status["latest_message"] = (
+                    f"RAGAnything processing completed for {file_name}"
+                )
+                pipeline_status["history_messages"].append(
+                    f"RAGAnything processing completed for {file_name}"
+                )
+                pipeline_status["history_messages"].append("Now is allowed to scan")
 
     async def insert_content_list(
         self,
