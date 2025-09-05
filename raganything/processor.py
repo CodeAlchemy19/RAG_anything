@@ -1423,9 +1423,7 @@ class ProcessorMixin:
         if parser:
             self.config.parser = parser
 
-        current_doc_status = await self.lightrag.doc_status.get_by_id(
-            doc_pre_id
-        )
+        current_doc_status = await self.lightrag.doc_status.get_by_id(doc_pre_id)
 
         try:
             # Ensure LightRAG is initialized
@@ -1489,14 +1487,20 @@ class ProcessorMixin:
                 pipeline_status["history_messages"].append("Now is not allowed to scan")
 
             await self.lightrag.doc_status.upsert(
-                {doc_pre_id: {**current_doc_status, "status": DocStatus.HANDLING, "error_msg": ""}}
+                {
+                    doc_pre_id: {
+                        **current_doc_status,
+                        "status": DocStatus.HANDLING,
+                        "error_msg": "",
+                    }
+                }
             )
 
             content_list = []
-            content_based_doc_id = ''
+            content_based_doc_id = ""
 
             try:
-            # Step 1: Parse document
+                # Step 1: Parse document
                 content_list, content_based_doc_id = await self.parse_document(
                     file_path, output_dir, parse_method, display_stats, **kwargs
                 )
@@ -1505,13 +1509,27 @@ class ProcessorMixin:
                 if isinstance(e.error_msg, list):
                     error_message = "\n".join(e.error_msg)
                 await self.lightrag.doc_status.upsert(
-                    {doc_pre_id: {**current_doc_status, "status": DocStatus.FAILED, "error_msg": error_message}}
+                    {
+                        doc_pre_id: {
+                            **current_doc_status,
+                            "status": DocStatus.FAILED,
+                            "error_msg": error_message,
+                        }
+                    }
                 )
-                self.logger.info(f"Error processing document {file_path}: MineruExecutionError")
+                self.logger.info(
+                    f"Error processing document {file_path}: MineruExecutionError"
+                )
                 return False
             except Exception as e:
                 await self.lightrag.doc_status.upsert(
-                    {doc_pre_id: {**current_doc_status, "status": DocStatus.FAILED, "error_msg": str(e)}}
+                    {
+                        doc_pre_id: {
+                            **current_doc_status,
+                            "status": DocStatus.FAILED,
+                            "error_msg": str(e),
+                        }
+                    }
                 )
                 self.logger.info(f"Error processing document {file_path}: {str(e)}")
                 return False

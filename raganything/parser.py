@@ -34,10 +34,13 @@ T = TypeVar("T")
 
 class MineruExecutionError(Exception):
     """catch mineru error"""
+
     def __init__(self, return_code, error_msg):
         self.return_code = return_code
         self.error_msg = error_msg
-        super().__init__(f"Mineru command failed with return code {return_code}: {error_msg}")
+        super().__init__(
+            f"Mineru command failed with return code {return_code}: {error_msg}"
+        )
 
 
 class Parser:
@@ -739,7 +742,7 @@ class MineruParser(Parser):
             else:
                 logging.info("[MinerU] Command executed successfully")
 
-        except MineruExecutionError as e:
+        except MineruExecutionError:
             raise
         except subprocess.CalledProcessError as e:
             logging.error(f"Error running mineru subprocess command: {e}")
@@ -879,7 +882,7 @@ class MineruParser(Parser):
             )
             return content_list
 
-        except MineruExecutionError as e:
+        except MineruExecutionError:
             raise
         except Exception as e:
             logging.error(f"Error in parse_pdf: {str(e)}")
@@ -1019,7 +1022,7 @@ class MineruParser(Parser):
                 )
                 return content_list
 
-            except MineruExecutionError as e:
+            except MineruExecutionError:
                 raise
 
             finally:
