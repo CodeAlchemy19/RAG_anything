@@ -2,7 +2,7 @@
 LM Studio Integration Example with RAG-Anything
 
 This example demonstrates how to integrate LM Studio with RAG-Anything for local
-multimodal document processing and querying.
+text document processing and querying.
 
 Requirements:
 - LM Studio running locally with server enabled
@@ -14,13 +14,13 @@ Create a .env file with:
 LMSTUDIO_API_HOST=http://localhost:1234/v1
 LMSTUDIO_API_KEY=lm-studio
 MODEL_CHOICE=your-model-name
-VISION_MODEL_CHOICE=your-vision-model-name  # Optional for vision tasks
 EMBEDDING_MODEL_CHOICE=text-embedding-nomic-embed-text-v1.5  # Default LM Studio embedding model
 """
 
 import os
+import uuid
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
@@ -35,7 +35,6 @@ from lightrag.llm.openai import openai_complete_if_cache
 LM_BASE_URL = os.getenv('LMSTUDIO_API_HOST', 'http://localhost:1234/v1')
 LM_API_KEY = os.getenv('LMSTUDIO_API_KEY', 'lm-studio')
 LM_MODEL_NAME = os.getenv('MODEL_CHOICE', 'openai/gpt-oss-20b')
-LM_VISION_MODEL_NAME = os.getenv('VISION_MODEL_CHOICE', LM_MODEL_NAME)
 LM_EMBED_MODEL = os.getenv('EMBEDDING_MODEL_CHOICE', 'text-embedding-nomic-embed-text-v1.5')
 
 async def lmstudio_llm_model_func(prompt: str, system_prompt: Optional[str] = None,
@@ -51,49 +50,6 @@ async def lmstudio_llm_model_func(prompt: str, system_prompt: Optional[str] = No
         **kwargs,
     )
 
-async def lmstudio_vision_model_func(prompt: str, system_prompt: Optional[str] = None,
-                                     history_messages: List[Dict] = None, image_data: Optional[str] = None,
-                                     messages: Optional[List[Dict]] = None, **kwargs) -> str:
-    """Top-level Vision/Multimodal function for LightRAG (pickle-safe)."""
-    try:
-        if messages:
-            return await openai_complete_if_cache(
-                model=LM_VISION_MODEL_NAME,
-                prompt="",
-                system_prompt=None,
-                history_messages=[],
-                messages=messages,
-                base_url=LM_BASE_URL,
-                api_key=LM_API_KEY,
-                **kwargs,
-            )
-        elif image_data:
-            vision_messages = []
-            if system_prompt:
-                vision_messages.append({"role": "system", "content": system_prompt})
-            if history_messages:
-                vision_messages.extend(history_messages)
-            vision_messages.append({
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}},
-                ],
-            })
-            return await openai_complete_if_cache(
-                model=LM_VISION_MODEL_NAME,
-                prompt="",
-                system_prompt=None,
-                history_messages=[],
-                messages=vision_messages,
-                base_url=LM_BASE_URL,
-                api_key=LM_API_KEY,
-                **kwargs,
-            )
-        else:
-            return await lmstudio_llm_model_func(prompt, system_prompt, history_messages, **kwargs)
-    except Exception:
-        return await lmstudio_llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
 async def lmstudio_embedding_async(texts: List[str]) -> List[List[float]]:
     """Top-level embedding function for LightRAG (pickle-safe)."""
@@ -114,19 +70,20 @@ class LMStudioRAGIntegration:
         self.base_url = os.getenv('LMSTUDIO_API_HOST', 'http://localhost:1234/v1')
         self.api_key = os.getenv('LMSTUDIO_API_KEY', 'lm-studio')
         self.model_name = os.getenv('MODEL_CHOICE', 'openai/gpt-oss-20b')
-        self.vision_model = os.getenv('VISION_MODEL_CHOICE', self.model_name)
         self.embedding_model = os.getenv('EMBEDDING_MODEL_CHOICE', 'text-embedding-nomic-embed-text-v1.5')
     
         
         # RAG-Anything configuration
+        # Use a fresh working directory each run to avoid legacy doc_status schema conflicts
         self.config = RAGAnythingConfig(
-            working_dir="./rag_storage_lmstudio",
+            working_dir=f"./rag_storage_lmstudio_demo/{uuid.uuid4()}",
             parser="mineru",
             parse_method="auto",
-            enable_image_processing=True,
+            enable_image_processing=False,
             enable_table_processing=True,
             enable_equation_processing=True,
         )
+        print(f"📁 Using working_dir: {self.config.working_dir}")
         
         self.rag = None
 
@@ -190,13 +147,7 @@ class LMStudioRAGIntegration:
             except Exception:
                 pass
     
-    def llm_model_func_factory(self):
-        """Deprecated: keep for backward compatibility; returns top-level function."""
-        return lmstudio_llm_model_func
-    
-    def vision_model_func_factory(self):
-        """Deprecated: keep for backward compatibility; returns top-level function."""
-        return lmstudio_vision_model_func
+    # Deprecated factory helpers removed to reduce redundancy
     
     def embedding_func_factory(self):
         """Create a completely serializable embedding function."""
@@ -214,9 +165,15 @@ class LMStudioRAGIntegration:
             self.rag = RAGAnything(
                 config=self.config,
                 llm_model_func=lmstudio_llm_model_func,
-                vision_model_func=lmstudio_vision_model_func,
                 embedding_func=self.embedding_func_factory(),
             )
+
+            # Compatibility: avoid writing unknown field 'multimodal_processed' to LightRAG doc_status
+            # Older LightRAG versions may not accept this extra field in DocProcessingStatus
+            async def _noop_mark_multimodal(doc_id: str):
+                return None
+            self.rag._mark_multimodal_processing_complete = _noop_mark_multimodal
+
             print("✅ RAG-Anything initialized successfully!")
             return True
         except Exception as e:
@@ -297,7 +254,8 @@ Key benefits include:
             await self.rag.insert_content_list(
                 content_list=content_list,
                 file_path="lmstudio_integration_demo.txt",
-                doc_id="demo-content-001",
+                # Use a unique doc_id to avoid collisions and doc_status reuse across runs
+                doc_id=f"demo-content-{uuid.uuid4()}",
                 display_stats=True
             )
             print("✅ Sample content added to knowledge base")
