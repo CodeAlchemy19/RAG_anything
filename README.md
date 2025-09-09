@@ -276,7 +276,7 @@ pip install -e '.[all]'
 mineru --version
 
 # Check if properly configured
-python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ MinerU installed properly' if rag.check_mineru_installation() else '❌ MinerU installation issue')"
+python -c "from raganything import RAGAnything; rag = RAGAnything(); print('✅ MinerU installed properly' if rag.check_parser_installation() else '❌ MinerU installation issue')"
 ```
 
 Models are downloaded automatically on first use. For manual download, refer to [MinerU Model Source Configuration](https://github.com/opendatalab/MinerU/blob/master/README.md#22-model-source-configuration).
