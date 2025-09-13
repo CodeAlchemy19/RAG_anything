@@ -11,10 +11,14 @@ Requirements:
 
 Environment Setup:
 Create a .env file with:
-LMSTUDIO_API_HOST=http://localhost:1234/v1
-LMSTUDIO_API_KEY=lm-studio
-MODEL_CHOICE=your-model-name
-EMBEDDING_MODEL_CHOICE=text-embedding-nomic-embed-text-v1.5  # Default LM Studio embedding model
+LLM_BINDING=lmstudio
+LLM_MODEL=openai/gpt-oss-20b
+LLM_BINDING_HOST=http://localhost:1234/v1
+LLM_BINDING_API_KEY=lm-studio
+EMBEDDING_BINDING=lmstudio
+EMBEDDING_MODEL=text-embedding-nomic-embed-text-v1.5
+EMBEDDING_BINDING_HOST=http://localhost:1234/v1
+EMBEDDING_BINDING_API_KEY=lm-studio
 """
 
 import os
@@ -32,10 +36,10 @@ from raganything import RAGAnything, RAGAnythingConfig
 from lightrag.utils import EmbeddingFunc
 from lightrag.llm.openai import openai_complete_if_cache
 
-LM_BASE_URL = os.getenv('LMSTUDIO_API_HOST', 'http://localhost:1234/v1')
-LM_API_KEY = os.getenv('LMSTUDIO_API_KEY', 'lm-studio')
-LM_MODEL_NAME = os.getenv('MODEL_CHOICE', 'openai/gpt-oss-20b')
-LM_EMBED_MODEL = os.getenv('EMBEDDING_MODEL_CHOICE', 'text-embedding-nomic-embed-text-v1.5')
+LM_BASE_URL = os.getenv('LLM_BINDING_HOST', 'http://localhost:1234/v1')
+LM_API_KEY = os.getenv('LLM_BINDING_API_KEY', 'lm-studio')
+LM_MODEL_NAME = os.getenv('LLM_MODEL', 'openai/gpt-oss-20b')
+LM_EMBED_MODEL = os.getenv('EMBEDDING_MODEL', 'text-embedding-nomic-embed-text-v1.5')
 
 async def lmstudio_llm_model_func(prompt: str, system_prompt: Optional[str] = None,
                                   history_messages: List[Dict] = None, **kwargs) -> str:
@@ -66,17 +70,17 @@ class LMStudioRAGIntegration:
     """Integration class for LM Studio with RAG-Anything."""
     
     def __init__(self):
-        # LM Studio configuration
-        self.base_url = os.getenv('LMSTUDIO_API_HOST', 'http://localhost:1234/v1')
-        self.api_key = os.getenv('LMSTUDIO_API_KEY', 'lm-studio')
-        self.model_name = os.getenv('MODEL_CHOICE', 'openai/gpt-oss-20b')
-        self.embedding_model = os.getenv('EMBEDDING_MODEL_CHOICE', 'text-embedding-nomic-embed-text-v1.5')
+        # LM Studio configuration using standard LLM_BINDING variables
+        self.base_url = os.getenv('LLM_BINDING_HOST', 'http://localhost:1234/v1')
+        self.api_key = os.getenv('LLM_BINDING_API_KEY', 'lm-studio')
+        self.model_name = os.getenv('LLM_MODEL', 'openai/gpt-oss-20b')
+        self.embedding_model = os.getenv('EMBEDDING_MODEL', 'text-embedding-nomic-embed-text-v1.5')
     
         
         # RAG-Anything configuration
         # Use a fresh working directory each run to avoid legacy doc_status schema conflicts
         self.config = RAGAnythingConfig(
-            working_dir=f"./rag_storage_lmstudio_demo/{uuid.uuid4()}",
+            working_dir=f"./rag_storage_lmstudio/{uuid.uuid4()}",
             parser="mineru",
             parse_method="auto",
             enable_image_processing=False,
