@@ -838,8 +838,12 @@ class ImageModalProcessor(BaseModalProcessor):
                 content_data = modal_content
 
             image_path = content_data.get("img_path")
-            captions = content_data.get("image_caption", content_data.get("img_caption", []))
-            footnotes = content_data.get("image_footnote", content_data.get("img_footnote", []))
+            captions = content_data.get(
+                "image_caption", content_data.get("img_caption", [])
+            )
+            footnotes = content_data.get(
+                "image_footnote", content_data.get("img_footnote", [])
+            )
 
             # Validate image path
             if not image_path:
@@ -937,8 +941,12 @@ class ImageModalProcessor(BaseModalProcessor):
                 content_data = modal_content
 
             image_path = content_data.get("img_path", "")
-            captions = content_data.get("image_caption", content_data.get("img_caption", []))
-            footnotes = content_data.get("image_footnote", content_data.get("img_footnote", []))
+            captions = content_data.get(
+                "image_caption", content_data.get("img_caption", [])
+            )
+            footnotes = content_data.get(
+                "image_footnote", content_data.get("img_footnote", [])
+            )
 
             modal_chunk = PROMPTS["image_chunk"].format(
                 image_path=image_path,
