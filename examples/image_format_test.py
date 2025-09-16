@@ -148,9 +148,10 @@ async def test_image_format_parsing(file_path: str):
             print(f"\n🖼️  Found {len(image_items)} processed image(s):")
             for i, item in enumerate(image_items, 1):
                 print(f"   {i}. Image path: {item.get('img_path', 'N/A')}")
-                if item.get("img_caption"):
+                caption = item.get("image_caption", item.get("img_caption", []))
+                if caption:
                     print(
-                        f"      Caption: {item.get('img_caption', [])[0] if item.get('img_caption') else 'N/A'}"
+                        f"      Caption: {caption[0] if caption else 'N/A'}"
                     )
 
         # Display text blocks (OCR results)

@@ -437,8 +437,8 @@ class QueryMixin:
     ) -> str:
         """Generate image description for query"""
         image_path = content.get("img_path")
-        captions = content.get("img_caption", [])
-        footnotes = content.get("img_footnote", [])
+        captions = content.get("image_caption", content.get("img_caption", []))
+        footnotes = content.get("image_footnote", content.get("img_footnote", []))
 
         if image_path and Path(image_path).exists():
             # If image exists, use vision model to generate description

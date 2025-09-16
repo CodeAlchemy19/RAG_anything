@@ -111,8 +111,8 @@ def create_sample_content_list():
         {
             "type": "image",
             "img_path": "/absolute/path/to/system_architecture.jpg",  # IMPORTANT: Use absolute path to image file
-            "img_caption": ["Figure 1: RAGAnything System Architecture"],
-            "img_footnote": [
+            "image_caption": ["Figure 1: RAGAnything System Architecture"],
+            "image_footnote": [
                 "The architecture shows the complete pipeline from document parsing to multimodal query processing"
             ],
             "page_idx": 1,  # Page number where this image appears
