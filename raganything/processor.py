@@ -711,12 +711,21 @@ class ProcessorMixin:
 
         # Use LightRAG's concurrency control
         semaphore = asyncio.Semaphore(getattr(self.lightrag, "max_parallel_insert", 2))
+        
+        # Progress tracking variables
+        total_items = len(multimodal_items)
+        completed_count = 0
+        progress_lock = asyncio.Lock()
+        
+        # Log processing start
+        self.logger.info(f"Starting to process {total_items} multimodal content items")
 
         # Stage 1: Concurrent generation of descriptions using correct processors for each type
         async def process_single_item_with_correct_processor(
             item: Dict[str, Any], index: int, file_path: str
         ):
             """Process single item using the correct processor for its type"""
+            nonlocal completed_count
             async with semaphore:
                 try:
                     content_type = item.get("type", "unknown")
@@ -749,6 +758,13 @@ class ProcessorMixin:
                         entity_name=None,  # Let LLM auto-generate
                     )
 
+                    # Update progress (non-blocking)
+                    async with progress_lock:
+                        completed_count += 1
+                        if completed_count % max(1, total_items // 10) == 0 or completed_count == total_items:
+                            progress_percent = (completed_count / total_items) * 100
+                            self.logger.info(f"Multimodal chunk generation progress: {completed_count}/{total_items} ({progress_percent:.1f}%)")
+
                     return {
                         "index": index,
                         "content_type": content_type,
@@ -762,6 +778,13 @@ class ProcessorMixin:
                     }
 
                 except Exception as e:
+                    # Update progress even on error (non-blocking)
+                    async with progress_lock:
+                        completed_count += 1
+                        if completed_count % max(1, total_items // 10) == 0 or completed_count == total_items:
+                            progress_percent = (completed_count / total_items) * 100
+                            self.logger.info(f"Multimodal chunk generation progress: {completed_count}/{total_items} ({progress_percent:.1f}%)")
+                    
                     self.logger.error(
                         f"Error generating description for {content_type} item {index}: {e}"
                     )
