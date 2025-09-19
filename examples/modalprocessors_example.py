@@ -91,8 +91,8 @@ async def process_image_example(lightrag: LightRAG, vision_model_func):
     # Prepare image content
     image_content = {
         "img_path": "image.jpg",
-        "img_caption": ["Example image caption"],
-        "img_footnote": ["Example image footnote"],
+        "image_caption": ["Example image caption"],
+        "image_footnote": ["Example image footnote"],
     }
 
     # Process image

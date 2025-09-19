@@ -11,6 +11,7 @@ import os
 from typing import Dict, Any, Optional, Callable
 import sys
 import asyncio
+import atexit
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -111,6 +112,9 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
             DoclingParser() if self.config.parser == "docling" else MineruParser()
         )
 
+        # Register close method for cleanup
+        atexit.register(self.close)
+
         # Create working directory if needed
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir)
@@ -128,7 +132,7 @@ class RAGAnything(QueryMixin, ProcessorMixin, BatchMixin):
         )
         self.logger.info(f"  Max concurrent files: {self.config.max_concurrent_files}")
 
-    def __del__(self):
+    def close(self):
         """Cleanup resources when object is destroyed"""
         try:
             import asyncio
