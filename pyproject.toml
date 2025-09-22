@@ -1,16 +1,17 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "raganything"
-version = "1.2.7"
+dynamic = ["version"]
+authors = [
+    {name = "Zirui Guo"}
+]
 description = "RAGAnything: All-in-One RAG System"
 readme = "README.md"
 license = { text = "MIT" }
-authors = [
-    { name = "Zirui Guo" }
-]
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
@@ -19,7 +20,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">=3.10"
 dependencies = [
     "huggingface_hub",
     "lightrag-hku",
@@ -31,11 +31,17 @@ dependencies = [
 image = ["Pillow>=10.0.0"]
 text = ["reportlab>=4.0.0"]
 office = []  # Requires LibreOffice (external program)
-all = ["Pillow>=10.0.0", "reportlab>=4.0.0"]
 markdown = [
     "markdown>=3.4.0",
     "weasyprint>=60.0",
     "pygments>=2.10.0",
+]
+all = [
+    "Pillow>=10.0.0",
+    "reportlab>=4.0.0",
+    "markdown>=3.4.0",
+    "weasyprint>=60.0",
+    "pygments>=2.10.0"
 ]
 
 [project.urls]
@@ -57,7 +63,13 @@ dev-dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-exclude = ["tests*", "docs*"]
+include = ["raganything*"]
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "raganything.__version__"}
+
+[tool.ruff]
+target-version = "py310"
