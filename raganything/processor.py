@@ -925,8 +925,12 @@ class ProcessorMixin:
         try:
             if content_type == "image":
                 image_path = original_item.get("img_path", "")
-                captions = original_item.get("img_caption", [])
-                footnotes = original_item.get("img_footnote", [])
+                captions = original_item.get(
+                    "image_caption", original_item.get("img_caption", [])
+                )
+                footnotes = original_item.get(
+                    "image_footnote", original_item.get("img_footnote", [])
+                )
 
                 return PROMPTS["image_chunk"].format(
                     image_path=image_path,
@@ -1733,7 +1737,7 @@ class ProcessorMixin:
                          Each item should be a dictionary with the following structure:
                          - Text: {"type": "text", "text": "content", "page_idx": 0}
                          - Image: {"type": "image", "img_path": "/absolute/path/to/image.jpg",
-                                  "img_caption": ["caption"], "img_footnote": ["note"], "page_idx": 1}
+                                  "image_caption": ["caption"], "image_footnote": ["note"], "page_idx": 1}
                          - Table: {"type": "table", "table_body": "markdown table",
                                   "table_caption": ["caption"], "table_footnote": ["note"], "page_idx": 2}
                          - Equation: {"type": "equation", "latex": "LaTeX formula",

@@ -202,7 +202,8 @@ Multimodal Content → Extract Surrounding Context → Enhanced LLM Analysis →
     {
         "type": "image",
         "img_path": "images/figure1.jpg",
-        "img_caption": ["Figure 1: Architecture"],
+        "image_caption": ["Figure 1: Architecture"],
+        "image_footnote": [],
         "page_idx": 1
     }
 ]
