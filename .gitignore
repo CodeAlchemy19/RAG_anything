@@ -66,6 +66,7 @@ LightRAG_2-4.pdf
 download_models_hf.py
 lightrag-dev/
 gui/
+tiktoken_cache/
 
 # unit-test files
 test_*
