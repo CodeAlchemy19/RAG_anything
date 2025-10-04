@@ -245,13 +245,16 @@ async def demo_insert_content_list(
             else:
                 return llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
-        # Define embedding function
+        # Define embedding function - using environment variables for configuration
+        embedding_dim = int(os.getenv("EMBEDDING_DIM", "3072"))
+        embedding_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")
+
         embedding_func = EmbeddingFunc(
-            embedding_dim=3072,
+            embedding_dim=embedding_dim,
             max_token_size=8192,
             func=lambda texts: openai_embed(
                 texts,
-                model="text-embedding-3-large",
+                model=embedding_model,
                 api_key=api_key,
                 base_url=base_url,
             ),
