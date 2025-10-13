@@ -14,17 +14,18 @@ import asyncio
 import atexit
 from dataclasses import dataclass, field
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Add project root directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from lightrag import LightRAG
-from lightrag.utils import logger
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
+# Load environment variables from .env file BEFORE importing LightRAG
+# This is critical for TIKTOKEN_CACHE_DIR to work properly in offline environments
 # The OS environment variables take precedence over the .env file
 load_dotenv(dotenv_path=".env", override=False)
+
+from lightrag import LightRAG
+from lightrag.utils import logger
 
 # Import configuration and modules
 from raganything.config import RAGAnythingConfig

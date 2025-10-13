@@ -28,3 +28,9 @@ jobs:
 
             - name: Run pre-commit
               run: pre-commit run --all-files --show-diff-on-failure
+
+            - name: Commit lint changes
+              uses: stefanzweifel/git-auto-commit-action@v5
+              with:
+                commit_message: "chore: apply linting and formatting"
+                branch: ${{ github.head_ref }}
