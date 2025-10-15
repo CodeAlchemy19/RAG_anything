@@ -1148,13 +1148,14 @@ Different content types require specific optional dependencies:
 If you find RAG-Anything useful in your research, please cite our paper:
 
 ```bibtex
-@article{guo2024lightrag,
-  title={LightRAG: Simple and Fast Retrieval-Augmented Generation},
-  author={Zirui Guo and Lianghao Xia and Yanhua Yu and Tu Ao and Chao Huang},
-  year={2024},
-  eprint={2410.05779},
-  archivePrefix={arXiv},
-  primaryClass={cs.IR}
+@misc{guo2025raganythingallinoneragframework,
+      title={RAG-Anything: All-in-One RAG Framework}, 
+      author={Zirui Guo and Xubin Ren and Lingrui Xu and Jiahao Zhang and Chao Huang},
+      year={2025},
+      eprint={2510.12323},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2510.12323}, 
 }
 ```
 
