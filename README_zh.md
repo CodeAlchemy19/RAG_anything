@@ -14,7 +14,7 @@
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; text-align: center;">
     <p>
       <a href='https://github.com/HKUDS/RAG-Anything'><img src='https://img.shields.io/badge/🔥项目-主页-00d9ff?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e'></a>
-      <a href='https://arxiv.org/abs/2410.05779'><img src='https://img.shields.io/badge/📄arXiv-2410.05779-ff6b6b?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=1a1a2e'></a>
+      <a href='https://arxiv.org/abs/2510.12323'><img src='https://img.shields.io/badge/📄arXiv-2510.12323-ff6b6b?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=1a1a2e'></a>
       <a href='https://github.com/HKUDS/LightRAG'><img src='https://img.shields.io/badge/⚡基于-LightRAG-4ecdc4?style=for-the-badge&logo=lightning&logoColor=white&labelColor=1a1a2e'></a>
     </p>
     <p>
@@ -1127,13 +1127,14 @@ await rag.process_document_complete(
 </div>
 
 ```bibtex
-@article{guo2024lightrag,
-  title={LightRAG: Simple and Fast Retrieval-Augmented Generation},
-  author={Zirui Guo and Lianghao Xia and Yanhua Yu and Tu Ao and Chao Huang},
-  year={2024},
-  eprint={2410.05779},
-  archivePrefix={arXiv},
-  primaryClass={cs.IR}
+@misc{guo2025raganythingallinoneragframework,
+      title={RAG-Anything: All-in-One RAG Framework},
+      author={Zirui Guo and Xubin Ren and Lingrui Xu and Jiahao Zhang and Chao Huang},
+      year={2025},
+      eprint={2510.12323},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2510.12323},
 }
 ```
 
