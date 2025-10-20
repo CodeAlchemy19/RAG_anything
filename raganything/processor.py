@@ -460,7 +460,7 @@ class ProcessorMixin:
             self.logger.debug("No multimodal content to process")
             return
 
-        # Check multimodal processing status - handle LightRAG's early "PROCESSED" marking
+        # Check multimodal processing status - handle LightRAG's early DocStatus.PROCESSED marking
         try:
             existing_doc_status = await self.lightrag.doc_status.get_by_id(doc_id)
             if existing_doc_status:
@@ -475,15 +475,15 @@ class ProcessorMixin:
                     )
                     return
 
-                # Even if status is "PROCESSED" (text processing done),
+                # Even if status is DocStatus.PROCESSED (text processing done),
                 # we still need to process multimodal content if not yet done
                 doc_status = existing_doc_status.get("status", "")
-                if doc_status == "PROCESSED" and not multimodal_processed:
+                if doc_status == DocStatus.PROCESSED and not multimodal_processed:
                     self.logger.info(
                         f"Document {doc_id} text processing is complete, but multimodal content still needs processing"
                     )
                     # Continue with multimodal processing
-                elif doc_status == "PROCESSED" and multimodal_processed:
+                elif doc_status == DocStatus.PROCESSED and multimodal_processed:
                     self.logger.info(
                         f"Document {doc_id} is fully processed (text + multimodal)"
                     )
@@ -1352,7 +1352,7 @@ class ProcessorMixin:
             if not doc_status:
                 return False
 
-            text_processed = doc_status.get("status") == "PROCESSED"
+            text_processed = doc_status.get("status") == DocStatus.PROCESSED
             multimodal_processed = doc_status.get("multimodal_processed", False)
 
             return text_processed and multimodal_processed
@@ -1384,7 +1384,7 @@ class ProcessorMixin:
                     "chunks_count": 0,
                 }
 
-            text_processed = doc_status.get("status") == "PROCESSED"
+            text_processed = doc_status.get("status") == DocStatus.PROCESSED
             multimodal_processed = doc_status.get("multimodal_processed", False)
             fully_processed = text_processed and multimodal_processed
 
