@@ -3,12 +3,8 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: ^lightrag/api/webui/
       - id: end-of-file-fixer
-        exclude: ^lightrag/api/webui/
       - id: requirements-txt-fixer
-        exclude: ^lightrag/api/webui/
-
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.4
@@ -25,4 +21,3 @@ repos:
     hooks:
       - id: check-manifest
         stages: [manual]
-        exclude: ^lightrag/api/webui/
