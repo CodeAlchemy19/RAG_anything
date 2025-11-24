@@ -10,10 +10,8 @@ repos:
     rev: v0.6.4
     hooks:
       - id: ruff-format
-        exclude: ^lightrag/api/webui/
       - id: ruff
         args: [--fix, --ignore=E402]
-        exclude: ^lightrag/api/webui/
 
 
   - repo: https://github.com/mgedmin/check-manifest
