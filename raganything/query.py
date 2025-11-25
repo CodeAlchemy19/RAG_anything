@@ -97,13 +97,16 @@ class QueryMixin:
 
         return f"multimodal_query:{cache_hash}"
 
-    async def aquery(self, query: str, mode: str = "mix", **kwargs) -> str:
+    async def aquery(
+        self, query: str, mode: str = "mix", system_prompt: str | None = None, **kwargs
+    ) -> str:
         """
         Pure text query - directly calls LightRAG's query functionality
 
         Args:
             query: Query text
             mode: Query mode ("local", "global", "hybrid", "naive", "mix", "bypass")
+            system_prompt: Optional system prompt to include.
             **kwargs: Other query parameters, will be passed to QueryParam
                 - vlm_enhanced: bool, default True when vision_model_func is available.
                   If True, will parse image paths in retrieved context and replace them
@@ -133,7 +136,9 @@ class QueryMixin:
             and hasattr(self, "vision_model_func")
             and self.vision_model_func
         ):
-            return await self.aquery_vlm_enhanced(query, mode=mode, **kwargs)
+            return await self.aquery_vlm_enhanced(
+                query, mode=mode, system_prompt=system_prompt, **kwargs
+            )
         elif vlm_enhanced and (
             not hasattr(self, "vision_model_func") or not self.vision_model_func
         ):
@@ -148,7 +153,9 @@ class QueryMixin:
         self.logger.info(f"Query mode: {mode}")
 
         # Call LightRAG's query method
-        result = await self.lightrag.aquery(query, param=query_param)
+        result = await self.lightrag.aquery(
+            query, param=query_param, system_prompt=system_prompt
+        )
 
         self.logger.info("Text query completed")
         return result
@@ -293,13 +300,16 @@ class QueryMixin:
         self.logger.info("Multimodal query completed")
         return result
 
-    async def aquery_vlm_enhanced(self, query: str, mode: str = "mix", **kwargs) -> str:
+    async def aquery_vlm_enhanced(
+        self, query: str, mode: str = "mix", system_prompt: str | None = None, **kwargs
+    ) -> str:
         """
         VLM enhanced query - replaces image paths in retrieved context with base64 encoded images for VLM processing
 
         Args:
             query: User query
             mode: Underlying LightRAG query mode
+            system_prompt: Optional system prompt to include
             **kwargs: Other query parameters
 
         Returns:
@@ -336,12 +346,16 @@ class QueryMixin:
             self.logger.info("No valid images found, falling back to normal query")
             # Fallback to normal query
             query_param = QueryParam(mode=mode, **kwargs)
-            return await self.lightrag.aquery(query, param=query_param)
+            return await self.lightrag.aquery(
+                query, param=query_param, system_prompt=system_prompt
+            )
 
         self.logger.info(f"Processed {images_found} images for VLM")
 
         # 3. Build VLM message format
-        messages = self._build_vlm_messages_with_images(enhanced_prompt, query)
+        messages = self._build_vlm_messages_with_images(
+            enhanced_prompt, query, system_prompt
+        )
 
         # 4. Call VLM for question answering
         result = await self._call_vlm_with_multimodal_content(messages)
@@ -593,7 +607,7 @@ class QueryMixin:
         return enhanced_prompt, images_processed
 
     def _build_vlm_messages_with_images(
-        self, enhanced_prompt: str, user_query: str
+        self, enhanced_prompt: str, user_query: str, system_prompt: str
     ) -> List[Dict]:
         """
         Build VLM message format, using markers to correspond images with text positions
@@ -658,13 +672,22 @@ class QueryMixin:
                 "text": f"\n\nUser Question: {user_query}\n\nPlease answer based on the context and images provided.",
             }
         )
+        base_system_prompt = "You are a helpful assistant that can analyze both text and image content to provide comprehensive answers."
+
+        if system_prompt:
+            full_system_prompt = base_system_prompt + " " + system_prompt
+        else:
+            full_system_prompt = base_system_prompt
 
         return [
             {
                 "role": "system",
-                "content": "You are a helpful assistant that can analyze both text and image content to provide comprehensive answers.",
+                "content": full_system_prompt,
             },
-            {"role": "user", "content": content_parts},
+            {
+                "role": "user",
+                "content": content_parts,
+            },
         ]
 
     async def _call_vlm_with_multimodal_content(self, messages: List[Dict]) -> str:
