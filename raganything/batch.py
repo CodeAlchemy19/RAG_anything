@@ -112,7 +112,7 @@ class BatchMixin:
                         output_dir=(
                             output_dir 
                             if not is_in_subdir 
-                            else str(output_path / file_path.parent.relative_to(folder_path_obj)),
+                            else str(output_path / file_path.parent.relative_to(folder_path_obj))
                         ),
                         parse_method=parse_method,
                         split_by_character=split_by_character,
