@@ -1422,6 +1422,7 @@ class ProcessorMixin:
         split_by_character: str | None = None,
         split_by_character_only: bool = False,
         doc_id: str | None = None,
+        file_name: str | None = None,
         **kwargs,
     ):
         """
@@ -1473,7 +1474,8 @@ class ProcessorMixin:
 
         # Step 3: Insert pure text content with all parameters
         if text_content.strip():
-            file_name = os.path.basename(file_path)
+            if file_name is None:
+                file_name = os.path.basename(file_path)
             await insert_text_content(
                 self.lightrag,
                 input=text_content,
